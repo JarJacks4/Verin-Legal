@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "332424564875",
+    "project_id": "verin-legal-fbzp5w",
+    "storage_bucket": "verin-legal-fbzp5w.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332424564875:android:d19399897a7a36966e848e",
+        "android_client_info": {
+          "package_name": "com.mycompany.verinlegal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "332424564875-2t7l8te6qodujd02rs9ilpsn6ie31uvo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mycompany.verinlegal",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "332424564875-ecrr4pf7tavoccoinkuvh1n7vced2smv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxXwbBO8E0cRhPwwtxA04aAYrNoIS6vXY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "332424564875-ecrr4pf7tavoccoinkuvh1n7vced2smv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "332424564875-3bv28cihnrc6vrbn74duqdvsq8dfi3rq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mycompany.verinlegal"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,102 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "Matters",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "firmID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "openedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "chainEntries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "seq",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "Statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "Items",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "batesId",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "clioSyncLog",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pushedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "Items",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "recievedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "Items",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "recievedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ]
+}
