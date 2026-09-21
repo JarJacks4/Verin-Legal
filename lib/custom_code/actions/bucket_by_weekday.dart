@@ -13,7 +13,8 @@ Future<dynamic> bucketByWeekday(List<ItemsRecord> items) async {
   const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   final counts = List<int>.filled(7, 0);
   for (final item in items) {
-    final weekday = item.receivedAt.weekday; // 1 = Monday .. 7 = Sunday
+    final weekday=item.recievedAt!.weekday;
+   // final weekday = item.receivedAt!.weekday; // 1 = Monday .. 7 = Sunday
     counts[weekday - 1] += 1;
   }
   return List.generate(7, (i) => {'day': labels[i], 'count': counts[i]});

@@ -664,6 +664,7 @@ class _MatterDetailClioWriteBackWidgetState
                                                     width: 32.0,
                                                     height: 32.0,
                                                     fit: BoxFit.contain,
+                                                    errorWidget: (context, url, error) => Icon(Icons.link, size: 24),
                                                   ),
                                                 ),
                                                 Expanded(

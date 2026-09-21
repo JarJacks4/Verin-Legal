@@ -24,14 +24,14 @@ Future<List<MattersRecord>> sortAndFilterMatters(
 
   switch (sortOption) {
     case 'Oldest First':
-      result.sort((a, b) => a.openedAt.compareTo(b.openedAt));
+      result.sort((a, b) => a.openedAt!.compareTo(b.openedAt!));
       break;
     case 'Client Name (A-Z)':
       result.sort((a, b) => a.clientName.compareTo(b.clientName));
       break;
     case 'Newest First':
     default:
-      result.sort((a, b) => b.openedAt.compareTo(a.openedAt));
+      result.sort((a, b) => b.openedAt!.compareTo(a.openedAt!));
   }
   return result;
 }

@@ -104,8 +104,8 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                             ),
                           ),
                         ),
-                        Flexible(
-                          flex: 1,
+                        Container(
+                        //  flex: 1,
                           child: Align(
                             alignment: AlignmentDirectional(0.0, 0.0),
                             child: Padding(

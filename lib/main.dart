@@ -92,12 +92,12 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     authUserSub.cancel();
-
+         
     super.dispose();
   }
 
   void setLocale(String language) {
-    safeSetState(() => _locale = createLocale(language));
+    safeSetState(() => _locale = createLocale(language)); 
   }
 
   void setThemeMode(ThemeMode mode) => safeSetState(() {

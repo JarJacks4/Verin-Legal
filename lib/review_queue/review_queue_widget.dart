@@ -711,8 +711,8 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                               FlutterFlowBarChart(
                                                 barData: [
                                                   FFBarChartData(
-                                                    yData: _model
-                                                        .weeklyProcessedItems!
+                                                    yData:(_model.weeklyProcessedItems ?? [])
+                                                    // _model .weeklyProcessedItems!
                                                         .map((d) => d.kind)
                                                         .toList(),
                                                     color: FlutterFlowTheme.of(
@@ -722,8 +722,9 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                         Color(0x2CE2E0DB),
                                                   )
                                                 ],
-                                                xLabels: _model
-                                                    .weeklyProcessedItems!
+                                                xLabels:  (_model.weeklyProcessedItems ?? [])
+                                              //  _model
+                                                   // .weeklyProcessedItems!
                                                     .map((d) => d.matterName)
                                                     .toList(),
                                                 barWidth: 60.0,

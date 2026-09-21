@@ -196,7 +196,7 @@ class _SideNavWidgetState extends State<SideNavWidget> {
               padding: EdgeInsetsDirectional.fromSTEB(16.0, 16.0, 16.0, 16.0),
               child: Container(
                 width: 300.0,
-                height: MediaQuery.sizeOf(context).height * 0.215,
+                height: MediaQuery.sizeOf(context).height * 0.26,
                 decoration: BoxDecoration(
                   color: Color(0x62F9F8F6),
                   boxShadow: [
@@ -214,7 +214,7 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                 child: Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 12.0),
                   child: Column(
-                    mainAxisSize: MainAxisSize.max,
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
@@ -259,6 +259,11 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                                     width: 32.0,
                                     height: 32.0,
                                     fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Icon(
+                                 Icons.account_circle,
+                                        size: 32.0,
+                                         color: FlutterFlowTheme.of(context).secondaryText,
+                                        ),
                                   ),
                                 ),
                               ),
