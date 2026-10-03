@@ -92,12 +92,12 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     authUserSub.cancel();
-         
+
     super.dispose();
   }
 
   void setLocale(String language) {
-    safeSetState(() => _locale = createLocale(language)); 
+    safeSetState(() => _locale = createLocale(language));
   }
 
   void setThemeMode(ThemeMode mode) => safeSetState(() {
@@ -125,10 +125,36 @@ class _MyAppState extends State<MyApp> {
       ],
       theme: ThemeData(
         brightness: Brightness.light,
+        scrollbarTheme: ScrollbarThemeData(
+          interactive: true,
+          thickness: WidgetStateProperty.all(1.0),
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.dragged)) {
+              return Color(4283716692);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return Color(4293058779);
+            }
+            return Color(4279905084);
+          }),
+        ),
         useMaterial3: false,
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
+        scrollbarTheme: ScrollbarThemeData(
+          interactive: true,
+          thickness: WidgetStateProperty.all(1.0),
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.dragged)) {
+              return Color(4287931320);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return Color(4281549141);
+            }
+            return Color(4293060848);
+          }),
+        ),
         useMaterial3: false,
       ),
       themeMode: _themeMode,

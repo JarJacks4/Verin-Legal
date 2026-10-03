@@ -65,7 +65,7 @@ class _NavItem5WidgetState extends State<NavItem5Widget> {
               'Dashboard',
             ),
             style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.inter(
+                  font: GoogleFonts.ibmPlexSans(
                     fontWeight:
                         FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                     fontStyle:

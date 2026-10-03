@@ -76,6 +76,8 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
     context.watch<FFAppState>();
 
     return Container(
+      width: 477.6,
+      height: 904.0,
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).secondaryBackground,
         borderRadius: BorderRadius.only(
@@ -112,7 +114,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                   Text(
                     'Filter & Sort',
                     style: FlutterFlowTheme.of(context).titleLarge.override(
-                          font: GoogleFonts.inter(
+                          font: GoogleFonts.ibmPlexSans(
                             fontWeight: FlutterFlowTheme.of(context)
                                 .titleLarge
                                 .fontWeight,
@@ -152,7 +154,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                     child: Text(
                       'Reset',
                       style: FlutterFlowTheme.of(context).labelLarge.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .labelLarge
                                   .fontWeight,
@@ -178,6 +180,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                 flex: 1,
                 child: SingleChildScrollView(
                   primary: false,
+                  controller: _model.columnScrollController,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -193,7 +196,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .labelMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .fontWeight,
@@ -264,7 +267,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                           style: FlutterFlowTheme.of(context)
                                               .labelMedium
                                               .override(
-                                                font: GoogleFonts.inter(
+                                                font: GoogleFonts.ibmPlexSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -346,7 +349,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                           style: FlutterFlowTheme.of(context)
                                               .labelMedium
                                               .override(
-                                                font: GoogleFonts.inter(
+                                                font: GoogleFonts.ibmPlexSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -408,7 +411,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .labelMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .fontWeight,
@@ -451,7 +454,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                             textStyle: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .bodyMedium
                                         .fontWeight,
@@ -506,7 +509,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .labelMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .fontWeight,
@@ -547,14 +550,14 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                     label: 'Newest First',
                                     subtitle: 'Receive weekly updates',
                                     color:
-                                        FlutterFlowTheme.of(context).tertiary,
+                                        FlutterFlowTheme.of(context).secondary,
                                     isSelected: valueOrDefault<bool>(
                                       widget.sortSelected == 'Newest First'
                                           ? true
                                           : false,
                                       false,
                                     ),
-                                    hasSubtitle: false,
+                                    hasSubtitle: true,
                                     disabled: false,
                                   ),
                                 ),
@@ -575,14 +578,14 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                     label: 'Oldest First',
                                     subtitle: 'Receive weekly updates',
                                     color:
-                                        FlutterFlowTheme.of(context).tertiary,
+                                        FlutterFlowTheme.of(context).secondary,
                                     isSelected: valueOrDefault<bool>(
                                       widget.sortSelected == 'Oldest First'
                                           ? true
                                           : false,
                                       false,
                                     ),
-                                    hasSubtitle: false,
+                                    hasSubtitle: true,
                                     disabled: false,
                                   ),
                                 ),
@@ -603,7 +606,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                     label: 'Client Name (A–Z)',
                                     subtitle: 'Receive weekly updates',
                                     color:
-                                        FlutterFlowTheme.of(context).tertiary,
+                                        FlutterFlowTheme.of(context).secondary,
                                     isSelected: valueOrDefault<bool>(
                                       widget.sortSelected ==
                                               'Client Name (A–Z)'
@@ -656,7 +659,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                         style: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .override(
-                                              font: GoogleFonts.inter(
+                                              font: GoogleFonts.ibmPlexSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .labelMedium
@@ -769,39 +772,40 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                                     children: [
                                                       Text(
                                                         'Uncertain',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .labelMedium
-                                                            .override(
-                                                              font: GoogleFonts
-                                                                  .inter(
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontStyle,
-                                                              ),
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primaryText,
-                                                              fontSize: 14.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FlutterFlowTheme.of(
+                                                        style:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .labelMedium
+                                                                .override(
+                                                                  font: GoogleFonts
+                                                                      .ibmPlexSans(
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .primaryText,
+                                                                  fontSize:
+                                                                      14.0,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontWeight,
-                                                              fontStyle:
-                                                                  FlutterFlowTheme.of(
+                                                                  fontStyle: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontStyle,
-                                                              lineHeight: 1.4,
-                                                            ),
+                                                                  lineHeight:
+                                                                      1.4,
+                                                                ),
                                                       ),
                                                     ].divide(
                                                         SizedBox(width: 6.0)),
@@ -842,39 +846,40 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                                     children: [
                                                       Text(
                                                         'Unreadable',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .labelMedium
-                                                            .override(
-                                                              font: GoogleFonts
-                                                                  .inter(
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontStyle,
-                                                              ),
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primaryText,
-                                                              fontSize: 14.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FlutterFlowTheme.of(
+                                                        style:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .labelMedium
+                                                                .override(
+                                                                  font: GoogleFonts
+                                                                      .ibmPlexSans(
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .primaryText,
+                                                                  fontSize:
+                                                                      14.0,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontWeight,
-                                                              fontStyle:
-                                                                  FlutterFlowTheme.of(
+                                                                  fontStyle: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontStyle,
-                                                              lineHeight: 1.4,
-                                                            ),
+                                                                  lineHeight:
+                                                                      1.4,
+                                                                ),
                                                       ),
                                                     ].divide(
                                                         SizedBox(width: 6.0)),
@@ -973,39 +978,40 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                                     children: [
                                                       Text(
                                                         'Email',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .labelMedium
-                                                            .override(
-                                                              font: GoogleFonts
-                                                                  .inter(
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontStyle,
-                                                              ),
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primaryText,
-                                                              fontSize: 14.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FlutterFlowTheme.of(
+                                                        style:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .labelMedium
+                                                                .override(
+                                                                  font: GoogleFonts
+                                                                      .ibmPlexSans(
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .primaryText,
+                                                                  fontSize:
+                                                                      14.0,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontWeight,
-                                                              fontStyle:
-                                                                  FlutterFlowTheme.of(
+                                                                  fontStyle: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontStyle,
-                                                              lineHeight: 1.4,
-                                                            ),
+                                                                  lineHeight:
+                                                                      1.4,
+                                                                ),
                                                       ),
                                                     ].divide(
                                                         SizedBox(width: 6.0)),
@@ -1046,39 +1052,40 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                                     children: [
                                                       Text(
                                                         'SMS',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .labelMedium
-                                                            .override(
-                                                              font: GoogleFonts
-                                                                  .inter(
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontStyle,
-                                                              ),
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primaryText,
-                                                              fontSize: 14.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FlutterFlowTheme.of(
+                                                        style:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .labelMedium
+                                                                .override(
+                                                                  font: GoogleFonts
+                                                                      .ibmPlexSans(
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .primaryText,
+                                                                  fontSize:
+                                                                      14.0,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontWeight,
-                                                              fontStyle:
-                                                                  FlutterFlowTheme.of(
+                                                                  fontStyle: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontStyle,
-                                                              lineHeight: 1.4,
-                                                            ),
+                                                                  lineHeight:
+                                                                      1.4,
+                                                                ),
                                                       ),
                                                     ].divide(
                                                         SizedBox(width: 6.0)),
@@ -1119,39 +1126,40 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                                     children: [
                                                       Text(
                                                         'WhatsApp',
-                                                        style: FlutterFlowTheme
-                                                                .of(context)
-                                                            .labelMedium
-                                                            .override(
-                                                              font: GoogleFonts
-                                                                  .inter(
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontStyle,
-                                                              ),
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .primaryText,
-                                                              fontSize: 14.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                              fontWeight:
-                                                                  FlutterFlowTheme.of(
+                                                        style:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .labelMedium
+                                                                .override(
+                                                                  font: GoogleFonts
+                                                                      .ibmPlexSans(
+                                                                    fontWeight: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontWeight,
+                                                                    fontStyle: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .labelMedium
+                                                                        .fontStyle,
+                                                                  ),
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .primaryText,
+                                                                  fontSize:
+                                                                      14.0,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontWeight: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontWeight,
-                                                              fontStyle:
-                                                                  FlutterFlowTheme.of(
+                                                                  fontStyle: FlutterFlowTheme.of(
                                                                           context)
                                                                       .labelMedium
                                                                       .fontStyle,
-                                                              lineHeight: 1.4,
-                                                            ),
+                                                                  lineHeight:
+                                                                      1.4,
+                                                                ),
                                                       ),
                                                     ].divide(
                                                         SizedBox(width: 6.0)),

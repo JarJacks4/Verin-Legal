@@ -135,7 +135,7 @@ class _MessageBubbleWidgetState extends State<MessageBubbleWidget> {
                           'Are you picking up the kids at 4?',
                         ),
                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.inter(
+                              font: GoogleFonts.ibmPlexSans(
                                 fontWeight: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,

@@ -7,7 +7,6 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/custom_code/actions/index.dart' as actions;
-import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -116,8 +115,10 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
             Expanded(
               flex: 1,
               child: Container(
+                decoration: BoxDecoration(),
                 child: SingleChildScrollView(
                   primary: false,
+                  controller: _model.columnScrollController,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -181,7 +182,7 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                           style: FlutterFlowTheme.of(context)
                                               .bodyMedium
                                               .override(
-                                                font: GoogleFonts.inter(
+                                                font: GoogleFonts.ibmPlexSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -355,8 +356,7 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                       context)
                                                   .headlineSmall
                                                   .override(
-                                                    font: GoogleFonts
-                                                        .playfairDisplay(
+                                                    font: GoogleFonts.spectral(
                                                       fontWeight:
                                                           FontWeight.w600,
                                                       fontStyle:
@@ -464,7 +464,7 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                       .headlineSmall
                                                       .override(
                                                         font: GoogleFonts
-                                                            .playfairDisplay(
+                                                            .spectral(
                                                           fontWeight:
                                                               FontWeight.w600,
                                                           fontStyle:
@@ -573,8 +573,7 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                       context)
                                                   .headlineSmall
                                                   .override(
-                                                    font: GoogleFonts
-                                                        .playfairDisplay(
+                                                    font: GoogleFonts.spectral(
                                                       fontWeight:
                                                           FontWeight.w600,
                                                       fontStyle:
@@ -636,7 +635,7 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                             style: FlutterFlowTheme.of(context)
                                                 .titleMedium
                                                 .override(
-                                                  font: GoogleFonts.inter(
+                                                  font: GoogleFonts.ibmPlexSans(
                                                     fontWeight:
                                                         FlutterFlowTheme.of(
                                                                 context)
@@ -711,8 +710,8 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                               FlutterFlowBarChart(
                                                 barData: [
                                                   FFBarChartData(
-                                                    yData:(_model.weeklyProcessedItems ?? [])
-                                                    // _model .weeklyProcessedItems!
+                                                    yData: _model
+                                                        .weeklyProcessedItems!
                                                         .map((d) => d.kind)
                                                         .toList(),
                                                     color: FlutterFlowTheme.of(
@@ -722,9 +721,8 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                         Color(0x2CE2E0DB),
                                                   )
                                                 ],
-                                                xLabels:  (_model.weeklyProcessedItems ?? [])
-                                              //  _model
-                                                   // .weeklyProcessedItems!
+                                                xLabels: _model
+                                                    .weeklyProcessedItems!
                                                     .map((d) => d.matterName)
                                                     .toList(),
                                                 barWidth: 60.0,
@@ -761,7 +759,7 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                           .bodySmall
                                                           .override(
                                                             font: GoogleFonts
-                                                                .inter(
+                                                                .ibmPlexSans(
                                                               fontWeight:
                                                                   FlutterFlowTheme.of(
                                                                           context)
@@ -831,7 +829,7 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                   style: FlutterFlowTheme.of(context)
                                       .titleMedium
                                       .override(
-                                        font: GoogleFonts.inter(
+                                        font: GoogleFonts.ibmPlexSans(
                                           fontWeight: FontWeight.w600,
                                           fontStyle:
                                               FlutterFlowTheme.of(context)
@@ -861,78 +859,26 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                       itemCount: items.length,
                                       itemBuilder: (context, itemsIndex) {
                                         final itemsItem = items[itemsIndex];
-                                        return InkWell(
-                                          splashColor: Colors.transparent,
-                                          focusColor: Colors.transparent,
-                                          hoverColor: Colors.transparent,
-                                          highlightColor: Colors.transparent,
-                                          onTap: () async {
-                                            if (itemsItem.kind ==
-                                                '\"screenshot_batch\"') {
-                                              context.pushNamed(
-                                                MatterDetailScreenshotThreadingWidget
-                                                    .routeName,
-                                                queryParameters: {
-                                                  'matterDoc': serializeParam(
-                                                    itemsItem.matterID,
-                                                    ParamType.DocumentReference,
-                                                  ),
-                                                }.withoutNulls,
-                                                extra: <String, dynamic>{
-                                                  '__transition_info__':
-                                                      TransitionInfo(
-                                                    hasTransition: true,
-                                                    transitionType:
-                                                        PageTransitionType.fade,
-                                                    duration: Duration(
-                                                        milliseconds: 11),
-                                                  ),
-                                                },
-                                              );
-                                            } else {
-                                              context.pushNamed(
-                                                MatterDetailIntakeChannelsWidget
-                                                    .routeName,
-                                                queryParameters: {
-                                                  'matterDoc': serializeParam(
-                                                    itemsItem.matterID,
-                                                    ParamType.DocumentReference,
-                                                  ),
-                                                }.withoutNulls,
-                                                extra: <String, dynamic>{
-                                                  '__transition_info__':
-                                                      TransitionInfo(
-                                                    hasTransition: true,
-                                                    transitionType:
-                                                        PageTransitionType.fade,
-                                                    duration: Duration(
-                                                        milliseconds: 11),
-                                                  ),
-                                                },
-                                              );
-                                            }
-                                          },
-                                          child: Hero(
-                                            tag: 'PriorityItems',
-                                            transitionOnUserGestures: true,
-                                            child: Material(
-                                              color: Colors.transparent,
-                                              child: ReviewItemWidget(
-                                                key: Key(
-                                                    'Keyawb_${itemsIndex}_of_${items.length}'),
-                                                client: itemsItem.clientName,
-                                                date: valueOrDefault<String>(
-                                                  itemsItem.recievedAt
-                                                      ?.toString(),
-                                                  'a moment ago...',
-                                                ),
-                                                issue: itemsItem
-                                                    .classificationLabel,
-                                                issueBg: Color(0xFFFEE2E2),
-                                                issueText: Color(0xFF991B1B),
-                                                matter: itemsItem.matterName,
-                                                type: itemsItem.kind,
+                                        return Hero(
+                                          tag: 'PriorityItems',
+                                          transitionOnUserGestures: true,
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: ReviewItemWidget(
+                                              key: Key(
+                                                  'Keyawb_${itemsIndex}_of_${items.length}'),
+                                              client: itemsItem.clientName,
+                                              date: valueOrDefault<String>(
+                                                itemsItem.recievedAt
+                                                    ?.toString(),
+                                                'a moment ago...',
                                               ),
+                                              issue:
+                                                  itemsItem.classificationLabel,
+                                              issueBg: Color(0xFFFEE2E2),
+                                              issueText: Color(0xFF991B1B),
+                                              matter: itemsItem.matterName,
+                                              type: itemsItem.kind,
                                             ),
                                           ),
                                         );

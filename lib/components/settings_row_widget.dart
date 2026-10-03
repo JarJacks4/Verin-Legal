@@ -75,7 +75,7 @@ class _SettingsRowWidgetState extends State<SettingsRowWidget> {
             'Eleanor Vance',
           ),
           style: FlutterFlowTheme.of(context).bodyMedium.override(
-                font: GoogleFonts.inter(
+                font: GoogleFonts.ibmPlexSans(
                   fontWeight: FontWeight.w500,
                   fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                 ),

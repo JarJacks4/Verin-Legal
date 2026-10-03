@@ -67,7 +67,7 @@ class _StatusBadge2WidgetState extends State<StatusBadge2Widget> {
               'SlotValue(\$issue)',
             ),
             style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.inter(
+                  font: GoogleFonts.ibmPlexSans(
                     fontWeight: FontWeight.w600,
                     fontStyle:
                         FlutterFlowTheme.of(context).bodyMedium.fontStyle,

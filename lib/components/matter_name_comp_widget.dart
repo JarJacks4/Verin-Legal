@@ -51,7 +51,7 @@ class _MatterNameCompWidgetState extends State<MatterNameCompWidget> {
             Text(
               'Whitmore v. Whitmore',
               style: FlutterFlowTheme.of(context).headlineMedium.override(
-                    font: GoogleFonts.playfairDisplay(
+                    font: GoogleFonts.spectral(
                       fontWeight: FontWeight.bold,
                       fontStyle:
                           FlutterFlowTheme.of(context).headlineMedium.fontStyle,
@@ -98,7 +98,7 @@ class _MatterNameCompWidgetState extends State<MatterNameCompWidget> {
         Text(
           'Client: Sarah Whitmore · Case #2024-FM-882 · Opened Jan 12, 2024',
           style: FlutterFlowTheme.of(context).bodySmall.override(
-                font: GoogleFonts.inter(
+                font: GoogleFonts.ibmPlexSans(
                   fontWeight: FlutterFlowTheme.of(context).bodySmall.fontWeight,
                   fontStyle: FlutterFlowTheme.of(context).bodySmall.fontStyle,
                 ),

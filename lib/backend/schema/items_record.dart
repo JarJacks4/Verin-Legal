@@ -14,7 +14,6 @@ class ItemsRecord extends FirestoreRecord {
   ) : super(reference, data) {
     _initializeFields();
   }
-  
 
   // "matterID" field.
   DocumentReference? _matterID;

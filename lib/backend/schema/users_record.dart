@@ -45,6 +45,16 @@ class UsersRecord extends FirestoreRecord {
   String get phoneNumber => _phoneNumber ?? '';
   bool hasPhoneNumber() => _phoneNumber != null;
 
+  // "role" field.
+  String? _role;
+  String get role => _role ?? '';
+  bool hasRole() => _role != null;
+
+  // "lawFirm" field.
+  String? _lawFirm;
+  String get lawFirm => _lawFirm ?? '';
+  bool hasLawFirm() => _lawFirm != null;
+
   void _initializeFields() {
     _email = snapshotData['email'] as String?;
     _displayName = snapshotData['display_name'] as String?;
@@ -52,6 +62,8 @@ class UsersRecord extends FirestoreRecord {
     _uid = snapshotData['uid'] as String?;
     _createdTime = snapshotData['created_time'] as DateTime?;
     _phoneNumber = snapshotData['phone_number'] as String?;
+    _role = snapshotData['role'] as String?;
+    _lawFirm = snapshotData['lawFirm'] as String?;
   }
 
   static CollectionReference get collection =>
@@ -94,6 +106,8 @@ Map<String, dynamic> createUsersRecordData({
   String? uid,
   DateTime? createdTime,
   String? phoneNumber,
+  String? role,
+  String? lawFirm,
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -103,6 +117,8 @@ Map<String, dynamic> createUsersRecordData({
       'uid': uid,
       'created_time': createdTime,
       'phone_number': phoneNumber,
+      'role': role,
+      'lawFirm': lawFirm,
     }.withoutNulls,
   );
 
@@ -119,7 +135,9 @@ class UsersRecordDocumentEquality implements Equality<UsersRecord> {
         e1?.photoUrl == e2?.photoUrl &&
         e1?.uid == e2?.uid &&
         e1?.createdTime == e2?.createdTime &&
-        e1?.phoneNumber == e2?.phoneNumber;
+        e1?.phoneNumber == e2?.phoneNumber &&
+        e1?.role == e2?.role &&
+        e1?.lawFirm == e2?.lawFirm;
   }
 
   @override
@@ -129,7 +147,9 @@ class UsersRecordDocumentEquality implements Equality<UsersRecord> {
         e?.photoUrl,
         e?.uid,
         e?.createdTime,
-        e?.phoneNumber
+        e?.phoneNumber,
+        e?.role,
+        e?.lawFirm
       ]);
 
   @override

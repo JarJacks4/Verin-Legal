@@ -337,7 +337,7 @@ class _SwitchComponent3WidgetState extends State<SwitchComponent3Widget> {
                 child: Text(
                   widget.label,
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.inter(
+                        font: GoogleFonts.ibmPlexSans(
                           fontWeight: FlutterFlowTheme.of(context)
                               .bodyMedium
                               .fontWeight,

@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 class CreateAccount1Model extends FlutterFlowModel<CreateAccount1Widget> {
   ///  State fields for stateful widgets in this page.
 
+  // State field(s) for scrollingContainer widget.
+  ScrollController? scrollingContainerScrollController;
   // State field(s) for emailAddress widget.
   FocusNode? emailAddressFocusNode;
   TextEditingController? emailAddressTextController;
@@ -24,12 +26,14 @@ class CreateAccount1Model extends FlutterFlowModel<CreateAccount1Widget> {
 
   @override
   void initState(BuildContext context) {
+    scrollingContainerScrollController = ScrollController();
     passwordVisibility = false;
     passwordConfirmVisibility = false;
   }
 
   @override
   void dispose() {
+    scrollingContainerScrollController?.dispose();
     emailAddressFocusNode?.dispose();
     emailAddressTextController?.dispose();
 

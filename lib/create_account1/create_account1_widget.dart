@@ -2,6 +2,7 @@ import '/auth/firebase_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'create_account1_model.dart';
@@ -71,6 +72,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                   ),
                   alignment: AlignmentDirectional(0.0, -1.0),
                   child: SingleChildScrollView(
+                    controller: _model.scrollingContainerScrollController,
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -104,8 +106,8 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                             ),
                           ),
                         ),
-                        Container(
-                        //  flex: 1,
+                        Flexible(
+                          flex: 1,
                           child: Align(
                             alignment: AlignmentDirectional(0.0, 0.0),
                             child: Padding(
@@ -122,7 +124,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                       style: FlutterFlowTheme.of(context)
                                           .displaySmall
                                           .override(
-                                            font: GoogleFonts.playfairDisplay(
+                                            font: GoogleFonts.spectral(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .displaySmall
@@ -152,7 +154,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                       style: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .override(
-                                            font: GoogleFonts.inter(
+                                            font: GoogleFonts.ibmPlexSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .labelMedium
@@ -192,7 +194,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                                   context)
                                               .labelMedium
                                               .override(
-                                                font: GoogleFonts.inter(
+                                                font: GoogleFonts.ibmPlexSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -263,7 +265,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
-                                              font: GoogleFonts.inter(
+                                              font: GoogleFonts.ibmPlexSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .bodyMedium
@@ -309,7 +311,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                                   context)
                                               .labelMedium
                                               .override(
-                                                font: GoogleFonts.inter(
+                                                font: GoogleFonts.ibmPlexSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -399,7 +401,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
-                                              font: GoogleFonts.inter(
+                                              font: GoogleFonts.ibmPlexSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .bodyMedium
@@ -445,7 +447,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                                   context)
                                               .labelMedium
                                               .override(
-                                                font: GoogleFonts.inter(
+                                                font: GoogleFonts.ibmPlexSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -536,7 +538,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
-                                              font: GoogleFonts.inter(
+                                              font: GoogleFonts.ibmPlexSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .bodyMedium
@@ -596,7 +598,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                         }
 
                                         context.goNamedAuth(
-                                            CreateAccount1Widget.routeName,
+                                            MattersListWidget.routeName,
                                             context.mounted);
                                       },
                                       text: 'Create Account',
@@ -613,7 +615,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                         textStyle: FlutterFlowTheme.of(context)
                                             .titleSmall
                                             .override(
-                                              font: GoogleFonts.inter(
+                                              font: GoogleFonts.ibmPlexSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .titleSmall
@@ -663,7 +665,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                             style: FlutterFlowTheme.of(context)
                                                 .bodyMedium
                                                 .override(
-                                                  font: GoogleFonts.inter(
+                                                  font: GoogleFonts.ibmPlexSans(
                                                     fontWeight: FontWeight.w600,
                                                     fontStyle:
                                                         FlutterFlowTheme.of(
@@ -688,7 +690,7 @@ class _CreateAccount1WidgetState extends State<CreateAccount1Widget> {
                                         style: FlutterFlowTheme.of(context)
                                             .labelLarge
                                             .override(
-                                              font: GoogleFonts.inter(
+                                              font: GoogleFonts.ibmPlexSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .labelLarge

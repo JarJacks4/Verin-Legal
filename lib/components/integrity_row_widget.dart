@@ -118,7 +118,7 @@ class _IntegrityRowWidgetState extends State<IntegrityRowWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FontWeight.w500,
                                     fontStyle: FlutterFlowTheme.of(context)
                                         .bodyMedium

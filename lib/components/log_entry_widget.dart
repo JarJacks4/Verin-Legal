@@ -106,7 +106,7 @@ class _LogEntryWidgetState extends State<LogEntryWidget> {
                       ),
                       maxLines: 1,
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .fontWeight,

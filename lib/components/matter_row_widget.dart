@@ -151,7 +151,7 @@ class _MatterRowWidgetState extends State<MatterRowWidget> {
                         'Sarah Whitmore',
                       ),
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .fontWeight,
@@ -219,7 +219,7 @@ class _MatterRowWidgetState extends State<MatterRowWidget> {
                           style: FlutterFlowTheme.of(context)
                               .bodyMedium
                               .override(
-                                font: GoogleFonts.inter(
+                                font: GoogleFonts.ibmPlexSans(
                                   fontWeight: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .fontWeight,

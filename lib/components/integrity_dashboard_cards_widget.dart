@@ -140,7 +140,7 @@ class _IntegrityDashboardCardsWidgetState
                       ' items anchored to Merkle Root',
                     ),
                     style: FlutterFlowTheme.of(context).bodyLarge.override(
-                          font: GoogleFonts.inter(
+                          font: GoogleFonts.ibmPlexSans(
                             fontWeight: FontWeight.bold,
                             fontStyle: FlutterFlowTheme.of(context)
                                 .bodyLarge
@@ -172,7 +172,7 @@ class _IntegrityDashboardCardsWidgetState
                         'Active monitoring enabled',
                         style:
                             FlutterFlowTheme.of(context).labelMedium.override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .fontWeight,
@@ -253,7 +253,7 @@ class _IntegrityDashboardCardsWidgetState
                             style: FlutterFlowTheme.of(context)
                                 .labelMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .fontWeight,
@@ -315,7 +315,7 @@ class _IntegrityDashboardCardsWidgetState
                             style: FlutterFlowTheme.of(context)
                                 .labelMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .fontWeight,
@@ -339,7 +339,7 @@ class _IntegrityDashboardCardsWidgetState
                             widget.timestamp,
                             style:
                                 FlutterFlowTheme.of(context).bodySmall.override(
-                                      font: GoogleFonts.inter(
+                                      font: GoogleFonts.ibmPlexSans(
                                         fontWeight: FlutterFlowTheme.of(context)
                                             .bodySmall
                                             .fontWeight,
@@ -380,7 +380,7 @@ class _IntegrityDashboardCardsWidgetState
                               style: FlutterFlowTheme.of(context)
                                   .labelMedium
                                   .override(
-                                    font: GoogleFonts.inter(
+                                    font: GoogleFonts.ibmPlexSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .labelMedium
                                           .fontWeight,
@@ -431,7 +431,7 @@ class _IntegrityDashboardCardsWidgetState
                                     style: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.inter(
+                                          font: GoogleFonts.ibmPlexSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -478,7 +478,7 @@ class _IntegrityDashboardCardsWidgetState
                             style: FlutterFlowTheme.of(context)
                                 .labelMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .fontWeight,

@@ -10,9 +10,12 @@ import 'schema/matters_record.dart';
 import 'schema/items_record.dart';
 import 'schema/chain_entries_record.dart';
 import 'schema/clio_sync_log_record.dart';
-import 'schema/statements_record.dart';
+import 'schema/verified_statements_record.dart';
 import 'schema/sync_status_record.dart';
 import 'schema/follow_up_requests_record.dart';
+import 'schema/receipts_record.dart';
+import 'schema/firm_account_record.dart';
+import 'schema/team_members_record.dart';
 
 export 'dart:async' show StreamSubscription;
 export 'package:cloud_firestore/cloud_firestore.dart' hide Order;
@@ -26,9 +29,12 @@ export 'schema/matters_record.dart';
 export 'schema/items_record.dart';
 export 'schema/chain_entries_record.dart';
 export 'schema/clio_sync_log_record.dart';
-export 'schema/statements_record.dart';
+export 'schema/verified_statements_record.dart';
 export 'schema/sync_status_record.dart';
 export 'schema/follow_up_requests_record.dart';
+export 'schema/receipts_record.dart';
+export 'schema/firm_account_record.dart';
+export 'schema/team_members_record.dart';
 
 /// Functions to query UsersRecords (as a Stream and as a Future).
 Future<int> queryUsersRecordCount({
@@ -215,38 +221,38 @@ Future<List<ClioSyncLogRecord>> queryClioSyncLogRecordOnce({
       singleRecord: singleRecord,
     );
 
-/// Functions to query StatementsRecords (as a Stream and as a Future).
-Future<int> queryStatementsRecordCount({
+/// Functions to query VerifiedStatementsRecords (as a Stream and as a Future).
+Future<int> queryVerifiedStatementsRecordCount({
   Query Function(Query)? queryBuilder,
   int limit = -1,
 }) =>
     queryCollectionCount(
-      StatementsRecord.collection,
+      VerifiedStatementsRecord.collection,
       queryBuilder: queryBuilder,
       limit: limit,
     );
 
-Stream<List<StatementsRecord>> queryStatementsRecord({
+Stream<List<VerifiedStatementsRecord>> queryVerifiedStatementsRecord({
   Query Function(Query)? queryBuilder,
   int limit = -1,
   bool singleRecord = false,
 }) =>
     queryCollection(
-      StatementsRecord.collection,
-      StatementsRecord.fromSnapshot,
+      VerifiedStatementsRecord.collection,
+      VerifiedStatementsRecord.fromSnapshot,
       queryBuilder: queryBuilder,
       limit: limit,
       singleRecord: singleRecord,
     );
 
-Future<List<StatementsRecord>> queryStatementsRecordOnce({
+Future<List<VerifiedStatementsRecord>> queryVerifiedStatementsRecordOnce({
   Query Function(Query)? queryBuilder,
   int limit = -1,
   bool singleRecord = false,
 }) =>
     queryCollectionOnce(
-      StatementsRecord.collection,
-      StatementsRecord.fromSnapshot,
+      VerifiedStatementsRecord.collection,
+      VerifiedStatementsRecord.fromSnapshot,
       queryBuilder: queryBuilder,
       limit: limit,
       singleRecord: singleRecord,
@@ -321,6 +327,117 @@ Future<List<FollowUpRequestsRecord>> queryFollowUpRequestsRecordOnce({
     queryCollectionOnce(
       FollowUpRequestsRecord.collection,
       FollowUpRequestsRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+/// Functions to query ReceiptsRecords (as a Stream and as a Future).
+Future<int> queryReceiptsRecordCount({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+}) =>
+    queryCollectionCount(
+      ReceiptsRecord.collection,
+      queryBuilder: queryBuilder,
+      limit: limit,
+    );
+
+Stream<List<ReceiptsRecord>> queryReceiptsRecord({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollection(
+      ReceiptsRecord.collection,
+      ReceiptsRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+Future<List<ReceiptsRecord>> queryReceiptsRecordOnce({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollectionOnce(
+      ReceiptsRecord.collection,
+      ReceiptsRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+/// Functions to query FirmAccountRecords (as a Stream and as a Future).
+Future<int> queryFirmAccountRecordCount({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+}) =>
+    queryCollectionCount(
+      FirmAccountRecord.collection,
+      queryBuilder: queryBuilder,
+      limit: limit,
+    );
+
+Stream<List<FirmAccountRecord>> queryFirmAccountRecord({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollection(
+      FirmAccountRecord.collection,
+      FirmAccountRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+Future<List<FirmAccountRecord>> queryFirmAccountRecordOnce({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollectionOnce(
+      FirmAccountRecord.collection,
+      FirmAccountRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+/// Functions to query TeamMembersRecords (as a Stream and as a Future).
+Future<int> queryTeamMembersRecordCount({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+}) =>
+    queryCollectionCount(
+      TeamMembersRecord.collection,
+      queryBuilder: queryBuilder,
+      limit: limit,
+    );
+
+Stream<List<TeamMembersRecord>> queryTeamMembersRecord({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollection(
+      TeamMembersRecord.collection,
+      TeamMembersRecord.fromSnapshot,
+      queryBuilder: queryBuilder,
+      limit: limit,
+      singleRecord: singleRecord,
+    );
+
+Future<List<TeamMembersRecord>> queryTeamMembersRecordOnce({
+  Query Function(Query)? queryBuilder,
+  int limit = -1,
+  bool singleRecord = false,
+}) =>
+    queryCollectionOnce(
+      TeamMembersRecord.collection,
+      TeamMembersRecord.fromSnapshot,
       queryBuilder: queryBuilder,
       limit: limit,
       singleRecord: singleRecord,

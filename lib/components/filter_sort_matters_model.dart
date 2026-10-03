@@ -11,6 +11,8 @@ class FilterSortMattersModel extends FlutterFlowModel<FilterSortMattersWidget> {
 
   // Stores action output result for [Custom Action - sortAndFilterMatters] action in Text widget.
   List<MattersRecord>? filterReset;
+  // State field(s) for Column widget.
+  ScrollController? columnScrollController;
   // State field(s) for Dropdown widget.
   String? dropdownValue;
   FormFieldController<String>? dropdownValueController;
@@ -27,6 +29,7 @@ class FilterSortMattersModel extends FlutterFlowModel<FilterSortMattersWidget> {
 
   @override
   void initState(BuildContext context) {
+    columnScrollController = ScrollController();
     radioModel1 = createModel(context, () => RadioModel());
     radioModel2 = createModel(context, () => RadioModel());
     radioModel3 = createModel(context, () => RadioModel());
@@ -35,6 +38,7 @@ class FilterSortMattersModel extends FlutterFlowModel<FilterSortMattersWidget> {
 
   @override
   void dispose() {
+    columnScrollController?.dispose();
     radioModel1.dispose();
     radioModel2.dispose();
     radioModel3.dispose();

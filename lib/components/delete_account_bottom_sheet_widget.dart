@@ -168,8 +168,8 @@ class _DeleteAccountBottomSheetWidgetState
                           onTap: () async {
                             await authManager.deleteUser(context);
 
-                            context.goNamedAuth(CreateAccount1Widget.routeName,
-                                context.mounted);
+                            context.goNamedAuth(
+                                MattersListWidget.routeName, context.mounted);
                           },
                           child: wrapWithModel(
                             model: _model.buttonModel2,

@@ -10,11 +10,13 @@ class EvidenceThumbWidget extends StatefulWidget {
     super.key,
     String? idLabel,
     bool? selected,
+    this.selectedSourceIndex,
   })  : this.idLabel = idLabel ?? 'IMG_8821.png',
         this.selected = selected ?? true;
 
   final String idLabel;
   final bool selected;
+  final int? selectedSourceIndex;
 
   @override
   State<EvidenceThumbWidget> createState() => _EvidenceThumbWidgetState();

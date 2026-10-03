@@ -61,6 +61,9 @@ class _NavItem4WidgetState extends State<NavItem4Widget> {
         ),
         borderRadius: BorderRadius.circular(6.0),
         shape: BoxShape.rectangle,
+        border: Border.all(
+          color: Color(0x3B2D5A5E),
+        ),
       ),
       child: Padding(
         padding: EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 8.0),
@@ -77,12 +80,12 @@ class _NavItem4WidgetState extends State<NavItem4Widget> {
                   'Matters',
                 ),
                 style: FlutterFlowTheme.of(context).labelLarge.override(
-                      font: GoogleFonts.inter(
+                      font: GoogleFonts.ibmPlexSans(
                         fontWeight: FontWeight.w300,
                         fontStyle:
                             FlutterFlowTheme.of(context).labelLarge.fontStyle,
                       ),
-                      color: FlutterFlowTheme.of(context).primaryBackground,
+                      color: FlutterFlowTheme.of(context).secondary,
                       letterSpacing: 0.0,
                       fontWeight: FontWeight.w300,
                       fontStyle:

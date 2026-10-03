@@ -96,7 +96,7 @@ class _IntakeCardWidgetState extends State<IntakeCardWidget> {
                       'Email Forwarding',
                     ),
                     style: FlutterFlowTheme.of(context).titleMedium.override(
-                          font: GoogleFonts.inter(
+                          font: GoogleFonts.ibmPlexSans(
                             fontWeight: FontWeight.bold,
                             fontStyle: FlutterFlowTheme.of(context)
                                 .titleMedium
@@ -119,7 +119,7 @@ class _IntakeCardWidgetState extends State<IntakeCardWidget> {
                   'Best for bulk exports, PDF attachments, and email threads.',
                 ),
                 style: FlutterFlowTheme.of(context).bodySmall.override(
-                      font: GoogleFonts.inter(
+                      font: GoogleFonts.ibmPlexSans(
                         fontWeight:
                             FlutterFlowTheme.of(context).bodySmall.fontWeight,
                         fontStyle:
@@ -163,7 +163,7 @@ class _IntakeCardWidgetState extends State<IntakeCardWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FontWeight.w600,
                                     fontStyle: FlutterFlowTheme.of(context)
                                         .bodyMedium

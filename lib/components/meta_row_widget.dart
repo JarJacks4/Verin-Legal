@@ -64,7 +64,7 @@ class _MetaRowWidgetState extends State<MetaRowWidget> {
                 'Matter Name',
               ),
               style: FlutterFlowTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.inter(
+                    font: GoogleFonts.ibmPlexSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).labelMedium.fontWeight,
                       fontStyle:
@@ -88,7 +88,7 @@ class _MetaRowWidgetState extends State<MetaRowWidget> {
                 'Whitmore v. Whitmore',
               ),
               style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    font: GoogleFonts.inter(
+                    font: GoogleFonts.ibmPlexSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).bodyMedium.fontWeight,
                       fontStyle:

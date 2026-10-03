@@ -5,9 +5,18 @@ import 'package:flutter/material.dart';
 
 class ScrollableMessageThreadModel
     extends FlutterFlowModel<ScrollableMessageThreadWidget> {
-  @override
-  void initState(BuildContext context) {}
+  ///  State fields for stateful widgets in this component.
+
+  // State field(s) for Column widget.
+  ScrollController? columnScrollController;
 
   @override
-  void dispose() {}
+  void initState(BuildContext context) {
+    columnScrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    columnScrollController?.dispose();
+  }
 }

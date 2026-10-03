@@ -143,7 +143,7 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                         'Whitmore v. Whitmore',
                       ),
                       style: FlutterFlowTheme.of(context).titleSmall.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FontWeight.w600,
                               fontStyle: FlutterFlowTheme.of(context)
                                   .titleSmall
@@ -164,7 +164,7 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                         'Sarah Whitmore',
                       ),
                       style: FlutterFlowTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .bodySmall
                                   .fontWeight,
@@ -199,7 +199,7 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                         'Oct 24, 2023 · 09:12 AM',
                       ),
                       style: FlutterFlowTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .bodySmall
                                   .fontWeight,

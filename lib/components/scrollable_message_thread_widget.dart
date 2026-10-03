@@ -132,6 +132,7 @@ class _ScrollableMessageThreadWidgetState
             flex: 1,
             child: SingleChildScrollView(
               primary: false,
+              controller: _model.columnScrollController,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -248,7 +249,7 @@ class _ScrollableMessageThreadWidgetState
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
-                                            font: GoogleFonts.inter(
+                                            font: GoogleFonts.ibmPlexSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .bodyMedium
@@ -328,7 +329,7 @@ class _ScrollableMessageThreadWidgetState
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
-                                            font: GoogleFonts.inter(
+                                            font: GoogleFonts.ibmPlexSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .bodyMedium
@@ -463,7 +464,7 @@ class _ScrollableMessageThreadWidgetState
                                           style: FlutterFlowTheme.of(context)
                                               .bodyMedium
                                               .override(
-                                                font: GoogleFonts.inter(
+                                                font: GoogleFonts.ibmPlexSans(
                                                   fontWeight:
                                                       FlutterFlowTheme.of(
                                                               context)
@@ -573,7 +574,7 @@ class _ScrollableMessageThreadWidgetState
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
-                                            font: GoogleFonts.inter(
+                                            font: GoogleFonts.ibmPlexSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .bodyMedium
@@ -705,7 +706,7 @@ class _ScrollableMessageThreadWidgetState
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
-                                            font: GoogleFonts.inter(
+                                            font: GoogleFonts.ibmPlexSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .bodyMedium

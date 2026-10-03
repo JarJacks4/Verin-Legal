@@ -340,7 +340,7 @@ class _SwitchComponent2WidgetState extends State<SwitchComponent2Widget> {
                     'Active Monitoring',
                   ),
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.inter(
+                        font: GoogleFonts.ibmPlexSans(
                           fontWeight: FlutterFlowTheme.of(context)
                               .bodyMedium
                               .fontWeight,

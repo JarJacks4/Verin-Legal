@@ -214,7 +214,7 @@ class _SourceVerificationItemWidgetState
                           style: FlutterFlowTheme.of(context)
                               .bodyMedium
                               .override(
-                                font: GoogleFonts.inter(
+                                font: GoogleFonts.ibmPlexSans(
                                   fontWeight: FlutterFlowTheme.of(context)
                                       .bodyMedium
                                       .fontWeight,
@@ -312,7 +312,7 @@ class _SourceVerificationItemWidgetState
                                       style: FlutterFlowTheme.of(context)
                                           .bodySmall
                                           .override(
-                                            font: GoogleFonts.inter(
+                                            font: GoogleFonts.ibmPlexSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .bodySmall

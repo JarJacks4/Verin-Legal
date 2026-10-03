@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '/backend/backend.dart';
-import '/backend/schema/structs/index.dart';
 
 import '/auth/base_auth_user_provider.dart';
 
@@ -77,29 +76,16 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
       debugLogDiagnostics: true,
       refreshListenable: appStateNotifier,
       navigatorKey: appNavigatorKey,
-      errorBuilder: (context, state) =>appStateNotifier.loggedIn
-         ? MattersListWidget()
-         : FirmWorkspaceSignInWidget(),
-
-         // appStateNotifier.loggedIn ? CreateAccount1Widget() : Auth2Widget(),
+      errorBuilder: (context, state) => appStateNotifier.loggedIn
+          ? MattersListWidget()
+          : FirmWorkspaceSignInWidget(),
       routes: [
         FFRoute(
           name: '_initialize',
           path: '/',
           builder: (context, _) => appStateNotifier.loggedIn
-                    ? MattersListWidget()
-                    : FirmWorkspaceSignInWidget(), 
-          
-          
-          //appStateNotifier.loggedIn
-            //  ? CreateAccount1Widget()
-            //  : Auth2Widget(),
-
-        ),
-        FFRoute(
-          name: Auth2Widget.routeName,
-          path: Auth2Widget.routePath,
-          builder: (context, params) => Auth2Widget(),
+              ? MattersListWidget()
+              : FirmWorkspaceSignInWidget(),
         ),
         FFRoute(
           name: CreateAccount1Widget.routeName,
@@ -117,85 +103,114 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => MattersListWidget(),
         ),
         FFRoute(
-          name: MatterDetailIntakeChannelsWidget.routeName,
-          path: MatterDetailIntakeChannelsWidget.routePath,
-          builder: (context, params) => MatterDetailIntakeChannelsWidget(
-            matterDoc: params.getParam(
-              'matterDoc',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['Matters'],
-            ),
-          ),
-        ),
-        FFRoute(
-          name: MatterDetailScreenshotThreadingWidget.routeName,
-          path: MatterDetailScreenshotThreadingWidget.routePath,
-          builder: (context, params) => MatterDetailScreenshotThreadingWidget(
-            matterDoc: params.getParam(
-              'matterDoc',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['Matters'],
-            ),
-          ),
-        ),
-        FFRoute(
-          name: MatterDetailIntegrityVerificationWidget.routeName,
-          path: MatterDetailIntegrityVerificationWidget.routePath,
-          builder: (context, params) => MatterDetailIntegrityVerificationWidget(
-            matterDoc: params.getParam(
-              'matterDoc',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['Matters'],
-            ),
-          ),
-        ),
-        FFRoute(
-          name: CertificateOfPreparationWidget.routeName,
-          path: CertificateOfPreparationWidget.routePath,
-          builder: (context, params) => CertificateOfPreparationWidget(
-            matterDoc: params.getParam(
-              'matterDoc',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['Matters'],
-            ),
-          ),
-        ),
-        FFRoute(
-          name: MatterDetailClioWriteBackWidget.routeName,
-          path: MatterDetailClioWriteBackWidget.routePath,
-          builder: (context, params) => MatterDetailClioWriteBackWidget(
-            matterDoc: params.getParam(
-              'matterDoc',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['Matters'],
-            ),
-          ),
-        ),
-        FFRoute(
           name: ReviewQueueWidget.routeName,
           path: ReviewQueueWidget.routePath,
           builder: (context, params) => ReviewQueueWidget(),
         ),
         FFRoute(
-          name: FirmUserProfilePageWidget.routeName,
-          path: FirmUserProfilePageWidget.routePath,
-          builder: (context, params) => FirmUserProfilePageWidget(),
+          name: AdminDashBoardPageWidget.routeName,
+          path: AdminDashBoardPageWidget.routePath,
+          builder: (context, params) => AdminDashBoardPageWidget(),
         ),
         FFRoute(
-          name: MatterDetailScreenshotThreadingCopyWidget.routeName,
-          path: MatterDetailScreenshotThreadingCopyWidget.routePath,
-          builder: (context, params) =>
-              MatterDetailScreenshotThreadingCopyWidget(
+          name: AdminMattersListWidget.routeName,
+          path: AdminMattersListWidget.routePath,
+          asyncParams: {
+            'matterDoc': getDocList(['Matters'], MattersRecord.fromSnapshot),
+          },
+          builder: (context, params) => AdminMattersListWidget(
+            matterDoc: params.getParam<MattersRecord>(
+              'matterDoc',
+              ParamType.Document,
+              isList: true,
+            ),
+          ),
+        ),
+        FFRoute(
+          name: AdminBillingAndPlanWidget.routeName,
+          path: AdminBillingAndPlanWidget.routePath,
+          builder: (context, params) => AdminBillingAndPlanWidget(),
+        ),
+        FFRoute(
+          name: AdminTeamsWidget.routeName,
+          path: AdminTeamsWidget.routePath,
+          builder: (context, params) => AdminTeamsWidget(),
+        ),
+        FFRoute(
+          name: AdminProgramPageWidget.routeName,
+          path: AdminProgramPageWidget.routePath,
+          builder: (context, params) => AdminProgramPageWidget(),
+        ),
+        FFRoute(
+          name: WelcomeScreenWidget.routeName,
+          path: WelcomeScreenWidget.routePath,
+          builder: (context, params) => WelcomeScreenWidget(),
+        ),
+        FFRoute(
+          name: CreatePasswordScreenWidget.routeName,
+          path: CreatePasswordScreenWidget.routePath,
+          builder: (context, params) => CreatePasswordScreenWidget(),
+        ),
+        FFRoute(
+          name: MattersTabGroupHomeWidget.routeName,
+          path: MattersTabGroupHomeWidget.routePath,
+          asyncParams: {
+            'matterDoc': getDoc(['Matters'], MattersRecord.fromSnapshot),
+          },
+          builder: (context, params) => MattersTabGroupHomeWidget(
             matterDoc: params.getParam(
               'matterDoc',
-              ParamType.DocumentReference,
-              isList: false,
-              collectionNamePath: ['Matters'],
+              ParamType.Document,
+            ),
+          ),
+        ),
+        FFRoute(
+          name: SampleWidget.routeName,
+          path: SampleWidget.routePath,
+          builder: (context, params) => SampleWidget(),
+        ),
+        FFRoute(
+          name: CreateAccountStep1Widget.routeName,
+          path: CreateAccountStep1Widget.routePath,
+          builder: (context, params) => CreateAccountStep1Widget(),
+        ),
+        FFRoute(
+          name: CreateAccountStep2Widget.routeName,
+          path: CreateAccountStep2Widget.routePath,
+          builder: (context, params) => CreateAccountStep2Widget(),
+        ),
+        FFRoute(
+          name: FirmSettingsWidget.routeName,
+          path: FirmSettingsWidget.routePath,
+          builder: (context, params) => FirmSettingsWidget(),
+        ),
+        FFRoute(
+          name: ClioCallbackPageWidget.routeName,
+          path: ClioCallbackPageWidget.routePath,
+          builder: (context, params) => ClioCallbackPageWidget(
+            code: params.getParam(
+              'code',
+              ParamType.String,
+            ),
+          ),
+        ),
+        FFRoute(
+          name: SmokeballCallbackPageCopyWidget.routeName,
+          path: SmokeballCallbackPageCopyWidget.routePath,
+          builder: (context, params) => SmokeballCallbackPageCopyWidget(
+            code: params.getParam(
+              'code',
+              ParamType.String,
+            ),
+          ),
+        ),
+        FFRoute(
+          name: MyCaseCallbackPageWidget.routeName,
+          path: MyCaseCallbackPageWidget.routePath,
+          builder: (context, params) => MyCaseCallbackPageWidget(
+            code: params.getParam(
+              'code',
+              ParamType.String,
             ),
           ),
         )
@@ -370,7 +385,7 @@ class FFRoute {
 
           if (requireAuth && !appStateNotifier.loggedIn) {
             appStateNotifier.setRedirectLocationIfUnset(state.uri.toString());
-            return '/auth2';
+            return '/firmWorkspaceSignIn';
           }
           return null;
         },

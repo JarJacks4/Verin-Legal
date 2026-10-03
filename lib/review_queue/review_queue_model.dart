@@ -2,7 +2,6 @@ import '/backend/backend.dart';
 import '/components/side_nav_widget.dart';
 import '/components/text_field_widget.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/index.dart';
 import 'review_queue_widget.dart' show ReviewQueueWidget;
 import 'package:flutter/material.dart';
 
@@ -25,18 +24,22 @@ class ReviewQueueModel extends FlutterFlowModel<ReviewQueueWidget> {
   dynamic weeklyVolume;
   // Model for SideNav component.
   late SideNavModel sideNavModel;
+  // State field(s) for Column widget.
+  ScrollController? columnScrollController;
   // Model for TextField.
   late TextFieldModel textFieldModel;
 
   @override
   void initState(BuildContext context) {
     sideNavModel = createModel(context, () => SideNavModel());
+    columnScrollController = ScrollController();
     textFieldModel = createModel(context, () => TextFieldModel());
   }
 
   @override
   void dispose() {
     sideNavModel.dispose();
+    columnScrollController?.dispose();
     textFieldModel.dispose();
   }
 }

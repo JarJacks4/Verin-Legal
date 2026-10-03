@@ -43,11 +43,14 @@ class MattersListModel extends FlutterFlowModel<MattersListWidget> {
   List<MattersRecord>? filteredMattersList;
   // Model for Button.
   late ButtonModel buttonModel;
+  // State field(s) for Column widget.
+  ScrollController? columnScrollController;
 
   @override
   void initState(BuildContext context) {
     sideNavModel = createModel(context, () => SideNavModel());
     buttonModel = createModel(context, () => ButtonModel());
+    columnScrollController = ScrollController();
   }
 
   @override
@@ -57,5 +60,6 @@ class MattersListModel extends FlutterFlowModel<MattersListWidget> {
     textController?.dispose();
 
     buttonModel.dispose();
+    columnScrollController?.dispose();
   }
 }

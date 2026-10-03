@@ -331,7 +331,7 @@ class _Button3WidgetState extends State<Button3Widget> {
                       ),
                       maxLines: 1,
                       style: FlutterFlowTheme.of(context).labelMedium.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .labelMedium
                                   .fontWeight,

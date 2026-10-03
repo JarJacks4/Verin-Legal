@@ -74,7 +74,7 @@ class _VerticalListSectionWidgetState extends State<VerticalListSectionWidget> {
                 Text(
                   widget.title,
                   style: FlutterFlowTheme.of(context).titleLarge.override(
-                        font: GoogleFonts.inter(
+                        font: GoogleFonts.ibmPlexSans(
                           fontWeight: FontWeight.bold,
                           fontStyle:
                               FlutterFlowTheme.of(context).titleLarge.fontStyle,
@@ -229,7 +229,7 @@ class _VerticalListSectionWidgetState extends State<VerticalListSectionWidget> {
                                         style: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .override(
-                                              font: GoogleFonts.inter(
+                                              font: GoogleFonts.ibmPlexSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .labelMedium
@@ -410,7 +410,7 @@ class _VerticalListSectionWidgetState extends State<VerticalListSectionWidget> {
                                         style: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .override(
-                                              font: GoogleFonts.inter(
+                                              font: GoogleFonts.ibmPlexSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .labelMedium
@@ -591,7 +591,7 @@ class _VerticalListSectionWidgetState extends State<VerticalListSectionWidget> {
                                         style: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .override(
-                                              font: GoogleFonts.inter(
+                                              font: GoogleFonts.ibmPlexSans(
                                                 fontWeight:
                                                     FlutterFlowTheme.of(context)
                                                         .labelMedium

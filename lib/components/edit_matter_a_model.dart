@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 class EditMatterAModel extends FlutterFlowModel<EditMatterAWidget> {
   ///  State fields for stateful widgets in this component.
 
+  // State field(s) for Column widget.
+  ScrollController? columnScrollController;
   // Model for TextField.
   late TextField3Model textFieldModel1;
   // Model for TextField.
@@ -31,6 +33,7 @@ class EditMatterAModel extends FlutterFlowModel<EditMatterAWidget> {
 
   @override
   void initState(BuildContext context) {
+    columnScrollController = ScrollController();
     textFieldModel1 = createModel(context, () => TextField3Model());
     textFieldModel2 = createModel(context, () => TextField3Model());
     textFieldModel3 = createModel(context, () => TextField3Model());
@@ -43,6 +46,7 @@ class EditMatterAModel extends FlutterFlowModel<EditMatterAWidget> {
 
   @override
   void dispose() {
+    columnScrollController?.dispose();
     textFieldModel1.dispose();
     textFieldModel2.dispose();
     textFieldModel3.dispose();

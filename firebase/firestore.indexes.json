@@ -1,6 +1,20 @@
 {
   "indexes": [
     {
+      "collectionGroup": "Receipts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "receivedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "Matters",
       "queryScope": "COLLECTION",
       "fields": [
@@ -10,62 +24,6 @@
         },
         {
           "fieldPath": "openedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "chainEntries",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "matterID",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "seq",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "Statements",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "matterId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "Items",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "matterID",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "batesId",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "clioSyncLog",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "matterID",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "pushedAt",
           "order": "DESCENDING"
         }
       ]

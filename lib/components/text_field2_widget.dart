@@ -99,7 +99,7 @@ class _TextField2WidgetState extends State<TextField2Widget> {
                 'Client Name',
               ),
               style: FlutterFlowTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.inter(
+                    font: GoogleFonts.ibmPlexSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).labelMedium.fontWeight,
                       fontStyle:
@@ -388,7 +388,7 @@ class _TextField2WidgetState extends State<TextField2Widget> {
                         hintStyle: FlutterFlowTheme.of(context)
                             .bodyMedium
                             .override(
-                              font: GoogleFonts.inter(
+                              font: GoogleFonts.ibmPlexSans(
                                 fontWeight: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,
@@ -431,7 +431,7 @@ class _TextField2WidgetState extends State<TextField2Widget> {
                         focusedErrorBorder: InputBorder.none,
                       ),
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .fontWeight,
@@ -491,7 +491,7 @@ class _TextField2WidgetState extends State<TextField2Widget> {
             Text(
               widget.helper,
               style: FlutterFlowTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.inter(
+                    font: GoogleFonts.ibmPlexSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).bodySmall.fontWeight,
                       fontStyle:

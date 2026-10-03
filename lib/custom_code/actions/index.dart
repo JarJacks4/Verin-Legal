@@ -17,3 +17,14 @@ export '/custom_code/actions/compute_gaps_and_accuracy.dart'
 export '/custom_code/actions/mock_export_thread.dart' show mockExportThread;
 export '/custom_code/actions/sort_and_filter_matters.dart'
     show sortAndFilterMatters;
+export '/custom_code/actions/origin_fidelity_label.dart'
+    show originFidelityLabel;
+export '/custom_code/actions/summarize_video_receipts.dart'
+    show summarizeVideoReceipts;
+export '/custom_code/actions/count_screen_recording_receipts.dart'
+    show countScreenRecordingReceipts;
+export '/custom_code/actions/bucket_evidence_volume_by_month.dart'
+    show bucketEvidenceVolumeByMonth;
+export '/custom_code/actions/bucket_record_lag_trend_by_month.dart'
+    show bucketRecordLagTrendByMonth;
+export '/custom_code/actions/compute_file_sha256.dart' show computeFileSha256;

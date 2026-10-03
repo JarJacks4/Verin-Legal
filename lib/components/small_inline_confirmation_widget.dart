@@ -95,7 +95,7 @@ class _SmallInlineConfirmationWidgetState
                             style: FlutterFlowTheme.of(context)
                                 .labelMedium
                                 .override(
-                                  font: GoogleFonts.inter(
+                                  font: GoogleFonts.ibmPlexSans(
                                     fontWeight: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .fontWeight,
@@ -162,7 +162,7 @@ class _SmallInlineConfirmationWidgetState
                                     style: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.inter(
+                                          font: GoogleFonts.ibmPlexSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium
@@ -219,7 +219,7 @@ class _SmallInlineConfirmationWidgetState
                                     style: FlutterFlowTheme.of(context)
                                         .labelMedium
                                         .override(
-                                          font: GoogleFonts.inter(
+                                          font: GoogleFonts.ibmPlexSans(
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
                                                     .labelMedium

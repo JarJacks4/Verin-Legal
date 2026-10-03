@@ -111,7 +111,7 @@ class _EvidenceItemWidgetState extends State<EvidenceItemWidget> {
                         'Oct 22 09:15',
                       ),
                       style: FlutterFlowTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .bodySmall
                                   .fontWeight,
@@ -139,7 +139,7 @@ class _EvidenceItemWidgetState extends State<EvidenceItemWidget> {
                         'Screenshot (Thread Reconstructed)',
                       ),
                       style: FlutterFlowTheme.of(context).bodySmall.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .bodySmall
                                   .fontWeight,
@@ -173,7 +173,7 @@ class _EvidenceItemWidgetState extends State<EvidenceItemWidget> {
                           ),
                           style:
                               FlutterFlowTheme.of(context).bodySmall.override(
-                                    font: GoogleFonts.inter(
+                                    font: GoogleFonts.ibmPlexSans(
                                       fontWeight: FlutterFlowTheme.of(context)
                                           .bodySmall
                                           .fontWeight,

@@ -113,7 +113,7 @@ class _TabItem2WidgetState extends State<TabItem2Widget> {
               ),
               textAlign: TextAlign.center,
               style: FlutterFlowTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.inter(
+                    font: GoogleFonts.ibmPlexSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).labelMedium.fontWeight,
                       fontStyle:

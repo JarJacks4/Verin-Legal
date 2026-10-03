@@ -182,7 +182,7 @@ class _LogOutBottomSheetWidgetState extends State<LogOutBottomSheetWidget> {
                       color: FlutterFlowTheme.of(context).primary,
                       textStyle:
                           FlutterFlowTheme.of(context).titleSmall.override(
-                                font: GoogleFonts.inter(
+                                font: GoogleFonts.ibmPlexSans(
                                   fontWeight: FlutterFlowTheme.of(context)
                                       .titleSmall
                                       .fontWeight,

@@ -305,89 +305,89 @@ class ThemeTypography extends Typography {
 
   final FlutterFlowTheme theme;
 
-  String get displayLargeFamily => 'Playfair Display';
+  String get displayLargeFamily => 'Spectral';
   bool get displayLargeIsCustom => false;
-  TextStyle get displayLarge => GoogleFonts.playfairDisplay(
+  TextStyle get displayLarge => GoogleFonts.spectral(
         color: theme.primaryText,
         fontWeight: FontWeight.bold,
         fontSize: 58.0,
         height: 1.1,
       );
-  String get displayMediumFamily => 'Playfair Display';
+  String get displayMediumFamily => 'Spectral';
   bool get displayMediumIsCustom => false;
-  TextStyle get displayMedium => GoogleFonts.playfairDisplay(
+  TextStyle get displayMedium => GoogleFonts.spectral(
         color: theme.primaryText,
         fontWeight: FontWeight.bold,
         fontSize: 46.0,
         height: 1.15,
       );
-  String get displaySmallFamily => 'Playfair Display';
+  String get displaySmallFamily => 'Spectral';
   bool get displaySmallIsCustom => false;
-  TextStyle get displaySmall => GoogleFonts.playfairDisplay(
+  TextStyle get displaySmall => GoogleFonts.spectral(
         color: theme.primaryText,
         fontWeight: FontWeight.bold,
         fontSize: 38.0,
         height: 1.2,
       );
-  String get headlineLargeFamily => 'Playfair Display';
+  String get headlineLargeFamily => 'Spectral';
   bool get headlineLargeIsCustom => false;
-  TextStyle get headlineLarge => GoogleFonts.playfairDisplay(
+  TextStyle get headlineLarge => GoogleFonts.spectral(
         color: theme.primaryText,
         fontWeight: FontWeight.bold,
         fontSize: 32.0,
         height: 1.2,
       );
-  String get headlineMediumFamily => 'Playfair Display';
+  String get headlineMediumFamily => 'Spectral';
   bool get headlineMediumIsCustom => false;
-  TextStyle get headlineMedium => GoogleFonts.playfairDisplay(
+  TextStyle get headlineMedium => GoogleFonts.spectral(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 26.0,
         height: 1.25,
       );
-  String get headlineSmallFamily => 'Playfair Display';
+  String get headlineSmallFamily => 'Spectral';
   bool get headlineSmallIsCustom => false;
-  TextStyle get headlineSmall => GoogleFonts.playfairDisplay(
+  TextStyle get headlineSmall => GoogleFonts.spectral(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 24.0,
         height: 1.3,
       );
-  String get titleLargeFamily => 'Inter';
+  String get titleLargeFamily => 'IBM Plex Sans';
   bool get titleLargeIsCustom => false;
-  TextStyle get titleLarge => GoogleFonts.inter(
+  TextStyle get titleLarge => GoogleFonts.ibmPlexSans(
         color: theme.primaryText,
         fontWeight: FontWeight.w600,
         fontSize: 20.0,
         height: 1.3,
       );
-  String get titleMediumFamily => 'Inter';
+  String get titleMediumFamily => 'IBM Plex Sans';
   bool get titleMediumIsCustom => false;
-  TextStyle get titleMedium => GoogleFonts.inter(
+  TextStyle get titleMedium => GoogleFonts.ibmPlexSans(
         color: theme.info,
         fontWeight: FontWeight.w600,
         fontSize: 16.0,
         height: 1.4,
       );
-  String get titleSmallFamily => 'Inter';
+  String get titleSmallFamily => 'IBM Plex Sans';
   bool get titleSmallIsCustom => false;
-  TextStyle get titleSmall => GoogleFonts.inter(
+  TextStyle get titleSmall => GoogleFonts.ibmPlexSans(
         color: theme.info,
         fontWeight: FontWeight.w600,
         fontSize: 14.0,
         height: 1.4,
       );
-  String get labelLargeFamily => 'Inter';
+  String get labelLargeFamily => 'IBM Plex Sans';
   bool get labelLargeIsCustom => false;
-  TextStyle get labelLarge => GoogleFonts.inter(
+  TextStyle get labelLarge => GoogleFonts.ibmPlexSans(
         color: theme.secondaryText,
         fontWeight: FontWeight.w600,
         fontSize: 14.0,
         height: 1.3,
       );
-  String get labelMediumFamily => 'Inter';
+  String get labelMediumFamily => 'IBM Plex Sans';
   bool get labelMediumIsCustom => false;
-  TextStyle get labelMedium => GoogleFonts.inter(
+  TextStyle get labelMedium => GoogleFonts.ibmPlexSans(
         color: theme.secondaryText,
         fontWeight: FontWeight.w600,
         fontSize: 12.0,
@@ -401,25 +401,25 @@ class ThemeTypography extends Typography {
         fontSize: 10.0,
         height: 1.2,
       );
-  String get bodyLargeFamily => 'Inter';
+  String get bodyLargeFamily => 'IBM Plex Sans';
   bool get bodyLargeIsCustom => false;
-  TextStyle get bodyLarge => GoogleFonts.inter(
+  TextStyle get bodyLarge => GoogleFonts.ibmPlexSans(
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 16.0,
         height: 1.6,
       );
-  String get bodyMediumFamily => 'Inter';
+  String get bodyMediumFamily => 'IBM Plex Sans';
   bool get bodyMediumIsCustom => false;
-  TextStyle get bodyMedium => GoogleFonts.inter(
+  TextStyle get bodyMedium => GoogleFonts.ibmPlexSans(
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 14.0,
         height: 1.5,
       );
-  String get bodySmallFamily => 'Inter';
+  String get bodySmallFamily => 'IBM Plex Sans';
   bool get bodySmallIsCustom => false;
-  TextStyle get bodySmall => GoogleFonts.inter(
+  TextStyle get bodySmall => GoogleFonts.ibmPlexSans(
         color: theme.primaryText,
         fontWeight: FontWeight.normal,
         fontSize: 12.0,

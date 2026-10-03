@@ -101,7 +101,7 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
                 'Email Address',
               ),
               style: FlutterFlowTheme.of(context).labelMedium.override(
-                    font: GoogleFonts.inter(
+                    font: GoogleFonts.ibmPlexSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).labelMedium.fontWeight,
                       fontStyle:
@@ -398,7 +398,7 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
                         hintStyle: FlutterFlowTheme.of(context)
                             .bodyMedium
                             .override(
-                              font: GoogleFonts.inter(
+                              font: GoogleFonts.ibmPlexSans(
                                 fontWeight: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .fontWeight,
@@ -453,7 +453,7 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
                             : null,
                       ),
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            font: GoogleFonts.inter(
+                            font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .fontWeight,
@@ -524,7 +524,7 @@ class _TextFieldWidgetState extends State<TextFieldWidget> {
             Text(
               widget.helper,
               style: FlutterFlowTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.inter(
+                    font: GoogleFonts.ibmPlexSans(
                       fontWeight:
                           FlutterFlowTheme.of(context).bodySmall.fontWeight,
                       fontStyle:

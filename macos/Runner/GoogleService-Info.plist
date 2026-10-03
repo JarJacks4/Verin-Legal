@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>332424564875-3bv28cihnrc6vrbn74duqdvsq8dfi3rq.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.332424564875-3bv28cihnrc6vrbn74duqdvsq8dfi3rq</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>332424564875-2t7l8te6qodujd02rs9ilpsn6ie31uvo.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDSk35Fw4lZnx34yVYGUbK_UXpHcpyCSE0</string>
+	<key>GCM_SENDER_ID</key>
+	<string>332424564875</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.mycompany.verinlegal</string>
+	<key>PROJECT_ID</key>
+	<string>verin-legal-fbzp5w</string>
+	<key>STORAGE_BUCKET</key>
+	<string>verin-legal-fbzp5w.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:332424564875:ios:f5cc33a3325638ab6e848e</string>
+</dict>
+</plist>

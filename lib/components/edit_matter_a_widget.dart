@@ -85,10 +85,10 @@ class _EditMatterAWidgetState extends State<EditMatterAWidget> {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: AlignmentDirectional(0.0, 0.0),
+      alignment: AlignmentDirectional(1.0, -1.0),
       child: Container(
-        width: 1463.2,
-        height: 870.89,
+        width: 640.0,
+        height: 897.19,
         decoration: BoxDecoration(
           color: FlutterFlowTheme.of(context).secondaryBackground,
         ),
@@ -139,7 +139,7 @@ class _EditMatterAWidgetState extends State<EditMatterAWidget> {
                           style: FlutterFlowTheme.of(context)
                               .headlineMedium
                               .override(
-                                font: GoogleFonts.playfairDisplay(
+                                font: GoogleFonts.spectral(
                                   fontWeight: FlutterFlowTheme.of(context)
                                       .headlineMedium
                                       .fontWeight,
@@ -179,6 +179,7 @@ class _EditMatterAWidgetState extends State<EditMatterAWidget> {
                     flex: 1,
                     child: SingleChildScrollView(
                       primary: false,
+                      controller: _model.columnScrollController,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -247,7 +248,7 @@ class _EditMatterAWidgetState extends State<EditMatterAWidget> {
                                 style: FlutterFlowTheme.of(context)
                                     .labelMedium
                                     .override(
-                                      font: GoogleFonts.inter(
+                                      font: GoogleFonts.ibmPlexSans(
                                         fontWeight: FlutterFlowTheme.of(context)
                                             .labelMedium
                                             .fontWeight,
@@ -285,7 +286,7 @@ class _EditMatterAWidgetState extends State<EditMatterAWidget> {
                                 textStyle: FlutterFlowTheme.of(context)
                                     .bodyMedium
                                     .override(
-                                      font: GoogleFonts.inter(
+                                      font: GoogleFonts.ibmPlexSans(
                                         fontWeight: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .fontWeight,
@@ -380,7 +381,7 @@ class _EditMatterAWidgetState extends State<EditMatterAWidget> {
                                       style: FlutterFlowTheme.of(context)
                                           .bodySmall
                                           .override(
-                                            font: GoogleFonts.inter(
+                                            font: GoogleFonts.ibmPlexSans(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .bodySmall
@@ -427,12 +428,12 @@ class _EditMatterAWidgetState extends State<EditMatterAWidget> {
                           await widget.matterDoc!
                               .update(createMattersRecordData(
                             clientName: widget.clientName,
-                            matterName: widget.matterName,
                             caseNumber: widget.caseNumber,
                             assignedCounsel: widget.assignedCounsel,
                             activeMonitoring: widget.isActiveMonitoring,
                             matterType: widget.matterType,
                             status: widget.status,
+                            caseTitle: widget.matterName,
                           ));
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(

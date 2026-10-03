@@ -339,7 +339,7 @@ class _SwitchComponentWidgetState extends State<SwitchComponentWidget> {
                     'Automatic daily sync',
                   ),
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                        font: GoogleFonts.inter(
+                        font: GoogleFonts.ibmPlexSans(
                           fontWeight: FlutterFlowTheme.of(context)
                               .bodyMedium
                               .fontWeight,
