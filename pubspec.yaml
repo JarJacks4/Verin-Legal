@@ -70,7 +70,7 @@ dependencies:
   google_sign_in_ios: 5.9.0
   google_sign_in_platform_interface: 2.5.0
   google_sign_in_web: 0.12.4+4
-  intl: 0.20.2
+  intl: 0.20.3
   json_path: 0.7.2
   page_transition: 2.1.0
   path_provider: 2.1.4

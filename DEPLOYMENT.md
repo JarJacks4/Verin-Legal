@@ -80,16 +80,16 @@ Indexes can take a few minutes to build after deploy. Screens may show an "index
 Allow the web app to display images stored in Firebase Storage (one time). This needs the
 Google Cloud CLI (`gcloud`), which provides `gsutil`:
 ```
-gsutil cors set cors.json gs://verin-legal-fbzp5w.appspot.com
+gsutil cors set cors.json gs://verin-legal-fbzp5w.firebasestorage.app
 ```
-The bucket name is in the Firebase console → Storage. It may end in `.firebasestorage.app` instead.
+(That is this project's bucket, from its Firebase web config.)
 
 ## 5. Deploy the web app (Firebase Hosting)
 From the repo root:
 ```
-flutter build web --release
+flutter build web --release --output firebase/public
 cd firebase
-firebase deploy --only hosting
+firebase deploy --only hosting --project verin-legal-fbzp5w
 ```
 The CLI prints the live URL, e.g. `https://verin-legal-fbzp5w.web.app`. Put that in `APP_URL`
 (step 3) and redeploy functions once: `firebase deploy --only functions`.
@@ -137,3 +137,23 @@ Receipts, chainEntries, clioSyncLog and exports are written only by these functi
 Billing/Stripe and invoices; sending invite emails and client follow-up messages; inbound
 email/SMS/WhatsApp intake addresses; external timestamp anchoring (RFC 3161); MyCase, Smokeball
 and Dropbox; enforcing the MFA/IP/session settings saved on the Settings page.
+
+## 8. Automatic deploys from GitHub (after the first manual deploy works)
+`.github/workflows/deploy-web.yml` runs on every push/merge to `main`: it checks the code
+(`flutter analyze`, backend tests), builds the web app, and deploys it to Firebase Hosting.
+Pull requests get a temporary preview link posted on the PR instead.
+
+One-time setup, so GitHub can deploy:
+1. Google Cloud console (console.cloud.google.com), project `verin-legal-fbzp5w` → **IAM & Admin → Service Accounts**
+   → **Create service account**, name it `github-deploy`.
+2. Grant it the roles **Firebase Hosting Admin** and **API Keys Viewer** (Cloud Run Viewer as well if
+   you later add hosting rewrites to functions). Click Done.
+3. Open the new account → **Keys** → **Add key → Create new key → JSON**. A .json file downloads.
+4. GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**.
+   Name: `FIREBASE_SERVICE_ACCOUNT`. Value: paste the entire contents of that JSON file. Save.
+5. Delete the downloaded JSON file from your computer. Never commit it.
+6. GitHub repo → **Actions** tab → "Deploy web app" → **Run workflow** to test it once.
+
+If a run fails, open it in the Actions tab; the failing step's log shows why (most often an
+analyze error or a missing secret). Functions are still deployed manually (step 4) because
+they need the Firebase secrets.
