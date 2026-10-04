@@ -108,7 +108,9 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                               ),
                             ),
                             const SizedBox(height: 16.0),
-                            Wrap(
+                            SizedBox(
+  width: double.infinity,
+  child: Wrap(
                               alignment: WrapAlignment.spaceBetween,
                               crossAxisAlignment: WrapCrossAlignment.start,
                               runSpacing: 12.0,
@@ -147,6 +149,7 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                                 ),
                               ],
                             ),
+),
                             const SizedBox(height: 24.0),
                             _TabBar(value: _tab, onChanged: (t) => setState(() => _tab = t)),
                           ],

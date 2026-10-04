@@ -91,7 +91,9 @@ class _AdminTeamState extends State<AdminTeam> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Wrap(
+              SizedBox(
+  width: double.infinity,
+  child: Wrap(
                 alignment: WrapAlignment.spaceBetween,
                 crossAxisAlignment: WrapCrossAlignment.end,
                 runSpacing: 12.0,
@@ -117,6 +119,7 @@ class _AdminTeamState extends State<AdminTeam> {
                   ),
                 ],
               ),
+),
               const SizedBox(height: 32.0),
               VCard(
                 child: Column(
@@ -147,9 +150,11 @@ class _AdminTeamState extends State<AdminTeam> {
                   children: [
                     if (!snap.hasData) const VLoading(),
                     if (snap.hasData && team.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Text('No team members yet. Invite your attorneys and paralegals.', style: VT.muted(context, size: 13.0)),
+                      const VEmptyState(
+                        compact: true,
+                        icon: Icons.group_outlined,
+                        title: 'No team members yet',
+                        message: 'Invite your attorneys and paralegals to work in this workspace.',
                       ),
                     for (var i = 0; i < team.length; i++) _memberRow(context, team[i], i),
                   ],

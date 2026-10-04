@@ -1094,3 +1094,52 @@ Future<void> copyToClipboard(BuildContext context, String text, {String what = '
   await Clipboard.setData(ClipboardData(text: text));
   if (context.mounted) showVToast(context, '$what to clipboard');
 }
+
+// ---------------------------------------------------------------------------
+// Empty state
+// ---------------------------------------------------------------------------
+
+/// Dashed card with an icon, a title, a line of help and an optional action —
+/// shown wherever a list has nothing in it yet.
+class VEmptyState extends StatelessWidget {
+  const VEmptyState({super.key, required this.icon, required this.title, required this.message, this.action, this.compact = false});
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final Widget? action;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: compact ? 24.0 : 40.0),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(VR.card),
+        border: Border.all(color: c.border),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: compact ? 40.0 : 52.0,
+            height: compact ? 40.0 : 52.0,
+            decoration: BoxDecoration(color: c.tealPale, shape: BoxShape.circle),
+            child: Icon(icon, size: compact ? 18.0 : 22.0, color: c.tealDeep),
+          ),
+          const SizedBox(height: 14.0),
+          Text(title, textAlign: TextAlign.center, style: VT.body(context, size: 15.0, weight: FontWeight.w600)),
+          const SizedBox(height: 6.0),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420.0),
+            child: Text(message, textAlign: TextAlign.center, style: VT.muted(context, size: 13.0, height: 1.55)),
+          ),
+          if (action != null) ...[const SizedBox(height: 18.0), action!],
+        ],
+      ),
+    );
+  }
+}

@@ -30,7 +30,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final c = VC.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(40.0, 36.0, 40.0, 48.0),
-      child: ConstrainedBox(
+      child: Align(
+  alignment: Alignment.topLeft,
+  child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 900.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +57,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       .toList()
                     ..sort((a, b) => (b.receivedAt ?? DateTime(0)).compareTo(a.receivedAt ?? DateTime(0)));
                   if (items.isEmpty) {
-                    return Text('Nothing waiting. Every item is resolved.', style: VT.muted(context));
+                    return const VEmptyState(
+                      icon: Icons.checklist,
+                      title: 'Nothing waiting',
+                      message: 'Every item is resolved. Anything the system cannot read or date on its own lands here for a person.',
+                    );
                   }
                   return Column(
                     children: [
@@ -112,6 +118,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
           ],
         ),
       ),
+),
     );
   }
 }

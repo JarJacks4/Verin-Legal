@@ -30,10 +30,16 @@ class VerinApi {
       final d = res.data;
       return d is Map ? Map<String, dynamic>.from(d) : <String, dynamic>{};
     } on FirebaseFunctionsException catch (e) {
-      throw VerinApiException(
-        (e.message == null || e.message!.isEmpty) ? 'Request failed (${e.code}).' : e.message!,
-        code: e.code,
-      );
+      final raw = (e.message ?? '').trim();
+      // A callable that isn't deployed (or crashed before answering) reaches
+      // the browser as a bare "internal" / "not-found"; say what that means.
+      if ((e.code == 'internal' && (raw.isEmpty || raw.toLowerCase() == 'internal')) || (e.code == 'not-found' && raw.toLowerCase() == 'not found')) {
+        throw VerinApiException(
+          "The Verin server didn't answer ($name). Deploy the backend functions (firebase deploy --only functions) and try again.",
+          code: e.code,
+        );
+      }
+      throw VerinApiException(raw.isEmpty ? 'Request failed (${e.code}).' : raw, code: e.code);
     } catch (e) {
       throw VerinApiException('Request failed: $e');
     }

@@ -11,6 +11,7 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../data/model.dart';
+import 'manual_entry_drawer.dart';
 import 'receipt_detail_drawer.dart';
 
 class ThreadTab extends StatelessWidget {
@@ -44,11 +45,29 @@ class ThreadTab extends StatelessWidget {
         children: [
           ...header,
           Text(
-            pending > 0
-                ? 'Reading $pending item${pending == 1 ? '' : 's'} now — messages appear here as soon as they are read.'
-                : 'No screenshot threads reconstructed for this matter yet. Add message screenshots or a screen recording with Add manual entry on the Intake channel tab.',
+            'Overlapping screenshots merged into one continuous thread. Each message cites its source.',
             style: VT.muted(context),
           ),
+          const SizedBox(height: 24.0),
+          pending > 0
+              ? VEmptyState(
+                  icon: Icons.auto_awesome_outlined,
+                  title: 'Reading $pending item${pending == 1 ? '' : 's'} now',
+                  message: 'Messages appear here as soon as they are read — usually within a minute.',
+                  action: const SizedBox(width: 22.0, height: 22.0, child: CircularProgressIndicator(strokeWidth: 2.0)),
+                )
+              : VEmptyState(
+                  icon: Icons.layers_outlined,
+                  title: 'No thread yet',
+                  message: 'Add screenshots of texts, WhatsApp or email threads — or a screen recording — and the messages are read into one dated conversation here.',
+                  action: VButton(
+                    label: 'Add screenshots',
+                    icon: Icons.image_outlined,
+                    kind: VButtonKind.tonal,
+                    size: VButtonSize.sm,
+                    onPressed: () => showManualEntryDrawer(context, matter: matter),
+                  ),
+                ),
         ],
       );
     }
