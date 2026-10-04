@@ -85,6 +85,65 @@ class VerinApi {
   static Future<Map<String, dynamic>> exportMatterRecord(String matterId) =>
       _call('exportMatterRecord', {'matterId': matterId}, timeout: const Duration(seconds: 120));
 
+  /// Files evidence that the app has already uploaded to Storage under
+  /// intake/{uid}/... (or a physical item with no file). The server hashes the
+  /// exact bytes, moves them under the matter, timestamps the hash (RFC 3161),
+  /// appends the receipt to the matter's hash chain, and queues AI reading.
+  /// Returns { receiptId, itemHash, entryHash, chainSeq, isDuplicate }.
+  static Future<Map<String, dynamic>> ingestEvidence({
+    required String matterId,
+    required String kind,
+    String? uploadPath,
+    String? fileName,
+    String? contentType,
+    String channel = 'upload',
+    String fromLabel = '',
+    String? dateReceived,
+    String description = '',
+    String custodyNotes = '',
+    String clientSide = 'right',
+  }) {
+    return _call(
+      'ingestEvidence',
+      {
+        'matterId': matterId,
+        'kind': kind,
+        if (uploadPath != null) 'uploadPath': uploadPath,
+        if (fileName != null) 'fileName': fileName,
+        if (contentType != null) 'contentType': contentType,
+        'channel': channel,
+        'fromLabel': fromLabel,
+        if (dateReceived != null) 'dateReceived': dateReceived,
+        'description': description,
+        'custodyNotes': custodyNotes,
+        'clientSide': clientSide,
+      },
+      timeout: const Duration(seconds: 540),
+    );
+  }
+
+  /// Runs AI reading again for one receipt (failed or deferred items).
+  static Future<Map<String, dynamic>> reprocessReceipt(String receiptId, {String clientSide = 'right', bool forceTranscription = false}) =>
+      _call(
+        'reprocessReceipt',
+        {'receiptId': receiptId, 'clientSide': clientSide, 'forceTranscription': forceTranscription},
+        timeout: const Duration(seconds: 540),
+      );
+
+  /// Builds the standalone-verifiable record archive (manifest.json,
+  /// exhibits/, certificate.pdf, README.txt) and returns { downloadUrl,
+  /// fileName, sha256, items }.
+  static Future<Map<String, dynamic>> exportRecordZip(String matterId) =>
+      _call('exportRecordZip', {'matterId': matterId}, timeout: const Duration(seconds: 540));
+
+  /// Integration report PDF for one matter: { downloadUrl, fileName, sha256 }.
+  static Future<Map<String, dynamic>> exportIntegrationReport(String matterId) =>
+      _call('exportIntegrationReport', {'matterId': matterId}, timeout: const Duration(seconds: 120));
+
+  /// Every matter's manifest in one ZIP: { downloadUrl, fileName, matters }.
+  static Future<Map<String, dynamic>> exportFirmData() =>
+      _call('exportFirmData', {}, timeout: const Duration(seconds: 540));
+
   // ---------------------------------------------------------------- Clio
 
   /// Returns the Clio authorize URL to open in the browser.

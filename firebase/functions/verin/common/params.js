@@ -18,6 +18,15 @@ module.exports = {
   EXTRACTION_MODEL: defineString('EXTRACTION_MODEL', { default: 'claude-sonnet-5-5' }),
   EXTRACTION_MAX_TOKENS: defineInt('EXTRACTION_MAX_TOKENS', { default: 16000 }),
 
+  // Video / audio reading (transcripts, screen recordings) via Gemini on
+  // Vertex AI, using the functions' own service account — no extra key.
+  VIDEO_MODEL: defineString('VIDEO_MODEL', { default: 'gemini-3.5-flash' }),
+  VERTEX_LOCATION: defineString('VERTEX_LOCATION', { default: 'global' }),
+
+  // RFC 3161 Time-Stamp Authority. Empty TSA_URL turns timestamping off.
+  TSA_URL: defineString('TSA_URL', { default: 'http://timestamp.digicert.com' }),
+  TSA_NAME: defineString('TSA_NAME', { default: 'DigiCert' }),
+
   CLIO_CLIENT_ID: defineString('CLIO_CLIENT_ID', { default: '' }),
   CLIO_REGION: defineString('CLIO_REGION', { default: 'us' }),
   // Must exactly match a Redirect URI registered on the Clio app: the deployed

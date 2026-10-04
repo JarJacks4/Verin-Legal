@@ -51,7 +51,8 @@ service cloud.firestore {
       // chaining). Staff may only change review labels on them.
       allow create, delete: if false;
       allow update: if signedIn() && request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['classificationLabel', 'isTranscribed', 'resolvedDate', 'hasChronologyShift']);
+        .hasOnly(['classificationLabel', 'isTranscribed', 'resolvedDate', 'hasChronologyShift',
+                  'reviewedByUid', 'reviewedAt']);
 
       match /extractionRuns/{runId} {
         allow read: if signedIn();
@@ -92,9 +93,24 @@ service cloud.firestore {
       allow read, create, update: if signedIn();
     }
 
+    // Firm profile and preferences are editable in Settings; plan and billing
+    // fields are set by Verin (console / Admin SDK) and can't be self-assigned.
     match /firmAccount/{id} {
-      allow read, update: if signedIn();
-      allow create, delete: if false;
+      function planFields() {
+        return ['planName', 'planStatus', 'planPriceCents', 'planRenewsAt', 'memberSince',
+                'seatLimit', 'storageTier', 'retentionPolicy'];
+      }
+      allow read: if signedIn();
+      allow create: if signedIn() && !request.resource.data.keys().hasAny(planFields());
+      allow update: if signedIn() && untouched(planFields())
+        || (signedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['retentionPolicy', 'retentionRequest'])
+            && request.resource.data.get('retentionPolicy', 'standard') == 'standard');
+      allow delete: if false;
+
+      match /invoices/{invoiceId} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
     }
 
     match /TeamMembers/{id} {

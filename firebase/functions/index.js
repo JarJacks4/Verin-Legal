@@ -24,3 +24,14 @@ exports.clioLinkMatter = verinClio.clioLinkMatter;
 exports.clioPushDocument = verinClio.clioPushDocument;
 
 exports.exportMatterRecord = require("./verin/export/callable").exportMatterRecord;
+
+// ---- Verin: any-file evidence intake, AI reading, RFC 3161, archives ----
+const verinEvidence = require("./verin/evidence/ingest");
+exports.ingestEvidence = verinEvidence.ingestEvidence;
+exports.onReceiptCreated = verinEvidence.onReceiptCreated;
+exports.reprocessReceipt = verinEvidence.reprocessReceipt;
+
+const verinArchive = require("./verin/export/archive");
+exports.exportRecordZip = verinArchive.exportRecordZip;
+exports.exportFirmData = verinArchive.exportFirmData;
+exports.exportIntegrationReport = verinArchive.exportIntegrationReport;

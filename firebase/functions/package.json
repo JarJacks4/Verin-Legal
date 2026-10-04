@@ -19,7 +19,14 @@
     "@anthropic-ai/sdk": "^0.131.0",
     "pdfkit": "^0.20.2",
     "fontkit": "^2.0.4",
-    "dejavu-fonts-ttf": "^2.37.3"
+    "dejavu-fonts-ttf": "^2.37.3",
+    "archiver": "^7.0.1",
+    "mammoth": "^1.8.0",
+    "mailparser": "^3.7.1",
+    "@kenjiuno/msgreader": "^1.22.0",
+    "jszip": "^3.10.1",
+    "ffprobe-static": "^3.1.0",
+    "@google/genai": "^1.20.0"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
