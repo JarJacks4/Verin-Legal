@@ -10,6 +10,7 @@ import '../data/model.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
+import 'manual_entry_drawer.dart';
 import 'receipt_detail_drawer.dart';
 
 class ReceiptsTab extends StatelessWidget {
@@ -41,10 +42,16 @@ class ReceiptsTab extends StatelessWidget {
         else if (loading)
           const VLoading()
         else if (receipts.isEmpty)
-          VCard(
-            child: Text(
-              'Nothing received yet. Use Add manual entry on the Intake channel tab to upload photos, videos, documents or emails.',
-              style: VT.muted(context),
+          VEmptyState(
+            icon: Icons.inbox_outlined,
+            title: 'Nothing received yet',
+            message: 'Photos, videos, documents and emails appear here the moment they arrive — hashed and timestamped before anyone opens them.',
+            action: VButton(
+              label: 'Add manual entry',
+              icon: Icons.edit_outlined,
+              kind: VButtonKind.tonal,
+              size: VButtonSize.sm,
+              onPressed: () => showManualEntryDrawer(context, matter: matter),
             ),
           )
         else

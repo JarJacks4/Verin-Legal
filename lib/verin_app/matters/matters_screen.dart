@@ -73,12 +73,16 @@ class _MattersScreenState extends State<MattersScreen> {
         final matters = snap.data ?? const <MattersRecord>[];
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(40.0, 36.0, 40.0, 48.0),
-          child: ConstrainedBox(
+          child: Align(
+  alignment: Alignment.topLeft,
+  child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1000.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
+                SizedBox(
+  width: double.infinity,
+  child: Wrap(
                   alignment: WrapAlignment.spaceBetween,
                   crossAxisAlignment: WrapCrossAlignment.end,
                   runSpacing: 16.0,
@@ -100,6 +104,7 @@ class _MattersScreenState extends State<MattersScreen> {
                     VButton(label: 'New matter', icon: Icons.add, onPressed: _newMatter),
                   ],
                 ),
+),
                 const SizedBox(height: 28.0),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 360.0),
@@ -138,6 +143,7 @@ class _MattersScreenState extends State<MattersScreen> {
               ],
             ),
           ),
+),
         );
       },
     );
@@ -205,9 +211,13 @@ class _MattersTable extends StatelessWidget {
                 child: matters.isEmpty
                     ? Column(
                         children: [
-                          Text('No matters yet.', textAlign: TextAlign.center, style: VT.muted(context)),
-                          const SizedBox(height: 12.0),
-                          VButton(label: 'Create your first matter', icon: Icons.add, kind: VButtonKind.tonal, onPressed: onNew),
+                          VIconCircle(icon: Icons.folder_open_outlined, size: 52.0, iconSize: 22.0, bg: c.tealPale),
+                          const SizedBox(height: 14.0),
+                          Text('No matters yet', style: VT.body(context, size: 15.0, weight: FontWeight.w600)),
+                          const SizedBox(height: 6.0),
+                          Text('Create a matter to start receiving evidence into its own record.', textAlign: TextAlign.center, style: VT.muted(context, size: 13.0)),
+                          const SizedBox(height: 18.0),
+                          VButton(label: 'Create your first matter', icon: Icons.add, kind: VButtonKind.tonal, size: VButtonSize.sm, onPressed: onNew),
                         ],
                       )
                     : Text('No matters match "$query"', textAlign: TextAlign.center, style: VT.muted(context)),

@@ -10,8 +10,7 @@
 // as an empty box, so the transcript never silently drops content.
 
 const path = require('path');
-const PDFDocument = require('pdfkit');
-const fontkit = require('fontkit');
+// pdfkit / fontkit are loaded on first use so the functions start quickly.
 
 const FONT_DIR = path.dirname(require.resolve('dejavu-fonts-ttf/ttf/DejaVuSans.ttf'));
 const FONTS = {
@@ -31,7 +30,7 @@ const WARN = '#9A6A14';
 
 let glyphFont = null;
 function sansFont() {
-  if (!glyphFont) glyphFont = fontkit.openSync(FONTS.sans);
+  if (!glyphFont) glyphFont = require('fontkit').openSync(FONTS.sans);
   return glyphFont;
 }
 
@@ -83,6 +82,7 @@ function buildRecordPdf(input) {
   const { matter, receipts, chain, verification, generatedAt, generatedBy } = input;
   const gen = generatedAt instanceof Date ? generatedAt : new Date(generatedAt);
 
+  const PDFDocument = require('pdfkit');
   const doc = new PDFDocument({
     size: 'LETTER',
     margins: { top: 54, bottom: 64, left: 54, right: 54 },

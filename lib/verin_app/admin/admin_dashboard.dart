@@ -98,7 +98,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Wrap(
+                SizedBox(
+  width: double.infinity,
+  child: Wrap(
                   alignment: WrapAlignment.spaceBetween,
                   crossAxisAlignment: WrapCrossAlignment.end,
                   runSpacing: 12.0,
@@ -129,6 +131,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           ),
                   ],
                 ),
+),
                 const SizedBox(height: 32.0),
                 LayoutBuilder(builder: (context, box) {
                   final cols = box.maxWidth >= 760 ? 4 : 2;
