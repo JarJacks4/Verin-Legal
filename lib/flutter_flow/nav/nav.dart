@@ -10,6 +10,8 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
 import '/index.dart';
+import '/verin_app/admin/admin_shell.dart' show AdminNav;
+import '/verin_app/pages.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -77,15 +79,15 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
       refreshListenable: appStateNotifier,
       navigatorKey: appNavigatorKey,
       errorBuilder: (context, state) => appStateNotifier.loggedIn
-          ? MattersListWidget()
-          : WelcomeScreenWidget(),
+          ? const VMattersPage()
+          : const VWelcomePage(),
       routes: [
         FFRoute(
           name: '_initialize',
           path: '/',
           builder: (context, _) => appStateNotifier.loggedIn
-              ? MattersListWidget()
-              : WelcomeScreenWidget(),
+              ? const VMattersPage()
+              : const VWelcomePage(),
         ),
         FFRoute(
           name: CreateAccount1Widget.routeName,
@@ -95,63 +97,54 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: FirmWorkspaceSignInWidget.routeName,
           path: FirmWorkspaceSignInWidget.routePath,
-          builder: (context, params) => FirmWorkspaceSignInWidget(),
+          builder: (context, params) => const VSignInPage(),
         ),
         FFRoute(
           name: MattersListWidget.routeName,
           path: MattersListWidget.routePath,
           requireAuth: true,
-          builder: (context, params) => MattersListWidget(),
+          builder: (context, params) => const VMattersPage(),
         ),
         FFRoute(
           name: ReviewQueueWidget.routeName,
           path: ReviewQueueWidget.routePath,
           requireAuth: true,
-          builder: (context, params) => ReviewQueueWidget(),
+          builder: (context, params) => const VReviewPage(),
         ),
         FFRoute(
           name: AdminDashBoardPageWidget.routeName,
           path: AdminDashBoardPageWidget.routePath,
           requireAuth: true,
-          builder: (context, params) => AdminDashBoardPageWidget(),
+          builder: (context, params) => const VAdminPage(nav: AdminNav.dashboard),
         ),
         FFRoute(
           name: AdminMattersListWidget.routeName,
           path: AdminMattersListWidget.routePath,
           requireAuth: true,
-          asyncParams: {
-            'matterDoc': getDocList(['Matters'], MattersRecord.fromSnapshot),
-          },
-          builder: (context, params) => AdminMattersListWidget(
-            matterDoc: params.getParam<MattersRecord>(
-              'matterDoc',
-              ParamType.Document,
-              isList: true,
-            ),
-          ),
+          builder: (context, params) => const VAdminPage(nav: AdminNav.matters),
         ),
         FFRoute(
           name: AdminBillingAndPlanWidget.routeName,
           path: AdminBillingAndPlanWidget.routePath,
           requireAuth: true,
-          builder: (context, params) => AdminBillingAndPlanWidget(),
+          builder: (context, params) => const VAdminPage(nav: AdminNav.billing),
         ),
         FFRoute(
           name: AdminTeamsWidget.routeName,
           path: AdminTeamsWidget.routePath,
           requireAuth: true,
-          builder: (context, params) => AdminTeamsWidget(),
+          builder: (context, params) => const VAdminPage(nav: AdminNav.team),
         ),
         FFRoute(
           name: AdminProgramPageWidget.routeName,
           path: AdminProgramPageWidget.routePath,
           requireAuth: true,
-          builder: (context, params) => AdminProgramPageWidget(),
+          builder: (context, params) => const VAdminPage(nav: AdminNav.program),
         ),
         FFRoute(
           name: WelcomeScreenWidget.routeName,
           path: WelcomeScreenWidget.routePath,
-          builder: (context, params) => WelcomeScreenWidget(),
+          builder: (context, params) => const VWelcomePage(),
         ),
         FFRoute(
           name: CreatePasswordScreenWidget.routeName,
@@ -165,11 +158,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           asyncParams: {
             'matterDoc': getDoc(['Matters'], MattersRecord.fromSnapshot),
           },
-          builder: (context, params) => MattersTabGroupHomeWidget(
-            matterDoc: params.getParam(
+          builder: (context, params) => VMatterPage(
+            matter: params.getParam<MattersRecord>(
               'matterDoc',
               ParamType.Document,
             ),
+            fromAdmin: params.getParam<String>('from', ParamType.String) == 'admin',
           ),
         ),
         FFRoute(
@@ -181,18 +175,18 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: CreateAccountStep1Widget.routeName,
           path: CreateAccountStep1Widget.routePath,
-          builder: (context, params) => CreateAccountStep1Widget(),
+          builder: (context, params) => const VSignUpPage(step: 1),
         ),
         FFRoute(
           name: CreateAccountStep2Widget.routeName,
           path: CreateAccountStep2Widget.routePath,
-          builder: (context, params) => CreateAccountStep2Widget(),
+          builder: (context, params) => const VSignUpPage(step: 2),
         ),
         FFRoute(
           name: FirmSettingsWidget.routeName,
           path: FirmSettingsWidget.routePath,
           requireAuth: true,
-          builder: (context, params) => FirmSettingsWidget(),
+          builder: (context, params) => const VAdminPage(nav: AdminNav.settings),
         ),
         FFRoute(
           name: ClioCallbackPageWidget.routeName,

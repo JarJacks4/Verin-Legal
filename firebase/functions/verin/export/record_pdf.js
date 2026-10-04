@@ -21,11 +21,12 @@ const FONTS = {
   serif: path.join(FONT_DIR, 'DejaVuSerif.ttf'),
 };
 
-const NAVY = '#1A2B3C';
-const TEAL = '#2D5A5E';
-const INK = '#1A1A1A';
-const MUTED = '#545454';
-const RULE = '#E2E0DB';
+// Verin brand (Figma Make theme): deep teal, teal, ink, muted, hairline.
+const NAVY = '#093F49';
+const TEAL = '#0E6E7D';
+const INK = '#172024';
+const MUTED = '#5C6A6E';
+const RULE = '#E2DED6';
 const WARN = '#9A6A14';
 
 let glyphFont = null;
@@ -366,4 +367,4 @@ function buildRecordPdf(input) {
   return done;
 }
 
-module.exports = { buildRecordPdf, printable };
+module.exports = { buildRecordPdf, printable, human, dash, FONTS, COLORS: { NAVY, TEAL, INK, MUTED, RULE, WARN } };

@@ -43,7 +43,12 @@ without a compiler available, so if it reports errors, copy the full output back
 
 ## 3. Secrets and settings (one time)
 Get these values first:
-- **Anthropic API key**: console.anthropic.com → API Keys. Used to read screenshots.
+- **Anthropic API key**: console.anthropic.com → API Keys. Used to read photos, screenshots,
+  PDFs, Word files and emails.
+- **Vertex AI** (video and voice-note transcription): Google Cloud console → APIs & Services →
+  enable **Vertex AI API** (`aiplatform.googleapis.com`) on project verin-legal-fbzp5w. No key is
+  needed; the functions use their own service account. Model defaults to `gemini-3.5-flash`
+  (override with `VIDEO_MODEL` in `.env`).
 - **Clio app**: developers.clio.com. The **Client ID**, the **Client Secret**, and your Clio
   region (US/EU/CA/AU). Register this exact Redirect URI on the Clio app:
   `https://us-central1-verin-legal-fbzp5w.cloudfunctions.net/clioOAuthCallback`
@@ -53,7 +58,7 @@ Then, from the repo:
 ```
 cd firebase/functions
 npm install
-npm test                                              # expect: 46 pass, 0 fail
+npm test                                              # expect: 84 pass, 0 fail
 copy .env.example .env                                # macOS/Linux: cp .env.example .env
 ```
 Edit `firebase/functions/.env` and set `CLIO_CLIENT_ID`, `CLIO_REGION` (us/eu/ca/au), and
@@ -76,6 +81,11 @@ cd ..            # now in firebase/
 firebase deploy --only functions,firestore:rules,firestore:indexes,storage
 ```
 Indexes can take a few minutes to build after deploy. Screens may show an "index" error until then.
+The first deploy of `onReceiptCreated` (a Firestore trigger) sometimes fails while Google sets up
+Eventarc permissions; wait two minutes and run the same deploy again.
+
+Storage rules (`firebase/storage.rules`) must be deployed — uploads go to `intake/{uid}/…` first
+and are moved under the matter by `ingestEvidence`.
 
 Allow the web app to display images stored in Firebase Storage (one time). This needs the
 Google Cloud CLI (`gcloud`), which provides `gsutil`:
@@ -100,19 +110,24 @@ the hosting domain (and any custom domain) is listed, or sign-in will fail.
 Optional custom domain: Firebase console → Hosting → Add custom domain.
 
 ## 6. Data the app expects
-- **Admins:** in Firestore `users/{uid}`, set `role` to `Admin` or `Owner` for anyone who should see
-  the Admin Portal.
-- **Firm settings:** create one document in the `firmAccount` collection (firmName, planName,
-  planStatus, seatLimit, …) if none exists. The app can edit it but not create it.
+- **Admins:** people who pick **Administrator** as their role when creating an account see the
+  Admin console. To change someone later, set `role` in Firestore `users/{uid}` to `Admin`
+  (or `Owner`); anything else hides it.
+- **Firm account:** Admin console → Settings → **Save changes** creates the `firmAccount` document
+  if none exists. Plan fields (`planName`, `planStatus`, `planPriceCents`, `planRenewsAt`,
+  `memberSince`, `seatLimit`) can only be set in the Firebase console, so nobody can upgrade
+  themselves from the app.
 - **Firm ID:** every matter uses `firmID = "harbow-law"` (set in `lib/verin/verin_config.dart` and
   `DEFAULT_FIRM_ID` in `.env`). Change both together if you rename it.
 
 ## 7. Smoke test after deploying
 1. Sign in → Matters list loads → open a matter (no crash, real name/client in the header).
-2. Intake tab → **Choose screenshots** → upload a PNG of a text conversation. The Receipts tab shows it
-   with a SHA-256, and the Thread tab shows the messages within ~30 seconds.
-3. Integrity tab → chain entry #1 appears. **Standalone verify tool** says "Chain intact".
-4. Integrity tab → **Export record (PDF)** opens a 4-section PDF.
+2. Intake channel tab → **Add manual entry** → Photo → upload a PNG of a text conversation. The
+   Receipts tab shows it with a SHA-256 ("Reading…" first), and the Thread tab shows the messages
+   within ~30 seconds. Try a PDF (Document), an .eml (Email) and a short video too.
+3. Integrity tab → chain entry #1 appears. **Standalone verify tool** → **Verify chain now** passes;
+   **Export record ZIP** downloads a ZIP; unzip it and run `python3 verify.py` → PASS.
+4. Integrity tab → **Certificate of preparation** → **Download PDF** opens the record PDF.
 5. Practice tab → **Connect Clio** → sign in to Clio → page shows "Connected" → **Link to a Clio matter**
    → **Push record to Clio** → the sync log shows "synced" and the PDF is in that Clio matter's Documents.
 6. Settings → change the firm name → Save → reload → the change is kept.
@@ -123,8 +138,12 @@ If a function fails: Firebase console → Functions → Logs, or `firebase funct
 ## What the backend does
 | Function | Purpose |
 |---|---|
-| ingestScreenshot | Stores an uploaded screenshot, SHA-256 hashes it, appends it to the matter's hash chain, reads the messages with Claude, writes the Receipt |
-| extractThreadMessages | Retries extraction on an existing Receipt |
+| ingestEvidence | Files any uploaded item (photo, video, voice note, PDF, Word, text, .eml/.msg) or a physical item: SHA-256 over the exact bytes while moving them under the matter, hash-chain entry, RFC 3161 timestamp |
+| onReceiptCreated | AI reading after intake: Claude reads images/PDFs/documents/emails (summary, evidence date, messages); Gemini on Vertex transcribes video/audio and reads screen recordings; ffprobe records the video's metadata |
+| reprocessReceipt | "Run AI reading again" / "Request transcription" |
+| exportRecordZip | Standalone-verifiable ZIP: manifest.json, exhibits/, timestamps/*.tsr, certificate.pdf, verify.py |
+| exportIntegrationReport / exportFirmData | Integration report PDF; all matters' manifests in one ZIP |
+| ingestScreenshot / extractThreadMessages | Older screenshot-only path, kept for compatibility |
 | verifyMatterChain | Recomputes a matter's hash chain (Standalone Verify Tool) |
 | exportMatterRecord | Builds the record PDF: certificate, exhibit index, transcript, chain appendix |
 | clioAuthStart / clioOAuthCallback / clioDisconnect | Server-side Clio sign-in. Tokens are encrypted and never reach the app |
@@ -134,9 +153,10 @@ Receipts, chainEntries, clioSyncLog and exports are written only by these functi
 `firebase/firestore.rules`), so the record can't be edited from the app.
 
 ## Not built yet (needs a product decision)
-Billing/Stripe and invoices; sending invite emails and client follow-up messages; inbound
-email/SMS/WhatsApp intake addresses; external timestamp anchoring (RFC 3161); MyCase, Smokeball
-and Dropbox; enforcing the MFA/IP/session settings saved on the Settings page.
+Billing/Stripe and card payments (invoices are read from `firmAccount/{id}/invoices` if you add
+them); sending invite and notification emails; inbound email/SMS/WhatsApp intake addresses (the
+Intake tab shows them once `emailAddress` / `smsNumber` / `whatsAppAddress` are set on a matter);
+MyCase and Smokeball; the public REST API.
 
 ## 8. Automatic deploys from GitHub (after the first manual deploy works)
 `.github/workflows/deploy-web.yml` runs on every push/merge to `main`: it checks the code
