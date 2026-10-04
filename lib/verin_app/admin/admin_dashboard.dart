@@ -190,25 +190,44 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 14.0),
                           decoration: BoxDecoration(border: i == 0 ? null : Border(top: BorderSide(color: c.border))),
-                          child: Row(
-                            children: [
-                              ChannelBadge(channel: channelOf(recent[i].channel)),
-                              const SizedBox(width: 16.0),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(recent[i].headline, maxLines: 1, overflow: TextOverflow.ellipsis, style: VT.body(context, size: 13.0, weight: FontWeight.w500)),
-                                    Text(paths[recent[i].matterId?.path]?.title ?? '—', style: VT.muted(context, size: 11.0)),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12.0),
-                              StateBadge(state: itemStateOf(recent[i])),
-                              const SizedBox(width: 12.0),
-                              Text(fmtWhen(recent[i].receivedAt), style: VT.muted(context, size: 11.0)),
-                            ],
-                          ),
+                          child: LayoutBuilder(builder: (context, box) {
+                            final r = recent[i];
+                            final title = Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(r.headline, maxLines: 1, overflow: TextOverflow.ellipsis, style: VT.body(context, size: 13.0, weight: FontWeight.w500)),
+                                Text(paths[r.matterId?.path]?.title ?? '—', maxLines: 1, overflow: TextOverflow.ellipsis, style: VT.muted(context, size: 11.0)),
+                              ],
+                            );
+                            final when = Text(fmtWhen(r.receivedAt), style: VT.muted(context, size: 11.0));
+                            if (box.maxWidth < 560.0) {
+                              // Phone: badges + date on one line, the item underneath.
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Wrap(
+                                    spacing: 8.0,
+                                    runSpacing: 6.0,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [ChannelBadge(channel: channelOf(r.channel)), StateBadge(state: itemStateOf(r)), when],
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  title,
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                ChannelBadge(channel: channelOf(r.channel)),
+                                const SizedBox(width: 16.0),
+                                Expanded(child: title),
+                                const SizedBox(width: 12.0),
+                                StateBadge(state: itemStateOf(r)),
+                                const SizedBox(width: 12.0),
+                                when,
+                              ],
+                            );
+                          }),
                         ),
                     ],
                   ),
