@@ -200,7 +200,7 @@ class _AdminSettingsState extends State<AdminSettings> {
           _section(
             'API access',
             VHover(
-              onTap: () => showVBottomSheet<void>(context, builder: (_) => _ApiSheet(firm: widget.firm, initialWebhook: webhook)),
+              onTap: () => showVDrawer<void>(context, title: 'API access', width: 520.0, builder: (_) => _ApiSheet(firm: widget.firm, initialWebhook: webhook)),
               builder: (context, hovered) => Opacity(
                 opacity: hovered ? 0.8 : 1.0,
                 child: VCard(
@@ -403,29 +403,14 @@ class _ApiSheetState extends State<_ApiSheet> {
           child: Text(s, style: VT.muted(context, size: 12.0, weight: FontWeight.w600)),
         );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 32.0),
+      padding: EdgeInsets.zero,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('API access', style: VT.body(context, size: 16.0, weight: FontWeight.w600)),
-                        const SizedBox(height: 2.0),
-                        Text('Authenticate requests, manage webhooks, and monitor usage.', style: VT.muted(context, size: 13.0)),
-                      ],
-                    ),
-                  ),
-                  VIconButton(icon: Icons.close, size: 15.0, filled: true, onPressed: () => Navigator.of(context).maybePop()),
-                ],
-              ),
+              Text('Authenticate requests, manage webhooks, and monitor usage.', style: VT.muted(context)),
               const SizedBox(height: 20.0),
               const VNotice(
                 text: 'The Verin REST API is in private beta — launching Q1 2027. A key is issued to your firm when access opens.',
