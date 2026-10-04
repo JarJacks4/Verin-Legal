@@ -78,14 +78,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
       navigatorKey: appNavigatorKey,
       errorBuilder: (context, state) => appStateNotifier.loggedIn
           ? MattersListWidget()
-          : FirmWorkspaceSignInWidget(),
+          : WelcomeScreenWidget(),
       routes: [
         FFRoute(
           name: '_initialize',
           path: '/',
           builder: (context, _) => appStateNotifier.loggedIn
               ? MattersListWidget()
-              : FirmWorkspaceSignInWidget(),
+              : WelcomeScreenWidget(),
         ),
         FFRoute(
           name: CreateAccount1Widget.routeName,
@@ -100,21 +100,25 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: MattersListWidget.routeName,
           path: MattersListWidget.routePath,
+          requireAuth: true,
           builder: (context, params) => MattersListWidget(),
         ),
         FFRoute(
           name: ReviewQueueWidget.routeName,
           path: ReviewQueueWidget.routePath,
+          requireAuth: true,
           builder: (context, params) => ReviewQueueWidget(),
         ),
         FFRoute(
           name: AdminDashBoardPageWidget.routeName,
           path: AdminDashBoardPageWidget.routePath,
+          requireAuth: true,
           builder: (context, params) => AdminDashBoardPageWidget(),
         ),
         FFRoute(
           name: AdminMattersListWidget.routeName,
           path: AdminMattersListWidget.routePath,
+          requireAuth: true,
           asyncParams: {
             'matterDoc': getDocList(['Matters'], MattersRecord.fromSnapshot),
           },
@@ -129,16 +133,19 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: AdminBillingAndPlanWidget.routeName,
           path: AdminBillingAndPlanWidget.routePath,
+          requireAuth: true,
           builder: (context, params) => AdminBillingAndPlanWidget(),
         ),
         FFRoute(
           name: AdminTeamsWidget.routeName,
           path: AdminTeamsWidget.routePath,
+          requireAuth: true,
           builder: (context, params) => AdminTeamsWidget(),
         ),
         FFRoute(
           name: AdminProgramPageWidget.routeName,
           path: AdminProgramPageWidget.routePath,
+          requireAuth: true,
           builder: (context, params) => AdminProgramPageWidget(),
         ),
         FFRoute(
@@ -154,6 +161,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: MattersTabGroupHomeWidget.routeName,
           path: MattersTabGroupHomeWidget.routePath,
+          requireAuth: true,
           asyncParams: {
             'matterDoc': getDoc(['Matters'], MattersRecord.fromSnapshot),
           },
@@ -167,6 +175,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: SampleWidget.routeName,
           path: SampleWidget.routePath,
+          requireAuth: true,
           builder: (context, params) => SampleWidget(),
         ),
         FFRoute(
@@ -182,6 +191,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: FirmSettingsWidget.routeName,
           path: FirmSettingsWidget.routePath,
+          requireAuth: true,
           builder: (context, params) => FirmSettingsWidget(),
         ),
         FFRoute(

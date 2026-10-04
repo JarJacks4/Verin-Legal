@@ -1,5 +1,8 @@
 import '/components/button19_copy_widget.dart';
 import '/components/button19_widget.dart';
+import '/verin/auth/auth_shell.dart';
+import '/create_account_step1/create_account_step1_widget.dart';
+import '/firm_workspace_sign_in/firm_workspace_sign_in_widget.dart';
 import '/flutter_flow/ff_builtin_enums.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -45,7 +48,7 @@ class _WelcomeToVerinCompWidgetState extends State<WelcomeToVerinCompWidget> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Column(
           mainAxisSize: MainAxisSize.min,
@@ -97,7 +100,12 @@ class _WelcomeToVerinCompWidgetState extends State<WelcomeToVerinCompWidget> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            wrapWithModel(
+            VerinTap(
+              onTap: () {
+                SignupDraft.clear();
+                context.pushNamed(CreateAccountStep1Widget.routeName);
+              },
+              child: wrapWithModel(
               model: _model.buttonModel,
               updateCallback: () => safeSetState(() {}),
               child: Button19Widget(
@@ -115,8 +123,10 @@ class _WelcomeToVerinCompWidgetState extends State<WelcomeToVerinCompWidget> {
                 loading: false,
                 disabled: false,
               ),
-            ),
-            wrapWithModel(
+            )),
+            VerinTap(
+              onTap: () => context.pushNamed(FirmWorkspaceSignInWidget.routeName),
+              child: wrapWithModel(
               model: _model.button19CopyModel,
               updateCallback: () => safeSetState(() {}),
               child: Button19CopyWidget(
@@ -127,7 +137,7 @@ class _WelcomeToVerinCompWidgetState extends State<WelcomeToVerinCompWidget> {
                 loading: false,
                 disabled: false,
               ),
-            ),
+            )),
           ].divide(SizedBox(height: 16.0)),
         ),
         Align(

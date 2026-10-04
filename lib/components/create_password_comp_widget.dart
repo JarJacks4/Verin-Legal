@@ -1,6 +1,11 @@
 import '/components/button19_widget.dart';
 import '/components/step_indicator_widget.dart';
 import '/components/text_field11_widget.dart';
+import '/auth/firebase_auth/auth_util.dart';
+import '/verin/auth/auth_actions.dart';
+import '/verin/auth/auth_shell.dart';
+import '/create_account_step1/create_account_step1_widget.dart';
+import '/matters_list/matters_list_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +23,62 @@ class CreatePasswordCompWidget extends StatefulWidget {
 
 class _CreatePasswordCompWidgetState extends State<CreatePasswordCompWidget> {
   late CreatePasswordCompModel _model;
+  String? _error;
+  bool _busy = false;
+
+  String _text(TextField11Model m) => (m.inputTextController?.text ?? '');
+
+  Future<void> _create() async {
+    if (_busy) return;
+    final email = _text(_model.textFieldModel1).trim();
+    final pw = _text(_model.textFieldModel2);
+    final pw2 = _text(_model.textFieldModel3);
+    String? err;
+    if (!SignupDraft.isComplete) {
+      err = 'Your details are missing. Go back to step 1 and fill them in.';
+    } else if (!looksLikeEmail(email)) {
+      err = 'Enter a valid work email.';
+    } else if (pw.length < 8) {
+      err = 'Password must be at least 8 characters.';
+    } else if (pw != pw2) {
+      err = "Passwords don't match.";
+    }
+    if (err != null) {
+      setState(() => _error = err);
+      return;
+    }
+    setState(() {
+      _error = null;
+      _busy = true;
+    });
+    GoRouter.of(context).prepareAuthEvent();
+    final result = await verinSignUp(
+      email: email,
+      password: pw,
+      fullName: SignupDraft.fullName,
+      firmName: SignupDraft.firmName,
+      role: SignupDraft.role,
+    );
+    if (!mounted) return;
+    if (result != null && currentUserUid.isEmpty) {
+      setState(() {
+        _busy = false;
+        _error = result;
+      });
+      return;
+    }
+    setState(() => _busy = false);
+    if (result != null) showSnackbar(context, result);
+    context.goNamedAuth(MattersListWidget.routeName, context.mounted);
+  }
+
+  void _back() {
+    if (Navigator.of(context).canPop()) {
+      context.safePop();
+    } else {
+      context.goNamed(CreateAccountStep1Widget.routeName);
+    }
+  }
 
   @override
   void setState(VoidCallback callback) {
@@ -43,10 +104,9 @@ class _CreatePasswordCompWidgetState extends State<CreatePasswordCompWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 480.0,
       decoration: BoxDecoration(),
       child: Padding(
-        padding: EdgeInsets.all(48.0),
+        padding: EdgeInsets.all(15.0),
         child: Container(
           child: Container(
             decoration: BoxDecoration(),
@@ -237,6 +297,7 @@ class _CreatePasswordCompWidgetState extends State<CreatePasswordCompWidget> {
                             leadingIconPresent: false,
                             trailingIconPresent: false,
                             hint: '••••••••',
+                            obscure: true,
                             value: '',
                             onChange: '',
                             onSubmit: '',
@@ -286,6 +347,7 @@ class _CreatePasswordCompWidgetState extends State<CreatePasswordCompWidget> {
                             leadingIconPresent: false,
                             trailingIconPresent: false,
                             hint: '••••••••',
+                            obscure: true,
                             value: '',
                             onChange: '',
                             onSubmit: '',
@@ -302,21 +364,25 @@ class _CreatePasswordCompWidgetState extends State<CreatePasswordCompWidget> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    wrapWithModel(
+                    VerinTap(
+                      onTap: _busy ? null : _create,
+                      child: wrapWithModel(
                       model: _model.buttonModel,
                       updateCallback: () => safeSetState(() {}),
                       child: Button19Widget(
                         iconPresent: false,
                         iconEndPresent: false,
-                        content: 'Create account',
+                        content: _busy ? 'Creating account…' : 'Create account',
                         variant: 'primary',
                         size: 'large',
                         fullWidth: true,
-                        loading: false,
+                        loading: _busy,
                         disabled: false,
                       ),
-                    ),
-                    Container(
+                    )),
+                    VerinTap(
+                      onTap: _back,
+                      child: Container(
                       alignment: AlignmentDirectional(0.0, 0.0),
                       child: Row(
                         mainAxisSize: MainAxisSize.max,
@@ -355,7 +421,7 @@ class _CreatePasswordCompWidgetState extends State<CreatePasswordCompWidget> {
                           ),
                         ].divide(SizedBox(width: 4.0)),
                       ),
-                    ),
+                    )),
                   ].divide(SizedBox(height: 24.0)),
                 ),
                 Container(
@@ -365,33 +431,7 @@ class _CreatePasswordCompWidgetState extends State<CreatePasswordCompWidget> {
                     child: Container(
                       child: Container(
                         alignment: AlignmentDirectional(0.0, 0.0),
-                        child: Container(
-                          alignment: AlignmentDirectional(0.0, 0.0),
-                          child: Text(
-                            'Demo workspace • fictional matters • no real data',
-                            style: FlutterFlowTheme.of(context)
-                                .bodySmall
-                                .override(
-                                  font: GoogleFonts.ibmPlexSans(
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .bodySmall
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodySmall
-                                        .fontStyle,
-                                  ),
-                                  color: FlutterFlowTheme.of(context).accent3,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .bodySmall
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .bodySmall
-                                      .fontStyle,
-                                  lineHeight: 1.5,
-                                ),
-                          ),
-                        ),
+                        child: VerinAuthError(message: _error),
                       ),
                     ),
                   ),
