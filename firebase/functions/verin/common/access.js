@@ -1,23 +1,46 @@
 // Verin Legal — who may act on which matter.
 //
-// The app is single-tenant today: every matter carries a hardcoded firmID
-// (the Matters list filters on it) and users docs have no firm field yet.
-// So a user's firm is users/{uid}.firmID if present, otherwise the
-// DEFAULT_FIRM_ID param. A matter is accessible when its firmID matches (or it
-// has none). When multi-firm lands, add firmID to users docs and this keeps
-// working unchanged.
+// Every user belongs to exactly one firm: users/{uid}.firmID, written only
+// by the setupAccount function (security rules stop clients from setting it
+// or their own role). Every matter carries the firmID it was opened under,
+// and a user may only touch matters of their own firm.
 
 const { HttpsError } = require('firebase-functions/v2/https');
+
+const ADMIN_ROLES = ['admin', 'owner', 'administrator'];
 
 function requireAuth(request) {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in first.');
   return request.auth.uid;
 }
 
-async function firmIdForUser(db, uid, defaultFirmId) {
+function isAdminRole(role) {
+  return ADMIN_ROLES.includes(String(role || '').trim().toLowerCase());
+}
+
+async function userAccess(db, uid) {
   const snap = await db.collection('users').doc(uid).get();
-  const v = snap.exists ? snap.get('firmID') || snap.get('firmId') : null;
-  return (typeof v === 'string' && v.trim()) || defaultFirmId;
+  const v = snap.exists ? snap.get('firmID') : null;
+  const firmId = typeof v === 'string' ? v.trim() : '';
+  const role = snap.exists ? String(snap.get('role') || '') : '';
+  return { firmId, role, isAdmin: isAdminRole(role) };
+}
+
+// The caller's firm. The legacy third argument (a default firm) is ignored:
+// an account without a firm has to finish setup, never borrow someone's.
+async function firmIdForUser(db, uid) {
+  const { firmId } = await userAccess(db, uid);
+  if (!firmId) {
+    throw new HttpsError('failed-precondition', 'Your account is not attached to a firm yet. Sign out and sign in again to finish setup.');
+  }
+  return firmId;
+}
+
+async function requireAdmin(db, uid) {
+  const a = await userAccess(db, uid);
+  if (!a.firmId) throw new HttpsError('failed-precondition', 'Your account is not attached to a firm yet.');
+  if (!a.isAdmin) throw new HttpsError('permission-denied', 'Only a firm admin can do this.');
+  return a;
 }
 
 function assertDocId(id, name = 'id') {
@@ -26,17 +49,17 @@ function assertDocId(id, name = 'id') {
   }
 }
 
-async function loadMatterForUser(db, uid, matterId, defaultFirmId) {
+async function loadMatterForUser(db, uid, matterId) {
   assertDocId(matterId, 'matterId');
   const ref = db.collection('Matters').doc(matterId);
   const snap = await ref.get();
   if (!snap.exists) throw new HttpsError('not-found', 'Matter not found');
-  const firmId = await firmIdForUser(db, uid, defaultFirmId);
-  const matterFirm = snap.get('firmID');
-  if (matterFirm && matterFirm !== firmId) {
-    throw new HttpsError('permission-denied', 'This matter belongs to a different firm');
+  const firmId = await firmIdForUser(db, uid);
+  if (snap.get('firmID') !== firmId) {
+    // Same answer as a missing matter: don't reveal other firms' matter ids.
+    throw new HttpsError('not-found', 'Matter not found');
   }
   return { ref, snap, firmId };
 }
 
-module.exports = { requireAuth, firmIdForUser, loadMatterForUser, assertDocId };
+module.exports = { requireAuth, isAdminRole, userAccess, firmIdForUser, requireAdmin, loadMatterForUser, assertDocId };

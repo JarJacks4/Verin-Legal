@@ -443,9 +443,12 @@ class _StepIndicator extends StatelessWidget {
 }
 
 class SignUpView extends StatefulWidget {
-  const SignUpView({super.key, required this.step});
+  const SignUpView({super.key, required this.step, this.invite = ''});
 
   final int step;
+
+  /// Invitation id from an admin's sign-up link; the person joins that firm.
+  final String invite;
 
   @override
   State<SignUpView> createState() => _SignUpViewState();
@@ -464,6 +467,7 @@ class _SignUpViewState extends State<SignUpView> with _RedirectIfSignedIn {
   @override
   void initState() {
     super.initState();
+    if (widget.step == 1 && widget.invite.trim().isNotEmpty) SignupDraft.inviteId = widget.invite.trim();
     if (widget.step == 1) redirectIfSignedIn();
     if (widget.step == 2 && !SignupDraft.isComplete) {
       // Landed on step 2 directly (refresh / bookmark): details are missing.
@@ -484,8 +488,9 @@ class _SignUpViewState extends State<SignUpView> with _RedirectIfSignedIn {
   }
 
   void _continue() {
-    if (_name.text.trim().isEmpty || _firm.text.trim().isEmpty) {
-      setState(() => _error = 'Please fill in your name and firm.');
+    final invited = SignupDraft.inviteId.isNotEmpty;
+    if (_name.text.trim().isEmpty || (!invited && _firm.text.trim().isEmpty)) {
+      setState(() => _error = invited ? 'Please fill in your name.' : 'Please fill in your name and firm.');
       return;
     }
     SignupDraft.fullName = _name.text.trim();
@@ -525,6 +530,7 @@ class _SignUpViewState extends State<SignUpView> with _RedirectIfSignedIn {
       fullName: SignupDraft.fullName,
       firmName: SignupDraft.firmName,
       role: SignupDraft.role,
+      inviteId: SignupDraft.inviteId,
     );
     if (!mounted) return;
     if (result != null && currentUserUid.isEmpty) {
@@ -556,8 +562,13 @@ class _SignUpViewState extends State<SignUpView> with _RedirectIfSignedIn {
             if (step == 1) ...[
               VTextField(controller: _name, label: 'Full name', hint: 'Sarah Chen', autofillHints: const [AutofillHints.name]),
               const SizedBox(height: 16.0),
-              VTextField(controller: _firm, label: 'Firm name', hint: 'Harbor Family Law', autofillHints: const [AutofillHints.organizationName]),
-              const SizedBox(height: 16.0),
+              if (SignupDraft.inviteId.isNotEmpty) ...[
+                const VNotice(tone: VNoticeTone.teal, text: "You've been invited to your firm's Verin workspace. On the next step, use the email address the invitation was sent to."),
+                const SizedBox(height: 16.0),
+              ] else ...[
+                VTextField(controller: _firm, label: 'Firm name', hint: 'Harbor Family Law', autofillHints: const [AutofillHints.organizationName]),
+                const SizedBox(height: 16.0),
+              ],
               VSelect<String>(
                 label: 'Role',
                 value: _role,

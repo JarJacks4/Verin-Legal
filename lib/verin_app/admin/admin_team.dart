@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/verin/record_ext.dart';
+import '/verin/verin_config.dart';
 
 import '../data/model.dart';
 import '../theme/tokens.dart';
@@ -14,9 +15,12 @@ import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
 import 'admin_shell.dart';
 
-String signUpLink() {
+/// The sign-up link for one invitation; whoever uses it (with the invited
+/// email) joins this firm instead of creating a new one.
+String signUpLink(String inviteId) {
   final base = Uri.base;
-  return '${base.scheme}://${base.host}${base.hasPort && base.port != 80 && base.port != 443 ? ':${base.port}' : ''}/createAccountStep1';
+  final origin = '${base.scheme}://${base.host}${base.hasPort && base.port != 80 && base.port != 443 ? ':${base.port}' : ''}';
+  return '$origin/createAccountStep1?invite=${Uri.encodeQueryComponent(inviteId)}';
 }
 
 String initialsOf(String name, String email) => VUser(name: name, email: email, firm: '', role: '').initials;
@@ -32,7 +36,9 @@ class AdminTeam extends StatefulWidget {
 }
 
 class _AdminTeamState extends State<AdminTeam> {
-  late final Stream<List<TeamMembersRecord>> _team = queryTeamMembersRecord();
+  late final Stream<List<TeamMembersRecord>> _team = queryTeamMembersRecord(
+    queryBuilder: (q) => q.where('firmID', isEqualTo: currentFirmId()),
+  );
 
   Future<void> _remove(TeamMembersRecord m) async {
     final who = m.name.isNotEmpty ? m.name : m.email;
@@ -80,8 +86,7 @@ class _AdminTeamState extends State<AdminTeam> {
       stream: _team,
       builder: (context, snap) {
         final all = snap.data ?? const <TeamMembersRecord>[];
-        final firmRef = widget.firm?.reference;
-        final team = all.where((m) => firmRef == null || m.firmAccountI == null || m.firmAccountI == firmRef).toList()
+        final team = all.toList()
           ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         final active = team.where((m) => m.status.toLowerCase() == 'active').length;
         final used = team.where((m) => m.status.toLowerCase() != 'suspended').length;
@@ -235,6 +240,7 @@ class _InviteFormState extends State<InviteForm> {
   String _role = 'Paralegal';
   bool _saving = false;
   bool _done = false;
+  String _inviteId = '';
   String? _error;
 
   @override
@@ -256,19 +262,26 @@ class _InviteFormState extends State<InviteForm> {
       _error = null;
     });
     try {
-      await TeamMembersRecord.collection.doc().set({
+      final ref = TeamMembersRecord.collection.doc();
+      await ref.set({
         ...createTeamMembersRecordData(
           firmAccountI: widget.firm?.reference,
           name: name,
-          email: email,
+          email: email.toLowerCase(),
           role: _role,
           status: 'invited',
           invitedAt: DateTime.now(),
         ),
         'expiresAt': DateTime.now().add(const Duration(hours: 72)),
         'invitedByUid': currentUserUid,
+        'firmID': currentFirmId(),
       });
-      if (mounted) setState(() => _done = true);
+      if (mounted) {
+        setState(() {
+          _done = true;
+          _inviteId = ref.id;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -282,7 +295,7 @@ class _InviteFormState extends State<InviteForm> {
   @override
   Widget build(BuildContext context) {
     if (_done) {
-      final link = signUpLink();
+      final link = signUpLink(_inviteId);
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

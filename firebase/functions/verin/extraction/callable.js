@@ -50,7 +50,7 @@ exports.ingestScreenshot = onCall(
     const uid = requireAuth(request);
     const db = getFirestore();
     const data = request.data || {};
-    const { ref: matterRef } = await loadMatterForUser(db, uid, data.matterId, P.DEFAULT_FIRM_ID.value());
+    const { ref: matterRef } = await loadMatterForUser(db, uid, data.matterId);
 
     if (typeof data.imageBase64 !== 'string' || !data.imageBase64) {
       throw new HttpsError('invalid-argument', 'imageBase64 is required');
@@ -115,6 +115,7 @@ exports.ingestScreenshot = onCall(
       });
       tx.set(receiptRef, {
         matterId: matterRef,
+        firmID: appended.firmId,
         itemKind: 'screenshot',
         receivedAt: Timestamp.fromDate(receivedAt),
         channel: 'Upload',
@@ -199,7 +200,7 @@ exports.extractThreadMessages = onCall(
       const snap = await db.collection(collection).doc(data.docId).get();
       const matterRef = snap.exists ? snap.get('matterId') || snap.get('matterID') : null;
       if (matterRef && matterRef.id) {
-        await loadMatterForUser(db, uid, matterRef.id, P.DEFAULT_FIRM_ID.value());
+        await loadMatterForUser(db, uid, matterRef.id);
       }
     }
 

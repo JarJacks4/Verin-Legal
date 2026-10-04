@@ -16,6 +16,7 @@ import 'matter/matter_detail_screen.dart';
 import 'matters/matters_screen.dart';
 import 'review/review_screen.dart';
 import 'shell/app_shell.dart';
+import 'shell/firm_gate.dart';
 
 class VWelcomePage extends StatelessWidget {
   const VWelcomePage({super.key});
@@ -30,22 +31,23 @@ class VSignInPage extends StatelessWidget {
 }
 
 class VSignUpPage extends StatelessWidget {
-  const VSignUpPage({super.key, required this.step});
+  const VSignUpPage({super.key, required this.step, this.invite = ''});
   final int step;
+  final String invite;
   @override
-  Widget build(BuildContext context) => SignUpView(step: step);
+  Widget build(BuildContext context) => SignUpView(step: step, invite: invite);
 }
 
 class VMattersPage extends StatelessWidget {
   const VMattersPage({super.key});
   @override
-  Widget build(BuildContext context) => const AppShell(nav: ConsoleNav.matters, child: MattersScreen());
+  Widget build(BuildContext context) => const FirmGate(child: AppShell(nav: ConsoleNav.matters, child: MattersScreen()));
 }
 
 class VReviewPage extends StatelessWidget {
   const VReviewPage({super.key});
   @override
-  Widget build(BuildContext context) => const AppShell(nav: ConsoleNav.review, child: ReviewScreen());
+  Widget build(BuildContext context) => const FirmGate(child: AppShell(nav: ConsoleNav.review, child: ReviewScreen()));
 }
 
 class VMatterPage extends StatelessWidget {
@@ -55,14 +57,18 @@ class VMatterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (fromAdmin) {
-      return AdminShell(
+      return FirmGate(
+        child: AdminShell(
         nav: AdminNav.matters,
-        builder: (context, user, firm) => MatterDetailScreen(key: ValueKey(matter?.reference.path), matter: matter, admin: true),
+          builder: (context, user, firm) => MatterDetailScreen(key: ValueKey(matter?.reference.path), matter: matter, admin: true),
+        ),
       );
     }
-    return AppShell(
-      nav: ConsoleNav.matters,
-      child: MatterDetailScreen(key: ValueKey(matter?.reference.path), matter: matter),
+    return FirmGate(
+      child: AppShell(
+        nav: ConsoleNav.matters,
+        child: MatterDetailScreen(key: ValueKey(matter?.reference.path), matter: matter),
+      ),
     );
   }
 }
@@ -72,7 +78,8 @@ class VAdminPage extends StatelessWidget {
   final AdminNav nav;
   @override
   Widget build(BuildContext context) {
-    return AdminShell(
+    return FirmGate(
+      child: AdminShell(
       nav: nav,
       builder: (context, user, firm) => switch (nav) {
         AdminNav.dashboard => AdminDashboard(user: user, firm: firm),
@@ -82,6 +89,7 @@ class VAdminPage extends StatelessWidget {
         AdminNav.program => AdminProgram(firm: firm, user: user),
         AdminNav.settings => AdminSettings(key: ValueKey(firm?.reference.path ?? 'no-firm'), firm: firm, user: user),
       },
+      ),
     );
   }
 }

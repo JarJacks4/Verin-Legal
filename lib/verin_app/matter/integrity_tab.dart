@@ -8,6 +8,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/verin/record_ext.dart';
 import '/verin/verin_api.dart';
+import '/verin/verin_config.dart';
 
 import '../data/format.dart';
 import '../data/model.dart';
@@ -46,7 +47,10 @@ class _IntegrityTabState extends State<IntegrityTab> {
     if (_chain == null || _chainFor != widget.matter.reference.path) {
       _chainFor = widget.matter.reference.path;
       _chain = queryChainEntriesRecord(
-        queryBuilder: (q) => q.where('matterID', isEqualTo: widget.matter.reference).orderBy('seq', descending: true),
+        queryBuilder: (q) => q
+            .where('matterID', isEqualTo: widget.matter.reference)
+            .where('firmID', isEqualTo: currentFirmId())
+            .orderBy('seq', descending: true),
         limit: 200,
       ).map((l) => l.reversed.toList());
     }

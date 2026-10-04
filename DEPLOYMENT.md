@@ -177,3 +177,18 @@ One-time setup, so GitHub can deploy:
 If a run fails, open it in the Actions tab; the failing step's log shows why (most often an
 analyze error or a missing secret). Functions are still deployed manually (step 4) because
 they need the Firebase secrets.
+
+## Firms (multi-firm separation)
+
+- Every account belongs to one firm: `users/{uid}.firmID`, plus `role` for
+  access. Only the `setupAccount` function writes these; the app calls it
+  after sign-up and once per session.
+- A new sign-up creates a new firm (`firmAccount/f_…`) and is its Admin.
+  Someone signing up with an email an admin invited (Admin → Team → Invite
+  member, then send the link) joins that firm with the invited role.
+- Receipts, chain entries and Clio sync log entries carry `firmID`; the
+  Firestore and Storage rules only let people read their own firm's records.
+- Records created before separation are stamped with their firm the first
+  time someone from that firm opens the app (marker: `firmScope/{firmId}`).
+- Deploy order when changing any of this: functions, then
+  `firestore:indexes`, then `firestore:rules,storage`, then hosting.

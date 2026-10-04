@@ -102,8 +102,11 @@ async function appendInTransaction(tx, db, { matterRef, receiptRef, itemHash, re
   const entryHash = computeEntryHash({ prevHash, itemHash, receivedAtIso, originDigest: od });
 
   const entryRef = db.collection('chainEntries').doc();
+  const firmId = matterSnap.get('firmID') || null;
   const entry = {
     matterID: matterRef,
+    // Denormalized so security rules can scope reads to the reader's firm.
+    firmID: firmId,
     receiptRef: receiptRef || null,
     seq,
     prevHash,
@@ -116,7 +119,7 @@ async function appendInTransaction(tx, db, { matterRef, receiptRef, itemHash, re
   };
   tx.set(entryRef, entry);
   tx.set(matterRef, { chainHeadHash: entryHash, chainLength: seq, hasChainRoot: true }, { merge: true });
-  return { entryRef, entry, isRoot: seq === 1 };
+  return { entryRef, entry, firmId, isRoot: seq === 1 };
 }
 
 module.exports = { GENESIS, sha256Hex, canonicalJson, originDigest, computeEntryHash, verifyEntries, appendInTransaction };

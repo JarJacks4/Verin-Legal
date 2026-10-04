@@ -150,7 +150,7 @@ exports.ingestEvidence = onCall({ timeoutSeconds: 540, memory: '1GiB' }, async (
   const db = getFirestore();
   const bucket = getStorage().bucket();
   const data = request.data || {};
-  const { ref: matterRef } = await loadMatterForUser(db, uid, data.matterId, P.DEFAULT_FIRM_ID.value());
+  const { ref: matterRef } = await loadMatterForUser(db, uid, data.matterId);
 
   const kind = String(data.kind || '').toLowerCase();
   if (!KINDS.includes(kind)) throw new HttpsError('invalid-argument', `kind must be one of ${KINDS.join(', ')}`);
@@ -229,6 +229,7 @@ exports.ingestEvidence = onCall({ timeoutSeconds: 540, memory: '1GiB' }, async (
     });
     tx.set(receiptRef, {
       matterId: matterRef,
+      firmID: appended.firmId,
       itemKind: kind,
       receivedAt: Timestamp.fromDate(receivedAt),
       channel,
@@ -320,7 +321,7 @@ exports.reprocessReceipt = onCall(
     if (!snap.exists) throw new HttpsError('not-found', 'Receipt not found');
     const matterRef = snap.get('matterId');
     if (!matterRef || !matterRef.id) throw new HttpsError('failed-precondition', 'Receipt has no matter');
-    await loadMatterForUser(db, uid, matterRef.id, P.DEFAULT_FIRM_ID.value());
+    await loadMatterForUser(db, uid, matterRef.id);
     if (data.clientSide === 'left' || data.clientSide === 'right') await ref.set({ clientSide: data.clientSide }, { merge: true });
     await ref.set({ extractionState: 'running' }, { merge: true });
     try {

@@ -2,13 +2,16 @@ rules_version = '2';
 
 // Verin Legal — Firestore security rules.
 //
+// Firms are separated here, on the server: every record carries the firmID
+// it belongs to, and a signed-in user can only read or change records whose
+// firmID matches users/{uid}.firmID. That field — and the user's role — are
+// written only by the setupAccount Cloud Function, never by the app.
+//
 // Evidence integrity rule of thumb: anything that is part of the record
 // (receipts, the hash chain, exports, extraction runs, Clio sync history) is
 // written only by Cloud Functions through the Admin SDK, which bypasses these
-// rules. Signed-in users can read it but cannot create, edit or delete it.
-//
-// This is still single-tenant (every signed-in user can see every matter).
-// When a second firm is onboarded, scope reads to the user's firmID.
+// rules. Staff can read their own firm's records but cannot create, edit or
+// delete them.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -17,21 +20,49 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function myFirm() {
+      return me().get('firmID', '');
+    }
+
+    // True when `firm` is the signed-in user's own (non-empty) firm.
+    function inMyFirm(firm) {
+      return signedIn() && firm is string && firm != '' && firm == myFirm();
+    }
+
+    function isAdmin() {
+      return me().get('role', '').lower() in ['admin', 'owner', 'administrator'];
+    }
+
     // True if the update leaves every listed field unchanged.
     function untouched(fields) {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
     }
 
+    function matterFirm(matterId) {
+      return get(/databases/$(database)/documents/Matters/$(matterId)).data.get('firmID', '');
+    }
+
     match /users/{uid} {
-      allow read, write: if request.auth.uid == uid;
+      allow read: if signedIn() && request.auth.uid == uid;
+      // Firm membership and role come only from setupAccount.
+      allow create: if signedIn() && request.auth.uid == uid
+        && !request.resource.data.keys().hasAny(['firmID', 'firmId', 'role']);
+      allow update: if signedIn() && request.auth.uid == uid
+        && untouched(['firmID', 'firmId', 'role']);
+      allow delete: if false;
     }
 
     match /Matters/{matterId} {
-      allow read: if signedIn();
-      allow create: if signedIn()
+      allow read: if inMyFirm(resource.data.firmID);
+      allow create: if inMyFirm(request.resource.data.get('firmID', ''))
         && !request.resource.data.keys().hasAny(['chainHeadHash', 'chainLength', 'hasChainRoot']);
-      // Chain and integration fields are server-maintained.
-      allow update: if signedIn() && untouched([
+      // Firm, chain and integration fields are server-maintained.
+      allow update: if inMyFirm(resource.data.firmID) && untouched([
+        'firmID',
         'chainHeadHash', 'chainLength', 'hasChainRoot',
         'clioMatterID', 'clioConnected', 'clioSyncedAt', 'clioMatterUrl', 'clioMatterDisplayNumber',
         'providerMatterReference', 'providerSyncedAt',
@@ -40,94 +71,100 @@ service cloud.firestore {
       allow delete: if false;
 
       match /exports/{exportId} {
-        allow read: if signedIn();
+        allow read: if inMyFirm(matterFirm(matterId));
         allow write: if false;
       }
     }
 
     match /Receipts/{receiptId} {
-      allow read: if signedIn();
-      // Receipts are created by ingestScreenshot (server-side hashing and
+      allow read: if inMyFirm(resource.data.firmID);
+      // Receipts are created by Cloud Functions (server-side hashing and
       // chaining). Staff may only change review labels on them.
       allow create, delete: if false;
-      allow update: if signedIn() && request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['classificationLabel', 'isTranscribed', 'resolvedDate', 'hasChronologyShift',
-                  'reviewedByUid', 'reviewedAt']);
+      allow update: if inMyFirm(resource.data.firmID)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['classificationLabel', 'isTranscribed', 'resolvedDate', 'hasChronologyShift',
+                    'reviewedByUid', 'reviewedAt']);
 
       match /extractionRuns/{runId} {
-        allow read: if signedIn();
-        allow write: if false;
-      }
-    }
-
-    match /Items/{itemId} {
-      allow read, create, update: if signedIn();
-      allow delete: if false;
-
-      match /extractionRuns/{runId} {
-        allow read: if signedIn();
+        allow read: if inMyFirm(get(/databases/$(database)/documents/Receipts/$(receiptId)).data.get('firmID', ''));
         allow write: if false;
       }
     }
 
     match /chainEntries/{entryId} {
-      allow read: if signedIn();
+      allow read: if inMyFirm(resource.data.firmID);
       allow write: if false;
     }
 
     match /clioSyncLog/{logId} {
-      allow read: if signedIn();
+      allow read: if inMyFirm(resource.data.firmID);
       allow write: if false;
     }
 
-    match /VerifiedStatements/{id} {
-      allow read, create, update: if signedIn();
-      allow delete: if false;
-    }
-
-    match /Sync_Status/{id} {
-      allow read, write: if signedIn();
-    }
-
-    match /Follow-UpRequests/{id} {
-      allow read, create, update: if signedIn();
-    }
-
-    // Firm profile and preferences are editable in Settings; plan and billing
-    // fields are set by Verin (console / Admin SDK) and can't be self-assigned.
+    // Firm profile and preferences are editable by the firm's admins in
+    // Settings; the firm itself is created by setupAccount, and plan and
+    // billing fields are set by Verin (console / Admin SDK).
     match /firmAccount/{id} {
       function planFields() {
         return ['planName', 'planStatus', 'planPriceCents', 'planRenewsAt', 'memberSince',
                 'seatLimit', 'storageTier', 'retentionPolicy'];
       }
-      allow read: if signedIn();
-      allow create: if signedIn() && !request.resource.data.keys().hasAny(planFields());
-      allow update: if signedIn() && untouched(planFields())
-        || (signedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['retentionPolicy', 'retentionRequest'])
-            && request.resource.data.get('retentionPolicy', 'standard') == 'standard');
-      allow delete: if false;
+      allow read: if inMyFirm(resource.data.firmID);
+      allow create, delete: if false;
+      allow update: if inMyFirm(resource.data.firmID) && isAdmin() && (
+        untouched(planFields().concat(['firmID', 'ownerUid']))
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['retentionPolicy', 'retentionRequest'])
+            && request.resource.data.get('retentionPolicy', 'standard') == 'standard'));
 
       match /invoices/{invoiceId} {
-        allow read: if signedIn();
+        allow read: if inMyFirm(get(/databases/$(database)/documents/firmAccount/$(id)).data.get('firmID', ''));
         allow write: if false;
       }
     }
 
+    // Team list and invitations. Admins invite and remove; joining a firm
+    // happens through setupAccount, which checks the invitation's email.
     match /TeamMembers/{id} {
-      allow read, create, update, delete: if signedIn();
+      allow read: if inMyFirm(resource.data.firmID);
+      allow create: if isAdmin() && inMyFirm(request.resource.data.get('firmID', ''))
+        && request.resource.data.get('status', '') == 'invited'
+        && !request.resource.data.keys().hasAny(['uid']);
+      allow update: if isAdmin() && inMyFirm(resource.data.firmID)
+        && untouched(['firmID', 'uid', 'email']);
+      allow delete: if isAdmin() && inMyFirm(resource.data.firmID);
     }
 
     // Clio connection status the app displays; written by the Clio functions.
     match /integrationStatus/{firmId} {
-      allow read: if signedIn();
+      allow read: if inMyFirm(firmId);
       allow write: if false;
     }
 
-    // OAuth tokens (encrypted) and one-time OAuth state values: server only.
+    // Server only: encrypted OAuth tokens, one-time OAuth state values and
+    // per-firm migration markers.
     match /integrationSecrets/{id} {
       allow read, write: if false;
     }
     match /oauthStates/{id} {
+      allow read, write: if false;
+    }
+    match /firmScope/{id} {
+      allow read, write: if false;
+    }
+
+    // Collections from the original FlutterFlow build. The current app
+    // doesn't use them and they carry no firm, so they are closed.
+    match /Items/{itemId=**} {
+      allow read, write: if false;
+    }
+    match /VerifiedStatements/{id} {
+      allow read, write: if false;
+    }
+    match /Sync_Status/{id} {
+      allow read, write: if false;
+    }
+    match /Follow-UpRequests/{id} {
       allow read, write: if false;
     }
   }

@@ -111,6 +111,60 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "Receipts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "firmID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "receivedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "chainEntries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "firmID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "seq",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "clioSyncLog",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "firmID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pushedAt",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

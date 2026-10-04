@@ -35,7 +35,7 @@ const { seal, open } = require('./tokenCrypto');
 
 if (!getApps().length) initializeApp();
 
-const { CLIO_CLIENT_SECRET, TOKEN_ENCRYPTION_KEY, CLIO_CLIENT_ID, CLIO_REGION, CLIO_REDIRECT_URI, APP_URL, DEFAULT_FIRM_ID } = P;
+const { CLIO_CLIENT_SECRET, TOKEN_ENCRYPTION_KEY, CLIO_CLIENT_ID, CLIO_REGION, CLIO_REDIRECT_URI, APP_URL } = P;
 
 const SYNC_LOG = 'clioSyncLog';
 const SECRETS = 'integrationSecrets'; // server-only (rules deny all client access)
@@ -46,8 +46,8 @@ const STATE_TTL_MS = 10 * 60 * 1000; // Clio auth codes are valid for 10 minutes
 const db = () => getFirestore();
 
 const requireAuth = access.requireAuth;
-const firmIdFor = (uid) => access.firmIdForUser(db(), uid, DEFAULT_FIRM_ID.value());
-const loadMatterForUser = (uid, matterId) => access.loadMatterForUser(db(), uid, matterId, DEFAULT_FIRM_ID.value());
+const firmIdFor = (uid) => access.firmIdForUser(db(), uid);
+const loadMatterForUser = (uid, matterId) => access.loadMatterForUser(db(), uid, matterId);
 
 function assertConfigured() {
   if (!CLIO_CLIENT_ID.value() || !CLIO_REDIRECT_URI.value()) {
@@ -241,11 +241,12 @@ exports.clioDisconnect = onCall({ secrets: CLIO_SECRETS }, async (request) => {
   const snap = await ref.get();
   if (snap.exists && snap.get('accessTokenEnc')) {
     try {
-      await clio.deauthorize({
+      const revoked = await clio.deauthorize({
         fetch,
         region: snap.get('region') || CLIO_REGION.value(),
         accessToken: open(snap.get('accessTokenEnc'), TOKEN_ENCRYPTION_KEY.value()),
       });
+      if (!revoked) console.warn('Clio did not confirm the deauthorize; local tokens deleted anyway');
     } catch (e) {
       console.warn('Clio deauthorize failed; deleting local tokens anyway', e.message);
     }
@@ -312,11 +313,16 @@ exports.clioPushDocument = onCall({ secrets: CLIO_SECRETS, timeoutSeconds: 120, 
   if (typeof storagePath !== 'string' || !storagePath || storagePath.includes('..') || storagePath.startsWith('/')) {
     throw new HttpsError('invalid-argument', 'storagePath is required (the export PDF\'s path in Storage)');
   }
+  // Only this matter's own files can be pushed to its Clio matter.
+  if (!storagePath.startsWith(`matters/${ref.id}/`)) {
+    throw new HttpsError('permission-denied', 'That file does not belong to this matter.');
+  }
   const name = String(documentName || storagePath.split('/').pop()).slice(0, 200);
 
   const logRef = db().collection(SYNC_LOG).doc();
   const baseLog = {
     matterID: ref,
+    firmID: firmId,
     documentName: name,
     storagePath,
     pushedByUid: uid,

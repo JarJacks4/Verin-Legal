@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/verin/record_ext.dart';
+import '/verin/verin_config.dart';
 
 import '../data/model.dart';
 import '../theme/tokens.dart';
@@ -25,8 +26,10 @@ void openMatter(BuildContext context, MattersRecord m, {bool admin = false}) {
   );
 }
 
-/// All receipts, grouped by matter path (single-tenant firm sizes).
-Stream<Map<String, List<ReceiptsRecord>>> receiptsByMatterStream() => queryReceiptsRecord().map((list) {
+/// The firm's receipts, grouped by matter path.
+Stream<Map<String, List<ReceiptsRecord>>> receiptsByMatterStream() => queryReceiptsRecord(
+      queryBuilder: (q) => q.where('firmID', isEqualTo: currentFirmId()),
+    ).map((list) {
       final out = <String, List<ReceiptsRecord>>{};
       for (final r in list) {
         final m = r.matterId;

@@ -150,6 +150,19 @@ class VerinApi {
   static Future<Map<String, dynamic>> exportFirmData() =>
       _call('exportFirmData', {}, timeout: const Duration(seconds: 540));
 
+  // ---------------------------------------------------------------- account
+
+  /// Attaches the signed-in account to a firm: joins the firm that invited
+  /// this email, or creates a new firm with [firmName]. Returns
+  /// { firmId, role, created, joined }.
+  static Future<Map<String, dynamic>> setupAccount({String? firmName, String? fullName, String? title, String? inviteId}) =>
+      _call('setupAccount', {
+        if ((firmName ?? '').trim().isNotEmpty) 'firmName': firmName!.trim(),
+        if ((fullName ?? '').trim().isNotEmpty) 'fullName': fullName!.trim(),
+        if ((title ?? '').trim().isNotEmpty) 'title': title!.trim(),
+        if ((inviteId ?? '').trim().isNotEmpty) 'inviteId': inviteId!.trim(),
+      }, timeout: const Duration(seconds: 120));
+
   // ---------------------------------------------------------------- Clio
 
   /// Returns the Clio authorize URL to open in the browser.
