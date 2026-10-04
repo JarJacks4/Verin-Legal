@@ -21,6 +21,7 @@ const { getStorage } = require('firebase-admin/storage');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 
 const P = require('../common/params');
+const { anthropicClient: sharedAnthropicClient } = require('../common/anthropic');
 const { requireAuth, loadMatterForUser } = require('../common/access');
 const { appendInTransaction } = require('../chain/chain');
 const { createExtractor, extractFromBytes, resultFields, InputError, MAX_IMAGE_BYTES, STATUS } = require('./extractor');
@@ -30,14 +31,8 @@ if (!getApps().length) initializeApp();
 
 const EXTENSIONS = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' };
 
-let cachedClient = null;
 function anthropicClient() {
-  if (!cachedClient) {
-    const mod = require('@anthropic-ai/sdk');
-    const Anthropic = mod.default || mod;
-    cachedClient = new Anthropic({ apiKey: P.ANTHROPIC_API_KEY.value(), maxRetries: 2, timeout: 120000 });
-  }
-  return cachedClient;
+  return sharedAnthropicClient({ timeout: 120000 });
 }
 
 function downloadUrl(bucketName, path, token) {

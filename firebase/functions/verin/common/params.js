@@ -15,6 +15,9 @@ module.exports = {
   CLIO_CLIENT_SECRET: defineSecret('CLIO_CLIENT_SECRET'),
   TOKEN_ENCRYPTION_KEY: defineSecret('TOKEN_ENCRYPTION_KEY'),
 
+  // Only for organization-level API keys: the workspace (wrkspc_…) to bill.
+  ANTHROPIC_WORKSPACE_ID: defineString('ANTHROPIC_WORKSPACE_ID', { default: '' }),
+
   EXTRACTION_MODEL: defineString('EXTRACTION_MODEL', { default: 'claude-sonnet-5-5' }),
   EXTRACTION_MAX_TOKENS: defineInt('EXTRACTION_MAX_TOKENS', { default: 16000 }),
 

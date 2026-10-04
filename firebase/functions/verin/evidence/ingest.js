@@ -26,6 +26,7 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 
 const P = require('../common/params');
+const { anthropicClient: sharedAnthropicClient } = require('../common/anthropic');
 const { requireAuth, loadMatterForUser, assertDocId } = require('../common/access');
 const { appendInTransaction } = require('../chain/chain');
 const { requestTimestamp } = require('./tsa');
@@ -46,14 +47,8 @@ const CHANNELS = {
 };
 const MAX_BYTES = 2 * 1024 * 1024 * 1024; // spec §3: up to 2 GB per item
 
-let cachedClient = null;
 function anthropicClient() {
-  if (!cachedClient) {
-    const mod = require('@anthropic-ai/sdk');
-    const Anthropic = mod.default || mod;
-    cachedClient = new Anthropic({ apiKey: P.ANTHROPIC_API_KEY.value(), maxRetries: 2, timeout: 300000 });
-  }
-  return cachedClient;
+  return sharedAnthropicClient({ timeout: 300000 });
 }
 
 function processDeps() {
