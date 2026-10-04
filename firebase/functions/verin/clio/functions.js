@@ -95,7 +95,14 @@ function toHttpsError(e) {
   if (e instanceof HttpsError) return e;
   if (e instanceof clio.ClioApiError) {
     if (e.status === 401) return new HttpsError('failed-precondition', 'Clio connection expired or was revoked. Reconnect Clio in Firm Settings.');
-    if (e.status === 403) return new HttpsError('permission-denied', 'The Clio app is missing a permission this needs (check the app\'s permissions in the Clio developer portal).');
+    if (e.status === 403) {
+      console.error('Clio 403', e.message, e.body);
+      const why = String(e.message || '').replace(/^Clio \w+ \S+ failed \(403\): /, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+      return new HttpsError(
+        'permission-denied',
+        `Clio refused this (403${why ? `: ${why}` : ''}). Check the app's permissions in the Clio developer portal, then deauthorize Verin inside Clio and connect again.`,
+      );
+    }
     if (e.status === 404) return new HttpsError('not-found', 'That record was not found in Clio.');
     if (e.status === 429) return new HttpsError('resource-exhausted', 'Clio rate limit hit; try again in a minute.');
     return new HttpsError('unavailable', `Clio error: ${e.message}`);
