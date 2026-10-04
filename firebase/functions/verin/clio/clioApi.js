@@ -18,6 +18,10 @@ const REGION_HOSTS = {
   au: 'au.app.clio.com',
 };
 
+// Clio sits behind a web firewall that rejects anonymous clients (Node's
+// default User-Agent is just "node"), so every call identifies itself.
+const USER_AGENT = 'VerinLegal/1.0 (+https://app.verinlegal.com)';
+
 // Refresh a little before the access token actually expires.
 const REFRESH_SKEW_MS = 5 * 60 * 1000;
 
@@ -79,11 +83,23 @@ function toTokens(body, now, previousRefreshToken) {
 async function tokenRequest({ fetch, region, form }) {
   const res = await fetch(`https://${hostFor(region)}/oauth/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json', 'User-Agent': USER_AGENT },
     body: new URLSearchParams(form).toString(),
   });
   const body = await readJson(res);
   if (!res.ok) {
+    if (body && body.raw) {
+      // An HTML page instead of an OAuth error means something in front of
+      // Clio refused the request. Log who answered so it can be traced.
+      const h = (k) => (res.headers && res.headers.get ? res.headers.get(k) : null) || '';
+      console.error('Clio token endpoint returned non-JSON', {
+        status: res.status,
+        server: h('server'),
+        via: h('via'),
+        requestId: h('x-request-id') || h('x-amzn-requestid') || h('cf-ray'),
+        body: body.raw.slice(0, 300),
+      });
+    }
     throw new ClioApiError(`Clio token request failed (${res.status}): ${errorMessage(body, res.statusText)}`, {
       status: res.status,
       body,
@@ -126,6 +142,7 @@ async function deauthorize({ fetch, region, accessToken }) {
   const res = await fetch(`https://${hostFor(region)}/oauth/deauthorize`, {
     method: 'POST',
     headers: {
+      'User-Agent': USER_AGENT,
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
@@ -142,6 +159,7 @@ async function apiRequest({ fetch, region, accessToken, method = 'GET', path, qu
   const res = await fetch(u.toString(), {
     method,
     headers: {
+      'User-Agent': USER_AGENT,
       Authorization: `Bearer ${accessToken}`,
       Accept: 'application/json',
       ...(body ? { 'Content-Type': 'application/json' } : {}),
