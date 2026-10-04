@@ -2,7 +2,6 @@
 // displays (channel, item state, Clio state, chain status), plus the shared
 // live queries.
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
