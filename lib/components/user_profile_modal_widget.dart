@@ -1,9 +1,14 @@
+import '/auth/firebase_auth/auth_util.dart';
+import '/backend/backend.dart';
 import '/components/button22_widget.dart';
+import '/firm_workspace_sign_in/firm_workspace_sign_in_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '/verin/verin_format.dart';
+import '/verin/verin_ui.dart';
 import 'user_profile_modal_model.dart';
 export 'user_profile_modal_model.dart';
 
@@ -14,10 +19,10 @@ class UserProfileModalWidget extends StatefulWidget {
     String? firm,
     String? name,
     String? role,
-  })  : this.email = email ?? 'Email',
-        this.firm = firm ?? 'Firm',
-        this.name = name ?? 'Name',
-        this.role = role ?? 'Role';
+  })  : this.email = email ?? '',
+        this.firm = firm ?? '',
+        this.name = name ?? '',
+        this.role = role ?? '';
 
   final String email;
   final String firm;
@@ -31,6 +36,66 @@ class UserProfileModalWidget extends StatefulWidget {
 class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
   late UserProfileModalModel _model;
 
+  // First firmAccount document: firm name, plan, integrations.
+  FirmAccountRecord? _firm;
+  bool _firmLoaded = false;
+  bool _signingOut = false;
+
+  String get _name =>
+      widget.name.isNotEmpty ? widget.name : currentUserDisplayName;
+  String get _email => widget.email.isNotEmpty ? widget.email : currentUserEmail;
+  String get _role => widget.role.isNotEmpty
+      ? widget.role
+      : (currentUserDocument?.role ?? '');
+  String get _firmName {
+    final fromAccount = _firm?.firmName.trim() ?? '';
+    if (fromAccount.isNotEmpty) return fromAccount;
+    if (widget.firm.isNotEmpty) return widget.firm;
+    return currentUserDocument?.lawFirm ?? '';
+  }
+
+  String get _integrationsLine {
+    if (!_firmLoaded) return 'Integrations: …';
+    final list = (_firm?.connectedIntegrations ?? const <String>[])
+        .where((e) => e.trim().isNotEmpty)
+        .toList();
+    return list.isEmpty
+        ? 'No integrations connected'
+        : 'Integrations: ${list.join(', ')}';
+  }
+
+  Future<void> _loadFirm() async {
+    try {
+      final firms = await queryFirmAccountRecordOnce(singleRecord: true);
+      _firm = firms.isEmpty ? null : firms.first;
+    } catch (_) {
+      _firm = null;
+    }
+    _firmLoaded = true;
+    safeSetState(() {});
+  }
+
+  void _close() => Navigator.of(context).maybePop();
+
+  Future<void> _signOut() async {
+    if (_signingOut) return;
+    safeSetState(() => _signingOut = true);
+    final router = GoRouter.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      router.prepareAuthEvent();
+      await authManager.signOut();
+      router.clearRedirectLocation();
+    } catch (e) {
+      if (!mounted) return;
+      safeSetState(() => _signingOut = false);
+      showVerinSnack(context, 'Could not sign out. $e', error: true);
+      return;
+    }
+    navigator.pop();
+    router.goNamed(FirmWorkspaceSignInWidget.routeName);
+  }
+
   @override
   void setState(VoidCallback callback) {
     super.setState(callback);
@@ -41,6 +106,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => UserProfileModalModel());
+    _loadFirm();
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
@@ -126,9 +192,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                     FlutterFlowTheme.of(context).secondaryText,
                                 size: 20.0,
                               ),
-                              onPressed: () {
-                                print('IconButton pressed ...');
-                              },
+                              onPressed: _close,
                             ),
                           ],
                         ),
@@ -177,7 +241,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                     ),
                                     alignment: AlignmentDirectional(0.0, 0.0),
                                     child: Text(
-                                      'JJ',
+                                      initialsFor(_name, email: _email),
                                       textAlign: TextAlign.center,
                                       maxLines: 1,
                                       style: FlutterFlowTheme.of(context)
@@ -210,10 +274,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                         CrossAxisAlignment.center,
                                     children: [
                                       Text(
-                                        valueOrDefault<String>(
-                                          widget.name,
-                                          'Name',
-                                        ),
+                                        orDash(_name),
                                         style: FlutterFlowTheme.of(context)
                                             .headlineMedium
                                             .override(
@@ -243,10 +304,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                             ),
                                       ),
                                       Text(
-                                        valueOrDefault<String>(
-                                          widget.email,
-                                          'Email',
-                                        ),
+                                        orDash(_email),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -302,10 +360,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                             size: 18.0,
                                           ),
                                           Text(
-                                            valueOrDefault<String>(
-                                              widget.role,
-                                              'Role',
-                                            ),
+                                            orDash(_role),
                                             style: FlutterFlowTheme.of(context)
                                                 .labelMedium
                                                 .override(
@@ -425,10 +480,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                                   ),
                                                 ),
                                                 Text(
-                                                  valueOrDefault<String>(
-                                                    widget.firm,
-                                                    'Firm',
-                                                  ),
+                                                  orDash(_firmName),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .titleSmall
@@ -547,10 +599,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                                   ),
                                                 ),
                                                 Text(
-                                                  valueOrDefault<String>(
-                                                    widget.role,
-                                                    'Role',
-                                                  ),
+                                                  orDash(_role),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .titleSmall
@@ -669,10 +718,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                                   ),
                                                 ),
                                                 Text(
-                                                  valueOrDefault<String>(
-                                                    widget.email,
-                                                    'Email',
-                                                  ),
+                                                  orDash(_email),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .titleSmall
@@ -782,7 +828,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                               ),
                                             ),
                                             Text(
-                                              'Demo workspace',
+                                              orDash(_firm?.planName),
                                               style: FlutterFlowTheme.of(
                                                       context)
                                                   .titleSmall
@@ -877,10 +923,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                               ),
                                         ),
                                         Text(
-                                          valueOrDefault<String>(
-                                            '${widget.firm} · family-law practice',
-                                            'Firm · family-law practice',
-                                          ),
+                                          orDash(_firmName),
                                           style: FlutterFlowTheme.of(context)
                                               .titleSmall
                                               .override(
@@ -912,7 +955,7 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                               ),
                                         ),
                                         Text(
-                                          'Integrations: Clio, MyCase, Smokeball available',
+                                          _integrationsLine,
                                           style: FlutterFlowTheme.of(context)
                                               .bodySmall
                                               .override(
@@ -953,7 +996,13 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  wrapWithModel(
+                                  InkWell(
+                                    splashColor: Colors.transparent,
+                                    focusColor: Colors.transparent,
+                                    hoverColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    onTap: _signingOut ? null : _signOut,
+                                    child: wrapWithModel(
                                     model: _model.buttonModel,
                                     updateCallback: () => safeSetState(() {}),
                                     child: Button22Widget(
@@ -969,12 +1018,13 @@ class _UserProfileModalWidgetState extends State<UserProfileModalWidget> {
                                       variant: 'destructive',
                                       size: 'medium',
                                       fullWidth: true,
-                                      loading: false,
-                                      disabled: false,
+                                      loading: _signingOut,
+                                      disabled: _signingOut,
                                     ),
                                   ),
+                                  ),
                                   Text(
-                                    'Verin Evidence Record - v0.9.0 - Demo workspace',
+                                    'Verin Evidence Record',
                                     textAlign: TextAlign.center,
                                     style: FlutterFlowTheme.of(context)
                                         .labelSmall

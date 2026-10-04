@@ -45,6 +45,7 @@ dependencies:
       ref: 514178337dfbea442f617daed39c704b57593fc9
       path: packages/dropdown_button2
   easy_debounce: 2.0.1
+  file_picker: ^8.1.2
   firebase_auth: 5.6.0
   firebase_auth_platform_interface: 7.7.0
   firebase_auth_web: 5.15.0

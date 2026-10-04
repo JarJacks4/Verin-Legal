@@ -20,6 +20,8 @@ class SideNavAdminModel extends FlutterFlowModel<SideNavAdminWidget> {
   late SidebarNavItemModel sidebarNavItemModel5;
   // Model for SidebarNavItem.
   late SidebarNavItemModel sidebarNavItemModel6;
+  // Model for SidebarNavItem ("Back to app").
+  late SidebarNavItemModel sidebarNavItemModel7;
   // Model for SidebarBrandCapsule.
   late SidebarBrandCapsuleModel sidebarBrandCapsuleModel;
   // Model for UserProfileCapsule.
@@ -33,6 +35,7 @@ class SideNavAdminModel extends FlutterFlowModel<SideNavAdminWidget> {
     sidebarNavItemModel4 = createModel(context, () => SidebarNavItemModel());
     sidebarNavItemModel5 = createModel(context, () => SidebarNavItemModel());
     sidebarNavItemModel6 = createModel(context, () => SidebarNavItemModel());
+    sidebarNavItemModel7 = createModel(context, () => SidebarNavItemModel());
     sidebarBrandCapsuleModel =
         createModel(context, () => SidebarBrandCapsuleModel());
     userProfileCapsuleModel =
@@ -47,6 +50,7 @@ class SideNavAdminModel extends FlutterFlowModel<SideNavAdminWidget> {
     sidebarNavItemModel4.dispose();
     sidebarNavItemModel5.dispose();
     sidebarNavItemModel6.dispose();
+    sidebarNavItemModel7.dispose();
     sidebarBrandCapsuleModel.dispose();
     userProfileCapsuleModel.dispose();
   }

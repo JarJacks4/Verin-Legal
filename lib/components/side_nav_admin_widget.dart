@@ -1,3 +1,4 @@
+import '/auth/firebase_auth/auth_util.dart';
 import '/components/sidebar_brand_capsule_widget.dart';
 import '/components/sidebar_nav_item_widget.dart';
 import '/components/user_profile_capsule_widget.dart';
@@ -5,13 +6,23 @@ import '/flutter_flow/ff_builtin_enums.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/verin/admin/admin_common.dart';
+import '/verin/verin_format.dart';
+import '/verin/verin_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'side_nav_admin_model.dart';
 export 'side_nav_admin_model.dart';
 
 class SideNavAdminWidget extends StatefulWidget {
-  const SideNavAdminWidget({super.key});
+  const SideNavAdminWidget({
+    super.key,
+    String? activePage,
+  }) : this.activePage = activePage ?? '';
+
+  /// routeName of the page showing this nav (e.g. 'AdminTeams'); that item is
+  /// highlighted. Empty highlights nothing.
+  final String activePage;
 
   @override
   State<SideNavAdminWidget> createState() => _SideNavAdminWidgetState();
@@ -39,6 +50,49 @@ class _SideNavAdminWidgetState extends State<SideNavAdminWidget> {
     _model.maybeDispose();
 
     super.dispose();
+  }
+
+  void _open(String routeName) {
+    if (widget.activePage == routeName) return;
+    context.pushNamed(
+      routeName,
+      extra: <String, dynamic>{
+        '__transition_info__': TransitionInfo(
+          hasTransition: true,
+          transitionType: PageTransitionType.fade,
+          duration: Duration(milliseconds: 2),
+        ),
+      },
+    );
+  }
+
+  Widget _navItem({
+    required SidebarNavItemModel model,
+    required String routeName,
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      splashColor: Colors.transparent,
+      focusColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      onTap: onTap ?? () => _open(routeName),
+      child: wrapWithModel(
+        model: model,
+        updateCallback: () => safeSetState(() {}),
+        child: SidebarNavItemWidget(
+          selected: routeName.isNotEmpty && widget.activePage == routeName,
+          icon: Icon(
+            icon,
+            color: Colors.white,
+            size: 20.0,
+          ),
+          label: label,
+        ),
+      ),
+    );
   }
 
   @override
@@ -101,206 +155,58 @@ class _SideNavAdminWidgetState extends State<SideNavAdminWidget> {
                 ),
                 Container(
                   width: 236.5,
-                  height: 405.8,
                   decoration: BoxDecoration(),
-                  child: Padding(
-                    padding:
-                        EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 75.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment:
-                          (FFCrossAxisAlignment.start).flutterValue,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context.pushNamed(
-                              AdminDashBoardPageWidget.routeName,
-                              extra: <String, dynamic>{
-                                '__transition_info__': TransitionInfo(
-                                  hasTransition: true,
-                                  transitionType: PageTransitionType.fade,
-                                  duration: Duration(milliseconds: 2),
-                                ),
-                              },
-                            );
-                          },
-                          child: wrapWithModel(
-                            model: _model.sidebarNavItemModel1,
-                            updateCallback: () => safeSetState(() {}),
-                            child: SidebarNavItemWidget(
-                              selected: true,
-                              icon: Icon(
-                                Icons.dashboard_rounded,
-                                color: Colors.white,
-                                size: 20.0,
-                              ),
-                              label: 'Dashboard',
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context.pushNamed(
-                              AdminMattersListWidget.routeName,
-                              extra: <String, dynamic>{
-                                '__transition_info__': TransitionInfo(
-                                  hasTransition: true,
-                                  transitionType: PageTransitionType.fade,
-                                  duration: Duration(milliseconds: 2),
-                                ),
-                              },
-                            );
-                          },
-                          child: wrapWithModel(
-                            model: _model.sidebarNavItemModel2,
-                            updateCallback: () => safeSetState(() {}),
-                            child: SidebarNavItemWidget(
-                              selected: false,
-                              icon: Icon(
-                                Icons.folder_shared_rounded,
-                                color: Colors.white,
-                                size: 20.0,
-                              ),
-                              label: 'Matters',
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context.pushNamed(
-                              AdminBillingAndPlanWidget.routeName,
-                              extra: <String, dynamic>{
-                                '__transition_info__': TransitionInfo(
-                                  hasTransition: true,
-                                  transitionType: PageTransitionType.fade,
-                                  duration: Duration(milliseconds: 2),
-                                ),
-                              },
-                            );
-                          },
-                          child: wrapWithModel(
-                            model: _model.sidebarNavItemModel3,
-                            updateCallback: () => safeSetState(() {}),
-                            child: SidebarNavItemWidget(
-                              selected: false,
-                              icon: Icon(
-                                Icons.payments_rounded,
-                                color: Colors.white,
-                                size: 20.0,
-                              ),
-                              label: 'Billing',
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context.pushNamed(
-                              AdminTeamsWidget.routeName,
-                              extra: <String, dynamic>{
-                                '__transition_info__': TransitionInfo(
-                                  hasTransition: true,
-                                  transitionType: PageTransitionType.fade,
-                                  duration: Duration(milliseconds: 2),
-                                ),
-                              },
-                            );
-                          },
-                          child: wrapWithModel(
-                            model: _model.sidebarNavItemModel4,
-                            updateCallback: () => safeSetState(() {}),
-                            child: SidebarNavItemWidget(
-                              selected: false,
-                              icon: Icon(
-                                Icons.group_rounded,
-                                color: Colors.white,
-                                size: 20.0,
-                              ),
-                              label: 'Team',
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context.pushNamed(
-                              AdminProgramPageWidget.routeName,
-                              extra: <String, dynamic>{
-                                '__transition_info__': TransitionInfo(
-                                  hasTransition: true,
-                                  transitionType: PageTransitionType.fade,
-                                  duration: Duration(milliseconds: 2),
-                                ),
-                              },
-                            );
-                          },
-                          child: wrapWithModel(
-                            model: _model.sidebarNavItemModel5,
-                            updateCallback: () => safeSetState(() {}),
-                            child: SidebarNavItemWidget(
-                              selected: false,
-                              icon: Icon(
-                                Icons.assignment_rounded,
-                                color: Colors.white,
-                                size: 20.0,
-                              ),
-                              label: 'Program',
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          splashColor: Colors.transparent,
-                          focusColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                          onTap: () async {
-                            context.pushNamed(
-                              FirmSettingsWidget.routeName,
-                              extra: <String, dynamic>{
-                                '__transition_info__': TransitionInfo(
-                                  hasTransition: true,
-                                  transitionType: PageTransitionType.fade,
-                                  duration: Duration(milliseconds: 2),
-                                ),
-                              },
-                            );
-                          },
-                          child: wrapWithModel(
-                            model: _model.sidebarNavItemModel6,
-                            updateCallback: () => safeSetState(() {}),
-                            child: SidebarNavItemWidget(
-                              selected: false,
-                              icon: Icon(
-                                Icons.settings_rounded,
-                                color: Colors.white,
-                                size: 20.0,
-                              ),
-                              label: 'Settings',
-                            ),
-                          ),
-                        ),
-                      ].divide(SizedBox(height: 4.0)),
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment:
+                        (FFCrossAxisAlignment.start).flutterValue,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      _navItem(
+                        model: _model.sidebarNavItemModel1,
+                        routeName: AdminDashBoardPageWidget.routeName,
+                        icon: Icons.dashboard_rounded,
+                        label: 'Dashboard',
+                      ),
+                      _navItem(
+                        model: _model.sidebarNavItemModel2,
+                        routeName: AdminMattersListWidget.routeName,
+                        icon: Icons.folder_shared_rounded,
+                        label: 'Matters',
+                      ),
+                      _navItem(
+                        model: _model.sidebarNavItemModel3,
+                        routeName: AdminBillingAndPlanWidget.routeName,
+                        icon: Icons.payments_rounded,
+                        label: 'Billing',
+                      ),
+                      _navItem(
+                        model: _model.sidebarNavItemModel4,
+                        routeName: AdminTeamsWidget.routeName,
+                        icon: Icons.group_rounded,
+                        label: 'Team',
+                      ),
+                      _navItem(
+                        model: _model.sidebarNavItemModel5,
+                        routeName: AdminProgramPageWidget.routeName,
+                        icon: Icons.assignment_rounded,
+                        label: 'Program',
+                      ),
+                      _navItem(
+                        model: _model.sidebarNavItemModel6,
+                        routeName: FirmSettingsWidget.routeName,
+                        icon: Icons.settings_rounded,
+                        label: 'Settings',
+                      ),
+                      _navItem(
+                        model: _model.sidebarNavItemModel7,
+                        routeName: '',
+                        icon: Icons.arrow_back_rounded,
+                        label: 'Back to app',
+                        onTap: () => context.goNamed(MattersListWidget.routeName),
+                      ),
+                    ].divide(SizedBox(height: 4.0)),
                   ),
                 ),
                 Align(
@@ -312,22 +218,38 @@ class _SideNavAdminWidgetState extends State<SideNavAdminWidget> {
                     children: [
                       Flexible(
                         flex: 1,
-                        child: wrapWithModel(
-                          model: _model.sidebarBrandCapsuleModel,
-                          updateCallback: () => safeSetState(() {}),
-                          child: SidebarBrandCapsuleWidget(),
+                        child: Tooltip(
+                          message: 'Admin dashboard',
+                          child: InkWell(
+                            splashColor: Colors.transparent,
+                            focusColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            onTap: () =>
+                                _open(AdminDashBoardPageWidget.routeName),
+                            child: wrapWithModel(
+                              model: _model.sidebarBrandCapsuleModel,
+                              updateCallback: () => safeSetState(() {}),
+                              child: SidebarBrandCapsuleWidget(),
+                            ),
+                          ),
                         ),
                       ),
                       Flexible(
                         flex: 1,
-                        child: wrapWithModel(
-                          model: _model.userProfileCapsuleModel,
-                          updateCallback: () => safeSetState(() {}),
-                          updateOnChange: true,
-                          child: UserProfileCapsuleWidget(
-                            email: 'paralegal@harborlaw...',
-                            firmName: 'Harbor Family Law',
-                            initials: 'SC',
+                        child: FirmAccountBuilder(
+                          builder: (context, firm) => wrapWithModel(
+                            model: _model.userProfileCapsuleModel,
+                            updateCallback: () => safeSetState(() {}),
+                            updateOnChange: true,
+                            child: UserProfileCapsuleWidget(
+                              email: orDash(currentUserEmail),
+                              firmName: orDash(firm?.firmName),
+                              initials: initialsFor(
+                                currentUserDisplayName,
+                                email: currentUserEmail,
+                              ),
+                            ),
                           ),
                         ),
                       ),

@@ -55,6 +55,63 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "chainEntries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "seq",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "chainEntries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "seq",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "clioSyncLog",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pushedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "Receipts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "receivedAt",
+          "order": "ASCENDING"
+        }
+      ]
     }
-  ]
+  ],
+  "fieldOverrides": []
 }

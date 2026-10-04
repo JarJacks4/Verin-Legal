@@ -17,13 +17,16 @@ class ReviewItemWidget extends StatefulWidget {
     Color? issueText,
     String? matter,
     String? type,
-  })  : this.client = client ?? 'Sarah Whitmore',
-        this.date = date ?? 'Oct 24, 2023 · 09:12 AM',
-        this.issue = issue ?? 'Uncertain',
+    String? channel,
+    this.onResolve,
+  })  : this.client = client ?? '',
+        this.date = date ?? '',
+        this.issue = issue ?? '',
         this.issueBg = issueBg ?? const Color(0xFFFEF3C7),
         this.issueText = issueText ?? const Color(0xFF92400E),
-        this.matter = matter ?? 'Whitmore v. Whitmore',
-        this.type = type ?? 'screenshot';
+        this.matter = matter ?? '',
+        this.type = type ?? '',
+        this.channel = channel ?? '';
 
   final String client;
   final String date;
@@ -32,6 +35,11 @@ class ReviewItemWidget extends StatefulWidget {
   final Color issueText;
   final String matter;
   final String type;
+  final String channel;
+
+  /// Opens the approve/reject confirmation. The Resolve button is disabled
+  /// when this is null.
+  final VoidCallback? onResolve;
 
   @override
   State<ReviewItemWidget> createState() => _ReviewItemWidgetState();
@@ -140,7 +148,7 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                     Text(
                       valueOrDefault<String>(
                         widget.matter,
-                        'Whitmore v. Whitmore',
+                        '—',
                       ),
                       style: FlutterFlowTheme.of(context).titleSmall.override(
                             font: GoogleFonts.ibmPlexSans(
@@ -161,7 +169,7 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                     Text(
                       valueOrDefault<String>(
                         widget.client,
-                        'Sarah Whitmore',
+                        '—',
                       ),
                       style: FlutterFlowTheme.of(context).bodySmall.override(
                             font: GoogleFonts.ibmPlexSans(
@@ -196,7 +204,7 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                     Text(
                       valueOrDefault<String>(
                         widget.date,
-                        'Oct 24, 2023 · 09:12 AM',
+                        '—',
                       ),
                       style: FlutterFlowTheme.of(context).bodySmall.override(
                             font: GoogleFonts.ibmPlexSans(
@@ -219,10 +227,11 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                           ),
                     ),
                     Text(
-                      valueOrDefault<String>(
-                        'Received via ${widget.type}',
-                        'Received via screenshot',
-                      ),
+                      widget.channel.isNotEmpty
+                          ? 'Received via ${widget.channel}'
+                          : widget.type.isNotEmpty
+                              ? 'Received as ${widget.type.replaceAll('_', ' ')}'
+                              : 'Received',
                       style: FlutterFlowTheme.of(context).labelSmall.override(
                             font: GoogleFonts.spaceGrotesk(
                               fontWeight: FlutterFlowTheme.of(context)
@@ -263,7 +272,7 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                         ),
                         label: valueOrDefault<String>(
                           widget.issue,
-                          'Uncertain',
+                          '—',
                         ),
                         textColor: valueOrDefault<Color>(
                           widget.issueText,
@@ -274,7 +283,13 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                   ].divide(SizedBox(width: 8.0)),
                 ),
               ),
-              wrapWithModel(
+              InkWell(
+                splashColor: Colors.transparent,
+                focusColor: Colors.transparent,
+                hoverColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                onTap: widget.onResolve,
+                child: wrapWithModel(
                 model: _model.buttonModel,
                 updateCallback: () => safeSetState(() {}),
                 child: ButtonWidget(
@@ -290,8 +305,9 @@ class _ReviewItemWidgetState extends State<ReviewItemWidget> {
                   size: 'small',
                   fullWidth: false,
                   loading: false,
-                  disabled: false,
+                  disabled: widget.onResolve == null,
                 ),
+              ),
               ),
             ].divide(SizedBox(width: 16.0)),
           ),

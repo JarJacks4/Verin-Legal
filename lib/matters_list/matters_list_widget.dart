@@ -1,14 +1,17 @@
 import '/backend/backend.dart';
 import '/components/button_widget.dart';
 import '/components/filter_sort_matters_widget.dart';
+import '/components/create_new_matter_bottom_sheet_widget.dart';
 import '/components/matter_row_widget.dart';
-import '/components/matter_upload_section_widget.dart';
 import '/components/side_nav_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/custom_code/actions/index.dart' as actions;
 import '/index.dart';
+import '/verin/record_ext.dart';
+import '/verin/verin_config.dart';
+import '/verin/verin_format.dart';
+import '/verin/verin_ui.dart';
 import 'package:collection/collection.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
@@ -39,25 +42,7 @@ class _MattersListWidgetState extends State<MattersListWidget> {
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _model.mattersList = await queryMattersRecordOnce(
-        queryBuilder: (mattersRecord) => mattersRecord
-            .where(
-              'firmID',
-              isEqualTo: 'harbow-law',
-            )
-            .orderBy('openedAt', descending: true),
-      );
-      _model.sync = await querySyncStatusRecordOnce(
-        singleRecord: true,
-      ).then((s) => s.firstOrNull);
-      _model.readSync =
-          await SyncStatusRecord.getDocumentOnce(_model.sync!.reference);
-      _model.filteredLists = _model.filteredMattersList!
-          .map((e) => e.reference.path)
-          .toList()
-          .toList()
-          .cast<String>();
-      safeSetState(() {});
+      await Future.wait([_loadMatters(), _loadSyncStatus()]);
     });
 
     _model.textController ??= TextEditingController();
@@ -71,6 +56,98 @@ class _MattersListWidgetState extends State<MattersListWidget> {
     _model.dispose();
 
     super.dispose();
+  }
+
+  /// Loads the firm's non-archived matters, newest first. Sorted client-side
+  /// so matters without openedAt still appear and no extra index is needed.
+  Future<void> _loadMatters() async {
+    try {
+      final all = await queryMattersRecordOnce(
+        queryBuilder: (mattersRecord) => mattersRecord.where(
+          'firmID',
+          isEqualTo: currentFirmId(),
+        ),
+      );
+      final epoch = DateTime.fromMillisecondsSinceEpoch(0);
+      final active = all.where((m) => !m.isArchiveBuild).toList()
+        ..sort((a, b) => (b.openedAt ?? epoch).compareTo(a.openedAt ?? epoch));
+      _model.mattersList = active;
+      if (_model.sheetFilteredMatters != null) {
+        // Re-apply the last Filter & Sort selection to the fresh list.
+        _model.sheetFilteredMatters = applyMatterFilterSort(
+          active,
+          status: FFAppState().filterStatus,
+          matterType: FFAppState().filterMatterType,
+          sort: FFAppState().sortOption,
+        );
+      }
+      _model.filteredLists =
+          active.map((e) => e.reference.path).toList();
+      _model.itemCountFutures.clear();
+      _model.loadError = null;
+    } catch (e) {
+      _model.mattersList ??= [];
+      _model.loadError = '$e';
+    }
+    _model.isLoading = false;
+    safeSetState(() {});
+  }
+
+  Future<void> _loadSyncStatus() async {
+    try {
+      _model.sync = await querySyncStatusRecordOnce(
+        singleRecord: true,
+      ).then((s) => s.firstOrNull);
+    } catch (_) {
+      _model.sync = null;
+    }
+    safeSetState(() {});
+  }
+
+  String get _searchText => (_model.textController?.text ?? '').trim();
+
+  bool get _filterOrSearchActive =>
+      _model.sheetFilteredMatters != null || _searchText.isNotEmpty;
+
+  /// The Filter & Sort result (or the full list) narrowed by the search box.
+  List<MattersRecord> _visibleMatters() {
+    final base = _model.sheetFilteredMatters ??
+        _model.mattersList ??
+        <MattersRecord>[];
+    final q = _searchText.toLowerCase();
+    if (q.isEmpty) return base;
+    return base
+        .where((m) =>
+            m.title.toLowerCase().contains(q) ||
+            m.clientName.toLowerCase().contains(q) ||
+            m.caseNumber.toLowerCase().contains(q))
+        .toList();
+  }
+
+  /// Number of Receipts filed under [m]; one query per matter per load.
+  Future<int> _itemCount(MattersRecord m) =>
+      _model.itemCountFutures.putIfAbsent(
+        m.reference.path,
+        () => queryReceiptsRecordCount(
+          queryBuilder: (q) => q.where('matterId', isEqualTo: m.reference),
+        ),
+      );
+
+  void _openMatter(MattersRecord m) {
+    context.pushNamed(
+      MattersTabGroupHomeWidget.routeName,
+      queryParameters: {
+        'matterDoc': serializeParam(m, ParamType.Document),
+      }.withoutNulls,
+      extra: <String, dynamic>{
+        'matterDoc': m,
+        '__transition_info__': TransitionInfo(
+          hasTransition: true,
+          transitionType: PageTransitionType.fade,
+          duration: Duration(milliseconds: 9),
+        ),
+      },
+    );
   }
 
   @override
@@ -202,23 +279,8 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                           onChanged: (_) =>
                                               EasyDebounce.debounce(
                                             '_model.textController',
-                                            Duration(milliseconds: 2000),
-                                            () async {
-                                              _model.filteredMattersList =
-                                                  await actions
-                                                      .filterMattersLocally(
-                                                _model.mattersList!.toList(),
-                                                _model.textController.text,
-                                              );
-                                              _model.filteredLists = _model
-                                                  .filteredMattersList!
-                                                  .map((e) => e.reference.id)
-                                                  .toList()
-                                                  .cast<String>();
-                                              safeSetState(() {});
-
-                                              safeSetState(() {});
-                                            },
+                                            Duration(milliseconds: 250),
+                                            () => safeSetState(() {}),
                                           ),
                                           autofocus: false,
                                           enabled: true,
@@ -258,7 +320,8 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                                           .fontStyle,
                                                 ),
                                             alignLabelWithHint: true,
-                                            hintText: 'Search Here...',
+                                            hintText:
+                                                'Search matter, client or case no.',
                                             hintStyle: FlutterFlowTheme.of(
                                                     context)
                                                 .labelMedium
@@ -369,12 +432,17 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                       buttonSize: 40.0,
                                       icon: Icon(
                                         Icons.filter_list,
-                                        color: FlutterFlowTheme.of(context)
-                                            .tertiary,
+                                        color: _model.sheetFilteredMatters !=
+                                                null
+                                            ? FlutterFlowTheme.of(context)
+                                                .secondary
+                                            : FlutterFlowTheme.of(context)
+                                                .tertiary,
                                         size: 24.0,
                                       ),
                                       onPressed: () async {
-                                        await showModalBottomSheet(
+                                        await showModalBottomSheet<
+                                            List<MattersRecord>>(
                                           isScrollControlled: true,
                                           backgroundColor: Colors.transparent,
                                           context: context,
@@ -393,17 +461,36 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                                         context),
                                                 child: FilterSortMattersWidget(
                                                   statusSelected:
-                                                      _model.filterStatus,
+                                                      FFAppState().filterStatus,
                                                   sortSelected:
-                                                      _model.sortOption,
-                                                  allMatters: _model.mattersList
-                                                      ?.take(5)
-                                                      .toList(),
+                                                      FFAppState().sortOption,
+                                                  allMatters:
+                                                      _model.mattersList ?? [],
                                                 ),
                                               ),
                                             );
                                           },
-                                        ).then((value) => safeSetState(() {}));
+                                        ).then((value) {
+                                          if (value != null) {
+                                            // Default selections = no filter.
+                                            final isDefault = FFAppState()
+                                                        .filterStatus ==
+                                                    'All' &&
+                                                FFAppState().filterMatterType ==
+                                                    'All Types' &&
+                                                FFAppState().sortOption ==
+                                                    kMatterSortNewest;
+                                            _model.sheetFilteredMatters =
+                                                isDefault ? null : value;
+                                            _model.filterStatus =
+                                                FFAppState().filterStatus;
+                                            _model.filterMatterType =
+                                                FFAppState().filterMatterType;
+                                            _model.sortOption =
+                                                FFAppState().sortOption;
+                                          }
+                                          safeSetState(() {});
+                                        });
                                       },
                                     ),
                                     InkWell(
@@ -430,16 +517,12 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                                     MediaQuery.viewInsetsOf(
                                                         context),
                                                 child:
-                                                    MatterUploadSectionWidget(
-                                                  fileCount: _model
-                                                      .filteredMattersList
-                                                      ?.length
-                                                      .toString(),
-                                                ),
+                                                    CreateNewMatterBottomSheetWidget(),
                                               ),
                                             );
                                           },
-                                        ).then((value) => safeSetState(() {}));
+                                        );
+                                        await _loadMatters();
                                       },
                                       child: wrapWithModel(
                                         model: _model.buttonModel,
@@ -550,8 +633,9 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                         ),
                                       ].divide(SizedBox(width: 8.0)),
                                     ),
+                                    if (_model.sync?.lastSyncAt != null)
                                     Text(
-                                      'Last sync: 2 mins ago',
+                                      'Last sync: ${fmtRelative(_model.sync?.lastSyncAt)}',
                                       style: FlutterFlowTheme.of(context)
                                           .labelSmall
                                           .override(
@@ -600,7 +684,7 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                           size: 16.0,
                                         ),
                                         Text(
-                                          '${_model.sync?.newItemsCount.toString()} New Items',
+                                          '${_model.sync?.newItemsCount ?? 0} New Items',
                                           style: FlutterFlowTheme.of(context)
                                               .bodySmall
                                               .override(
@@ -640,7 +724,7 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                           size: 16.0,
                                         ),
                                         Text(
-                                          '${_model.sync?.duplicatesFilteredCount.toString()} Duplicates Filtered',
+                                          '${_model.sync?.duplicatesFilteredCount ?? 0} Duplicates Filtered',
                                           style: FlutterFlowTheme.of(context)
                                               .bodySmall
                                               .override(
@@ -687,7 +771,7 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                           size: 16.0,
                                         ),
                                         Text(
-                                          '${_model.sync?.chronologyShiftsCount.toString()} Chronology shifts',
+                                          '${_model.sync?.chronologyShiftsCount ?? 0} Chronology shifts',
                                           style: FlutterFlowTheme.of(context)
                                               .bodySmall
                                               .override(
@@ -736,13 +820,14 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                       ],
                     ),
                   ),
-                  Container(
+                  Expanded(
+                    child: Container(
                     decoration: BoxDecoration(
                       color: FlutterFlowTheme.of(context).secondaryBackground,
                       shape: BoxShape.rectangle,
                     ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Padding(
@@ -894,22 +979,48 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                           flex: 1,
                           child: Builder(
                             builder: (context) {
-                              final listOfMatters =
-                                  _model.mattersList?.toList() ?? [];
+                              if (_model.isLoading) {
+                                return VerinLoading();
+                              }
+                              if (_model.loadError != null &&
+                                  (_model.mattersList?.isEmpty ?? true)) {
+                                return Center(
+                                  child: VerinEmptyState(
+                                    icon: Icons.error_outline_rounded,
+                                    title: 'Could not load matters',
+                                    message: _model.loadError,
+                                    action: VerinButton(
+                                      label: 'Try again',
+                                      icon: Icons.refresh_rounded,
+                                      size: VerinButtonSize.small,
+                                      onPressed: () {
+                                        _loadMatters();
+                                      },
+                                    ),
+                                  ),
+                                );
+                              }
+                              final listOfMatters = _visibleMatters();
                               if (listOfMatters.isEmpty) {
                                 return Center(
-                                  child: Image.asset(
-                                    'assets/images/verin_counsel_lockup_light.png',
-                                    width:
-                                        MediaQuery.sizeOf(context).width * 0.4,
-                                    fit: BoxFit.contain,
-                                  ),
+                                  child: _filterOrSearchActive
+                                      ? VerinEmptyState(
+                                          icon: Icons.search_off_rounded,
+                                          title: 'No matters match',
+                                          message:
+                                              'Try a different search, or reset the filters.',
+                                        )
+                                      : VerinEmptyState(
+                                          icon: Icons.folder_open_rounded,
+                                          title: 'No matters yet',
+                                          message:
+                                              'Create the first one with New Matter.',
+                                        ),
                                 );
                               }
 
                               return ListView.builder(
                                 padding: EdgeInsets.zero,
-                                shrinkWrap: true,
                                 scrollDirection: Axis.vertical,
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 itemCount: listOfMatters.length,
@@ -917,33 +1028,29 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                                   final listOfMattersItem =
                                       listOfMatters[listOfMattersIndex];
                                   return InkWell(
+                                    key: ValueKey(
+                                        listOfMattersItem.reference.path),
                                     splashColor: Colors.transparent,
                                     focusColor: Colors.transparent,
                                     hoverColor: Colors.transparent,
                                     highlightColor: Colors.transparent,
                                     onTap: () async {
-                                      context.pushNamed(
-                                        MattersTabGroupHomeWidget.routeName,
-                                        extra: <String, dynamic>{
-                                          '__transition_info__': TransitionInfo(
-                                            hasTransition: true,
-                                            transitionType:
-                                                PageTransitionType.fade,
-                                            duration: Duration(milliseconds: 9),
-                                          ),
-                                        },
-                                      );
+                                      _openMatter(listOfMattersItem);
                                     },
-                                    child: MatterRowWidget(
-                                      key: Key(
-                                          'Keym41_${listOfMattersIndex}_of_${listOfMatters.length}'),
-                                      caseNo: listOfMattersItem.caseNumber,
-                                      client: listOfMattersItem.clientName,
-                                      items: listOfMattersIndex.toString(),
-                                      name: listOfMattersItem.caseTitle,
-                                      status: listOfMattersItem.status,
-                                      statusBg: Color(0xFFDCFCE7),
-                                      statusText: Color(0xFF166534),
+                                    child: FutureBuilder<int>(
+                                      future: _itemCount(listOfMattersItem),
+                                      builder: (context, countSnapshot) =>
+                                          MatterRowWidget(
+                                        key: Key(
+                                            'Keym41_${listOfMattersItem.reference.id}'),
+                                        caseNo: listOfMattersItem.caseNumber,
+                                        client: listOfMattersItem.clientName,
+                                        items: countSnapshot.hasData
+                                            ? '${countSnapshot.data}'
+                                            : '',
+                                        name: listOfMattersItem.title,
+                                        status: listOfMattersItem.status,
+                                      ),
                                     ),
                                   );
                                 },
@@ -961,124 +1068,6 @@ class _MattersListWidgetState extends State<MattersListWidget> {
                       ],
                     ),
                   ),
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      decoration: BoxDecoration(),
-                      child: SingleChildScrollView(
-                        primary: false,
-                        controller: _model.columnScrollController,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                  0.0, 0.0, 0.0, 32.0),
-                              child: Container(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(32.0),
-                                        child: Container(
-                                          child: Container(
-                                            alignment:
-                                                AlignmentDirectional(0.0, 0.0),
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .info10,
-                                                borderRadius:
-                                                    BorderRadius.circular(6.0),
-                                                shape: BoxShape.rectangle,
-                                                border: Border.all(
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .info30,
-                                                  width: 1.0,
-                                                ),
-                                              ),
-                                              child: Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(
-                                                        24.0, 16.0, 24.0, 16.0),
-                                                child: Container(
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.start,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Icon(
-                                                        Icons.info_rounded,
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .secondary,
-                                                        size: 18.0,
-                                                      ),
-                                                      Text(
-                                                        'Demo workspace. Fictional matters used for training. No real client data.',
-                                                        style:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodySmall
-                                                                .override(
-                                                                  font: GoogleFonts
-                                                                      .ibmPlexSans(
-                                                                    fontWeight: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodySmall
-                                                                        .fontWeight,
-                                                                    fontStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .bodySmall
-                                                                        .fontStyle,
-                                                                  ),
-                                                                  color: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .primary,
-                                                                  letterSpacing:
-                                                                      0.0,
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodySmall
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .bodySmall
-                                                                      .fontStyle,
-                                                                  lineHeight:
-                                                                      1.5,
-                                                                ),
-                                                      ),
-                                                    ].divide(
-                                                        SizedBox(width: 8.0)),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),

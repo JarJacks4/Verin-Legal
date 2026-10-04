@@ -11,6 +11,8 @@ class SideNavModel extends FlutterFlowModel<SideNavWidget> {
 
   // Stores action output result for [Firestore Query - Query a collection] action in SideNav widget.
   List<MattersRecord>? profileRead;
+  // First firmAccount document (firm name for the profile row).
+  FirmAccountRecord? firmAccount;
   // Model for NavItem.
   late NavItem4Model navItemModel1;
   // Model for NavItem.

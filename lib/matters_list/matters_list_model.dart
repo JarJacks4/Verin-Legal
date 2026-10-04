@@ -41,6 +41,14 @@ class MattersListModel extends FlutterFlowModel<MattersListWidget> {
   String? Function(BuildContext, String?)? textControllerValidator;
   // Stores action output result for [Custom Action - filterMattersLocally] action in TextField widget.
   List<MattersRecord>? filteredMattersList;
+  // Result returned by the Filter & Sort sheet (null = no filter applied).
+  List<MattersRecord>? sheetFilteredMatters;
+  // True until the first Matters query finishes.
+  bool isLoading = true;
+  // Set when the Matters query fails.
+  String? loadError;
+  // Receipts count per matter (keyed by matter path), fetched once per load.
+  final Map<String, Future<int>> itemCountFutures = {};
   // Model for Button.
   late ButtonModel buttonModel;
   // State field(s) for Column widget.

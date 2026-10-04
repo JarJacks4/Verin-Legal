@@ -1,4 +1,3 @@
-import '/components/status_badge4_widget.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -17,12 +16,13 @@ class MatterRow2Widget extends StatefulWidget {
     String? status,
     Color? statusBg,
     Color? statusText,
-  })  : this.caseNo = caseNo ?? '24-DR-0892',
-        this.client = client ?? 'Sarah Whitmore',
-        this.items = items ?? '142',
-        this.name = name ?? 'Whitmore v. Whitmore',
-        this.status = status ?? 'Verified',
-        this.statusBg = statusBg ?? const Color(0x00000000),
+    this.onTap,
+  })  : this.caseNo = caseNo ?? '—',
+        this.client = client ?? '—',
+        this.items = items ?? '—',
+        this.name = name ?? '—',
+        this.status = status ?? '—',
+        this.statusBg = statusBg ?? const Color(0xFF1A2B3C),
         this.statusText = statusText ?? Colors.white;
 
   final String caseNo;
@@ -32,6 +32,10 @@ class MatterRow2Widget extends StatefulWidget {
   final String status;
   final Color statusBg;
   final Color statusText;
+
+  /// Called by the chevron button (the row itself is usually wrapped in an
+  /// InkWell by the page).
+  final VoidCallback? onTap;
 
   @override
   State<MatterRow2Widget> createState() => _MatterRow2WidgetState();
@@ -91,8 +95,10 @@ class _MatterRow2WidgetState extends State<MatterRow2Widget> {
                         Text(
                           valueOrDefault<String>(
                             widget.name,
-                            'Whitmore v. Whitmore',
+                            '—',
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: FlutterFlowTheme.of(context)
                               .bodyMedium
                               .override(
@@ -115,7 +121,7 @@ class _MatterRow2WidgetState extends State<MatterRow2Widget> {
                         Text(
                           valueOrDefault<String>(
                             widget.caseNo,
-                            '24-DR-0892',
+                            '—',
                           ),
                           style: FlutterFlowTheme.of(context)
                               .labelSmall
@@ -148,8 +154,10 @@ class _MatterRow2WidgetState extends State<MatterRow2Widget> {
                     child: Text(
                       valueOrDefault<String>(
                         widget.client,
-                        'Sarah Whitmore',
+                        '—',
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
                             font: GoogleFonts.ibmPlexSans(
                               fontWeight: FlutterFlowTheme.of(context)
@@ -178,18 +186,42 @@ class _MatterRow2WidgetState extends State<MatterRow2Widget> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        wrapWithModel(
-                          model: _model.statusBadgeModel,
-                          updateCallback: () => safeSetState(() {}),
-                          child: StatusBadge4Widget(
-                            bgColor: 'primary',
-                            label: valueOrDefault<String>(
-                              widget.status,
-                              'Verified',
+                        Flexible(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: widget.statusBg,
+                              borderRadius: BorderRadius.circular(2.0),
+                              shape: BoxShape.rectangle,
                             ),
-                            textColor: valueOrDefault<Color>(
-                              widget.statusText,
-                              Colors.white,
+                            child: Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  8.0, 4.0, 8.0, 4.0),
+                              child: Text(
+                                valueOrDefault<String>(
+                                  widget.status,
+                                  '—',
+                                ).toUpperCase(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                      font: GoogleFonts.ibmPlexSans(
+                                        fontWeight: FontWeight.bold,
+                                        fontStyle: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .fontStyle,
+                                      ),
+                                      color: widget.statusText,
+                                      fontSize: 10.0,
+                                      letterSpacing: 0.0,
+                                      fontWeight: FontWeight.bold,
+                                      fontStyle: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .fontStyle,
+                                      lineHeight: 1.5,
+                                    ),
+                              ),
                             ),
                           ),
                         ),
@@ -210,8 +242,8 @@ class _MatterRow2WidgetState extends State<MatterRow2Widget> {
                         ),
                         Text(
                           valueOrDefault<String>(
-                            '${widget.items}',
-                            '142',
+                            widget.items,
+                            '—',
                           ),
                           style: FlutterFlowTheme.of(context)
                               .bodyMedium
@@ -251,9 +283,11 @@ class _MatterRow2WidgetState extends State<MatterRow2Widget> {
                         color: FlutterFlowTheme.of(context).secondaryText,
                         size: 24.0,
                       ),
-                      onPressed: () {
-                        print('IconButton pressed ...');
-                      },
+                      onPressed: widget.onTap == null
+                          ? null
+                          : () async {
+                              widget.onTap!();
+                            },
                     ),
                   ),
                 ].divide(SizedBox(width: 16.0)),

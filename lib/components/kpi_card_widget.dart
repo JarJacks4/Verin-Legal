@@ -11,8 +11,8 @@ class KpiCardWidget extends StatefulWidget {
     super.key,
     String? value,
     String? label,
-  })  : this.value = value ?? '124',
-        this.label = label ?? 'Active Matters';
+  })  : this.value = value ?? '—',
+        this.label = label ?? '—';
 
   final String value;
   final String label;
@@ -70,7 +70,7 @@ class _KpiCardWidgetState extends State<KpiCardWidget> {
               Text(
                 valueOrDefault<String>(
                   widget.value,
-                  '124',
+                  '—',
                 ),
                 style: FlutterFlowTheme.of(context).headlineMedium.override(
                       font: GoogleFonts.inter(
@@ -90,7 +90,7 @@ class _KpiCardWidgetState extends State<KpiCardWidget> {
               Text(
                 valueOrDefault<String>(
                   widget.label,
-                  'Active Matters',
+                  '—',
                 ),
                 style: FlutterFlowTheme.of(context).labelSmall.override(
                       font: GoogleFonts.spaceGrotesk(

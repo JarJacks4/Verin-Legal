@@ -12,9 +12,8 @@ class ActivityRowWidget extends StatefulWidget {
     String? description,
     String? time,
     bool? last,
-  })  : this.description =
-            description ?? 'New evidence batch uploaded for Matter #8821',
-        this.time = time ?? '2 hours ago',
+  })  : this.description = description ?? '—',
+        this.time = time ?? '—',
         this.last = last ?? false;
 
   final Widget? icon;
@@ -71,7 +70,7 @@ class _ActivityRowWidgetState extends State<ActivityRowWidget> {
                 shape: BoxShape.rectangle,
               ),
               alignment: AlignmentDirectional(0.0, 0.0),
-              child: widget.icon!,
+              child: widget.icon ?? SizedBox.shrink(),
             ),
             Expanded(
               flex: 1,
@@ -83,7 +82,7 @@ class _ActivityRowWidgetState extends State<ActivityRowWidget> {
                   Text(
                     valueOrDefault<String>(
                       widget.description,
-                      'New evidence batch uploaded for Matter #8821',
+                      '—',
                     ),
                     maxLines: 1,
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -109,7 +108,7 @@ class _ActivityRowWidgetState extends State<ActivityRowWidget> {
                   Text(
                     valueOrDefault<String>(
                       widget.time,
-                      '2 hours ago',
+                      '—',
                     ),
                     style: FlutterFlowTheme.of(context).labelSmall.override(
                           font: GoogleFonts.spaceGrotesk(

@@ -15,7 +15,11 @@
     "@langchain/langgraph": "^0.2.23",
     "@langchain/openai": "^0.3.14",
     "@langchain/google-genai": "^0.0.8",
-    "@langchain/anthropic": "^0.1.1"
+    "@langchain/anthropic": "^0.1.1",
+    "@anthropic-ai/sdk": "^0.131.0",
+    "pdfkit": "^0.20.2",
+    "fontkit": "^2.0.4",
+    "dejavu-fonts-ttf": "^2.37.3"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
@@ -27,7 +31,8 @@
     "shell": "firebase -P verin-legal-fbzp5w functions:shell",
     "start": "npm run shell",
     "logs": "firebase -P verin-legal-fbzp5w functions:log",
-    "compile": "cp ../../tsconfig.template.json ./tsconfig-compile.json && tsc --project tsconfig-compile.json"
+    "compile": "cp ../../tsconfig.template.json ./tsconfig-compile.json && tsc --project tsconfig-compile.json",
+    "test": "node --test verin/test/*.test.js"
   },
   "engines": {
     "node": "20"

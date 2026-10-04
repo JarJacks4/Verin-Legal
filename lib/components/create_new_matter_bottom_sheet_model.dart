@@ -10,6 +10,15 @@ import 'package:flutter/material.dart';
 
 class CreateNewMatterBottomSheetModel
     extends FlutterFlowModel<CreateNewMatterBottomSheetWidget> {
+  ///  Local state fields for this component.
+
+  // Selected "Initial Workflow Status" chip, written to Matters.status.
+  String initialStatus = 'Open';
+  // True while the Matters document is being written.
+  bool isSaving = false;
+  // Inline validation / save error shown above the buttons.
+  String? formError;
+
   ///  State fields for stateful widgets in this component.
 
   // State field(s) for Column widget.
