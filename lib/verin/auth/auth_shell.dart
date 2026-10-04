@@ -13,13 +13,18 @@ class SignupDraft {
   static String firmName = '';
   static String role = '';
 
+  /// TeamMembers invitation id from an admin's sign-up link (?invite=…).
+  /// Invited people join that firm, so they don't name one.
+  static String inviteId = '';
+
   static bool get isComplete =>
-      fullName.trim().isNotEmpty && firmName.trim().isNotEmpty && role.trim().isNotEmpty;
+      fullName.trim().isNotEmpty && (firmName.trim().isNotEmpty || inviteId.isNotEmpty) && role.trim().isNotEmpty;
 
   static void clear() {
     fullName = '';
     firmName = '';
     role = '';
+    inviteId = '';
   }
 }
 

@@ -8,6 +8,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/verin/record_ext.dart';
 import '/verin/verin_api.dart';
+import '/verin/verin_config.dart';
 
 import '../data/format.dart';
 import '../data/model.dart';
@@ -15,6 +16,49 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../widgets/drawer.dart';
+
+/// Revokes Verin's current Clio grant, then starts a fresh sign-in so Clio
+/// issues a token with the app's current permissions.
+Future<void> reconnectClio(BuildContext context) async {
+  try {
+    await VerinApi.clioDisconnect();
+  } on VerinApiException catch (e) {
+    if (context.mounted) showVToast(context, e.message, error: true);
+    return;
+  }
+  if (context.mounted) await connectClio(context);
+}
+
+Future<void> disconnectClio(BuildContext context) async {
+  final ok = await showVDialog<bool>(
+    context,
+    builder: (ctx) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Disconnect Clio?', style: VT.body(ctx, size: 16.0, weight: FontWeight.w600)),
+        const SizedBox(height: 8.0),
+        Text('Verin stops pushing to Clio for the whole firm. Matter links are kept, so reconnecting picks up where you left off.',
+            style: VT.muted(ctx, size: 13.0)),
+        const SizedBox(height: 20.0),
+        Row(
+          children: [
+            Expanded(child: VButton(label: 'Cancel', kind: VButtonKind.secondary, fullWidth: true, onPressed: () => Navigator.of(ctx).pop(false))),
+            const SizedBox(width: 12.0),
+            Expanded(child: VButton(label: 'Disconnect', kind: VButtonKind.danger, fullWidth: true, onPressed: () => Navigator.of(ctx).pop(true))),
+          ],
+        ),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  try {
+    await VerinApi.clioDisconnect();
+    if (context.mounted) showVToast(context, 'Clio disconnected');
+  } on VerinApiException catch (e) {
+    if (context.mounted) showVToast(context, e.message, error: true);
+  }
+}
 
 Future<void> connectClio(BuildContext context) async {
   try {
@@ -29,7 +73,7 @@ Future<void> connectClio(BuildContext context) async {
 }
 
 Stream<List<ClioSyncLogRecord>> clioLogStream(DocumentReference matterRef) => queryClioSyncLogRecord(
-      queryBuilder: (q) => q.where('matterID', isEqualTo: matterRef).orderBy('pushedAt', descending: true),
+      queryBuilder: (q) => q.where('matterID', isEqualTo: matterRef).where('firmID', isEqualTo: currentFirmId()).orderBy('pushedAt', descending: true),
       limit: 20,
     );
 
@@ -141,6 +185,17 @@ class _PracticeTabState extends State<PracticeTab> {
                   ClioBadge(state: clio),
                 ],
               ),
+              if (widget.firmConnected) ...[
+                const SizedBox(height: 8.0),
+                Wrap(
+                  spacing: 16.0,
+                  runSpacing: 4.0,
+                  children: [
+                    VButton(label: 'Reconnect Clio', icon: Icons.refresh, kind: VButtonKind.link, size: VButtonSize.sm, onPressed: () => reconnectClio(context)),
+                    VButton(label: 'Disconnect', kind: VButtonKind.link, size: VButtonSize.sm, onPressed: () => disconnectClio(context)),
+                  ],
+                ),
+              ],
               const SizedBox(height: 16.0),
               if (!widget.firmConnected) ...[
                 Text(

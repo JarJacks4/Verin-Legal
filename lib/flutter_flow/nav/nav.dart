@@ -175,7 +175,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: CreateAccountStep1Widget.routeName,
           path: CreateAccountStep1Widget.routePath,
-          builder: (context, params) => const VSignUpPage(step: 1),
+          builder: (context, params) => VSignUpPage(step: 1, invite: params.getParam<String>('invite', ParamType.String) ?? ''),
         ),
         FFRoute(
           name: CreateAccountStep2Widget.routeName,

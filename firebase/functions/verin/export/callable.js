@@ -35,7 +35,7 @@ function slug(s) {
 exports.exportMatterRecord = onCall({ timeoutSeconds: 120, memory: '1GiB' }, async (request) => {
   const uid = requireAuth(request);
   const db = getFirestore();
-  const { ref, snap } = await loadMatterForUser(db, uid, (request.data || {}).matterId, P.DEFAULT_FIRM_ID.value());
+  const { ref, snap } = await loadMatterForUser(db, uid, (request.data || {}).matterId);
   const md = snap.data() || {};
 
   const [receiptSnap, chainSnap] = await Promise.all([

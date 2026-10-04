@@ -2,16 +2,13 @@
 
 import '/auth/firebase_auth/auth_util.dart';
 
-/// The firm every matter is filed under while the app is single-tenant.
-/// The Matters list and the Cloud Functions' DEFAULT_FIRM_ID use the same
-/// value; change all three together (or add `firmID` to users docs).
-const String kDefaultFirmId = 'harbow-law';
-
-/// The current user's firm: users/{uid}.firmID when present, else the default.
+/// The signed-in user's firm (users/{uid}.firmID, set by the setupAccount
+/// Cloud Function). Empty until setup finishes — never a shared default, so
+/// queries made too early simply match nothing.
 String currentFirmId() {
   final data = currentUserDocument?.snapshotData;
-  final v = data == null ? null : (data['firmID'] ?? data['firmId']);
-  return (v is String && v.trim().isNotEmpty) ? v.trim() : kDefaultFirmId;
+  final v = data == null ? null : data['firmID'];
+  return (v is String && v.trim().isNotEmpty) ? v.trim() : '';
 }
 
 /// Industry baseline record lag (days), shown as a reference line (guide §1e).

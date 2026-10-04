@@ -8,7 +8,7 @@ service firebase.storage {
 
     // Profile photos.
     match /users/{userId}/{allPaths=**} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
@@ -21,9 +21,13 @@ service firebase.storage {
                     && request.resource.size < 2 * 1024 * 1024 * 1024;
     }
 
-    // Evidence originals and record exports: written only by Cloud Functions.
+    // Evidence originals and record exports: written only by Cloud Functions,
+    // readable only by members of the firm that owns the matter.
     match /matters/{matterId}/{allPaths=**} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+        && firestore.get(/databases/(default)/documents/Matters/$(matterId)).data.get('firmID', '') != ''
+        && firestore.get(/databases/(default)/documents/Matters/$(matterId)).data.get('firmID', '')
+           == firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.get('firmID', '');
       allow write: if false;
     }
   }

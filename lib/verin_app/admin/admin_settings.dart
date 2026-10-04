@@ -76,11 +76,12 @@ class _AdminSettingsState extends State<AdminSettings> {
     setState(() => _saving = true);
     try {
       final f = widget.firm;
-      if (f != null) {
-        await f.reference.update(_payload);
-      } else {
-        await FirmAccountRecord.collection.doc().set({..._payload, 'createdAt': FieldValue.serverTimestamp()});
+      if (f == null) {
+        // The firm profile is created by the server at sign-up; it can only be
+        // missing for a moment while an older workspace is upgraded.
+        throw 'Your firm profile is still being set up. Reload the page and try again.';
       }
+      await f.reference.update(_payload);
       if (!mounted) return;
       setState(() => _saved = true);
       Future.delayed(const Duration(seconds: 2), () {

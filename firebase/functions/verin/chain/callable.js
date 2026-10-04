@@ -13,7 +13,7 @@ if (!getApps().length) initializeApp();
 exports.verifyMatterChain = onCall(async (request) => {
   const uid = requireAuth(request);
   const db = getFirestore();
-  const { ref, snap } = await loadMatterForUser(db, uid, (request.data || {}).matterId, P.DEFAULT_FIRM_ID.value());
+  const { ref, snap } = await loadMatterForUser(db, uid, (request.data || {}).matterId);
 
   const entries = (await db.collection('chainEntries').where('matterID', '==', ref).get()).docs.map((d) => d.data());
   const r = verifyEntries(entries);

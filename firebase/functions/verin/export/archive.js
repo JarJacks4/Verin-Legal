@@ -18,7 +18,7 @@ const { getStorage } = require('firebase-admin/storage');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 
 const P = require('../common/params');
-const { requireAuth, loadMatterForUser, firmIdForUser } = require('../common/access');
+const { requireAuth, loadMatterForUser, requireAdmin } = require('../common/access');
 const { verifyEntries } = require('../chain/chain');
 const { buildRecordPdf, printable, human, dash, FONTS, COLORS } = require('./record_pdf');
 
@@ -245,7 +245,7 @@ exports.exportRecordZip = onCall({ timeoutSeconds: 540, memory: '2GiB' }, async 
   const uid = requireAuth(request);
   const db = getFirestore();
   const bucket = getStorage().bucket();
-  const { ref, snap } = await loadMatterForUser(db, uid, (request.data || {}).matterId, P.DEFAULT_FIRM_ID.value());
+  const { ref, snap } = await loadMatterForUser(db, uid, (request.data || {}).matterId);
   const md = snap.data() || {};
   const { receipts, chain } = await loadMatterData(db, ref);
   const exportedAt = new Date();
@@ -341,7 +341,7 @@ exports.exportFirmData = onCall({ timeoutSeconds: 540, memory: '1GiB' }, async (
   const uid = requireAuth(request);
   const db = getFirestore();
   const bucket = getStorage().bucket();
-  const firmId = await firmIdForUser(db, uid, P.DEFAULT_FIRM_ID.value());
+  const { firmId } = await requireAdmin(db, uid);
   const mattersSnap = await db.collection('Matters').where('firmID', '==', firmId).get();
   const exportedAt = new Date();
   const exportedBy = await generatedByName(db, uid, request);
@@ -497,7 +497,7 @@ exports.exportIntegrationReport = onCall({ timeoutSeconds: 120, memory: '1GiB' }
   const uid = requireAuth(request);
   const db = getFirestore();
   const bucket = getStorage().bucket();
-  const { ref, snap } = await loadMatterForUser(db, uid, (request.data || {}).matterId, P.DEFAULT_FIRM_ID.value());
+  const { ref, snap } = await loadMatterForUser(db, uid, (request.data || {}).matterId);
   const md = snap.data() || {};
   const { receipts } = await loadMatterData(db, ref);
   const generatedAt = new Date();

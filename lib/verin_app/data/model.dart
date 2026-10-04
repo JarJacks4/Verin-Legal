@@ -229,13 +229,13 @@ Stream<List<MattersRecord>> firmMattersStream() => queryMattersRecord(
 
 /// A matter's receipts, oldest first (the order they arrived).
 Stream<List<ReceiptsRecord>> matterReceiptsStream(DocumentReference matterRef) => queryReceiptsRecord(
-      queryBuilder: (q) => q.where('matterId', isEqualTo: matterRef).orderBy('receivedAt', descending: true),
+      queryBuilder: (q) => q.where('matterId', isEqualTo: matterRef).where('firmID', isEqualTo: currentFirmId()).orderBy('receivedAt', descending: true),
     ).map((list) => list.reversed.toList());
 
 /// Receipts waiting for a person, across all matters (filtered to the
 /// firm's matters by the caller).
 Stream<List<ReceiptsRecord>> flaggedReceiptsStream() => queryReceiptsRecord(
-      queryBuilder: (q) => q.where('classificationLabel', whereIn: ['Uncertain', 'Unreadable']),
+      queryBuilder: (q) => q.where('firmID', isEqualTo: currentFirmId()).where('classificationLabel', whereIn: ['Uncertain', 'Unreadable']),
     );
 
 Stream<MattersRecord> matterStream(DocumentReference ref) => MattersRecord.getDocument(ref);
@@ -247,9 +247,11 @@ Stream<Map<String, dynamic>> integrationStatusStream() => FirebaseFirestore.inst
     .snapshots()
     .map((s) => s.data() ?? <String, dynamic>{});
 
-/// The firm's account record (first firmAccount doc), or null.
-Stream<FirmAccountRecord?> firmAccountStream() =>
-    queryFirmAccountRecord(singleRecord: true).map((list) => list.isEmpty ? null : list.first);
+/// The signed-in user's firm account record, or null.
+Stream<FirmAccountRecord?> firmAccountStream() => queryFirmAccountRecord(
+      queryBuilder: (q) => q.where('firmID', isEqualTo: currentFirmId()),
+      singleRecord: true,
+    ).map((list) => list.isEmpty ? null : list.first);
 
 // ---------------------------------------------------------------------------
 // Record lag

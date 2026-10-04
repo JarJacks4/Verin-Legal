@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 
-import '../verin_config.dart';
+import '../verin_api.dart';
 import 'auth_shell.dart';
 
 Future<String?> verinSignUp({
@@ -15,6 +15,7 @@ Future<String?> verinSignUp({
   required String fullName,
   required String firmName,
   required String role,
+  String inviteId = '',
 }) async {
   try {
     final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -36,12 +37,21 @@ Future<String?> verinSignUp({
           email: user.email ?? email.trim(),
           displayName: fullName.trim(),
           uid: user.uid,
-          role: role.trim(),
-          lawFirm: firmName.trim(),
+          lawFirm: inviteId.isEmpty ? firmName.trim() : null,
         ),
-        'firmID': kDefaultFirmId,
+        // Job title. Firm membership and access role are set by the server.
+        'title': role.trim(),
       },
       SetOptions(merge: true),
+    );
+    // Creates the firm (or joins the inviting one). If this fails the app's
+    // firm gate retries and shows what went wrong.
+    await ensureFirmSetup(
+      force: true,
+      firmName: firmName,
+      fullName: fullName,
+      title: role,
+      inviteId: inviteId,
     );
     currentUserDocument = await UsersRecord.getDocumentOnce(ref);
     SignupDraft.clear();
@@ -66,12 +76,55 @@ Future<String?> verinSignIn({required String email, required String password}) a
     final user = cred.user;
     if (user == null) return 'Sign-in failed. Please try again.';
     await maybeCreateUser(user);
+    _setup = null; // new session: let the firm gate run setup again
     return null;
   } on FirebaseAuthException catch (e) {
     return authErrorMessage(e.code, e.message);
   } catch (e) {
     return 'Sign-in failed: $e';
   }
+}
+
+Future<String?>? _setup;
+String? _setupFor;
+
+/// Makes sure the signed-in account belongs to a firm (see setupAccount in
+/// the Cloud Functions). Runs at most once per session unless [force]d;
+/// concurrent callers share one request. Returns null on success or a
+/// message to show.
+Future<String?> ensureFirmSetup({
+  bool force = false,
+  String firmName = '',
+  String fullName = '',
+  String title = '',
+  String inviteId = '',
+}) {
+  final uid = currentUserUid;
+  if (uid.isEmpty) return Future.value('Sign in first.');
+  if (!force && _setup != null && _setupFor == uid) return _setup!;
+  _setupFor = uid;
+  final doc = currentUserDocument;
+  final f = () async {
+    try {
+      await VerinApi.setupAccount(
+        firmName: firmName.isNotEmpty ? firmName : (doc?.lawFirm ?? ''),
+        fullName: fullName,
+        title: title,
+        inviteId: inviteId,
+      );
+      return null;
+    } on VerinApiException catch (e) {
+      return e.message;
+    } catch (e) {
+      return 'Could not set up your firm workspace: $e';
+    }
+  }();
+  _setup = f;
+  // A failure shouldn't stick for the whole session.
+  f.then((err) {
+    if (err != null && identical(_setup, f)) _setup = null;
+  });
+  return f;
 }
 
 Future<String?> verinResetPassword(String email) async {
