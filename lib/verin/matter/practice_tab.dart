@@ -48,6 +48,7 @@ class PracticeTab extends StatefulWidget {
 
 class _PracticeTabState extends State<PracticeTab> {
   bool _pushing = false;
+  final Stream<Map<String, dynamic>> _status = firmIntegrationStatus();
 
   Future<void> _pushRecord() async {
     setState(() => _pushing = true);
@@ -87,7 +88,7 @@ class _PracticeTabState extends State<PracticeTab> {
           ),
           const SizedBox(height: 32.0),
           StreamBuilder<Map<String, dynamic>>(
-            stream: firmIntegrationStatus(),
+            stream: _status,
             builder: (context, snap) {
               final status = snap.data ?? const <String, dynamic>{};
               final firmConnected = status['clioConnected'] == true;

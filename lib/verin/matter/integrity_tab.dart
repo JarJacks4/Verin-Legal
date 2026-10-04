@@ -43,6 +43,19 @@ class IntegrityTab extends StatefulWidget {
 
 class _IntegrityTabState extends State<IntegrityTab> {
   bool _exporting = false;
+  Stream<List<ChainEntriesRecord>>? _chain;
+  String? _chainFor;
+
+  Stream<List<ChainEntriesRecord>> _chainStream() {
+    if (_chain == null || _chainFor != widget.matter.reference.path) {
+      _chainFor = widget.matter.reference.path;
+      _chain = queryChainEntriesRecord(
+        queryBuilder: (q) => q.where('matterID', isEqualTo: widget.matter.reference).orderBy('seq', descending: true),
+        limit: 50,
+      );
+    }
+    return _chain!;
+  }
 
   Future<void> _export() async {
     setState(() => _exporting = true);
@@ -119,11 +132,7 @@ class _IntegrityTabState extends State<IntegrityTab> {
           VerinCard(
             padding: const EdgeInsets.all(32.0),
             child: StreamBuilder<List<ChainEntriesRecord>>(
-              stream: queryChainEntriesRecord(
-                queryBuilder: (q) =>
-                    q.where('matterID', isEqualTo: m.reference).orderBy('seq', descending: true),
-                limit: 50,
-              ),
+              stream: _chainStream(),
               builder: (context, snap) {
                 final entries = snap.data ?? const <ChainEntriesRecord>[];
                 final head = m.chainHeadHash.isNotEmpty
