@@ -1,6 +1,5 @@
 import '/components/create_account_step1_comp_widget.dart';
 import '/verin/auth/auth_shell.dart';
-import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
 import 'create_account_step1_model.dart';

@@ -150,18 +150,17 @@ class AuthLayout extends StatelessWidget {
 }
 
 class _Heading extends StatelessWidget {
-  const _Heading({required this.title, required this.subtitle, this.size = 26.0});
+  const _Heading({required this.title, required this.subtitle});
 
   final String title;
   final String subtitle;
-  final double size;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: VT.h2(context, size: size)),
+        Text(title, style: VT.h2(context, size: 26.0)),
         const SizedBox(height: 6.0),
         Text(subtitle, style: VT.muted(context, size: 14.0)),
         const SizedBox(height: 28.0),

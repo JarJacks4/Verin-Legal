@@ -2,7 +2,6 @@
 // record. Card payments are not connected, so payment-method editing says so
 // instead of pretending to save a card.
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '/backend/backend.dart';
@@ -38,7 +37,7 @@ class AdminBilling extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = VC.of(context);
     final f = firm;
-    final hasPlan = f != null && f!.planName.isNotEmpty;
+    final hasPlan = f != null && f.planName.isNotEmpty;
     final status = (f?.planStatus ?? '').trim();
     final active = status.isEmpty || status.toLowerCase() == 'active';
     final integrations = (f?.connectedIntegrations ?? const <String>[]);
@@ -78,18 +77,18 @@ class AdminBilling extends StatelessWidget {
                                   children: [
                                     const Icon(Icons.star_rounded, size: 14.0, color: Color(0xFFF4C842)),
                                     const SizedBox(width: 8.0),
-                                    Text(f!.planName.toUpperCase(), style: VT.eyebrow(context, color: c.onPanel, spacing: 0.14)),
+                                    Text(f.planName.toUpperCase(), style: VT.eyebrow(context, color: c.onPanel, spacing: 0.14)),
                                   ],
                                 ),
                                 const SizedBox(height: 8.0),
                                 Text.rich(
                                   TextSpan(children: [
-                                    TextSpan(text: f!.planPriceCents > 0 ? money(f!.planPriceCents) : '—', style: VT.h2(context, size: 32.0, color: c.paper)),
-                                    if (f!.planPriceCents > 0) TextSpan(text: '/year', style: VT.body(context, size: 16.0, color: c.paper)),
+                                    TextSpan(text: f.planPriceCents > 0 ? money(f.planPriceCents) : '—', style: VT.h2(context, size: 32.0, color: c.paper)),
+                                    if (f.planPriceCents > 0) TextSpan(text: '/year', style: VT.body(context, size: 16.0, color: c.paper)),
                                   ]),
                                 ),
                                 const SizedBox(height: 4.0),
-                                Text(f!.planRenewsAt == null ? 'Renewal date not set' : 'Next renewal ${fmtLongDay(f!.planRenewsAt)}',
+                                Text(f.planRenewsAt == null ? 'Renewal date not set' : 'Next renewal ${fmtLongDay(f.planRenewsAt)}',
                                     style: VT.body(context, size: 13.0, color: c.onPanelA(0.7))),
                               ],
                             ),
@@ -110,7 +109,7 @@ class AdminBilling extends StatelessWidget {
                         children: [
                           for (final (l, v) in [
                             ('Matters', 'Unlimited'),
-                            ('Team seats', f!.seatLimit > 0 ? 'Up to ${f!.seatLimit}' : '—'),
+                            ('Team seats', f.seatLimit > 0 ? 'Up to ${f.seatLimit}' : '—'),
                             ('Integrations', integrations.isEmpty ? 'Clio' : integrations.join(' · ')),
                           ])
                             Expanded(
