@@ -1,5 +1,4 @@
 import '/components/status_badge_widget.dart';
-import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
@@ -15,23 +14,24 @@ class MatterRowWidget extends StatefulWidget {
     String? items,
     String? name,
     String? status,
-    Color? statusBg,
-    Color? statusText,
-  })  : this.caseNo = caseNo ?? '2023-DR-0812',
-        this.client = client ?? 'Sarah Whitmore',
-        this.items = items ?? '142',
-        this.name = name ?? 'Whitmore v. Whitmore',
-        this.status = status ?? 'VERIFIED',
-        this.statusBg = statusBg ?? const Color(0xFFDCFCE7),
-        this.statusText = statusText ?? const Color(0xFF166534);
+    this.statusBg,
+    this.statusText,
+  })  : this.caseNo = caseNo ?? '',
+        this.client = client ?? '',
+        this.items = items ?? '',
+        this.name = name ?? '',
+        this.status = status ?? '';
 
   final String caseNo;
   final String client;
   final String items;
   final String name;
   final String status;
-  final Color statusBg;
-  final Color statusText;
+
+  /// Badge colors for statuses this row doesn't recognise. Known statuses
+  /// (Open/Active, Pending, Closed, Archived) always use their own colors.
+  final Color? statusBg;
+  final Color? statusText;
 
   @override
   State<MatterRowWidget> createState() => _MatterRowWidgetState();
@@ -39,6 +39,28 @@ class MatterRowWidget extends StatefulWidget {
 
 class _MatterRowWidgetState extends State<MatterRowWidget> {
   late MatterRowModel _model;
+
+  /// (background, text) for the status badge: Open/Active teal, Pending
+  /// amber, Closed slate, Archived grey, anything else neutral.
+  (Color, Color) _statusColors(BuildContext context) {
+    final t = FlutterFlowTheme.of(context);
+    switch (widget.status.trim().toLowerCase()) {
+      case 'open':
+      case 'active':
+        return (t.secondary10, t.secondary);
+      case 'pending':
+        return (t.warning10, const Color(0xFF92400E));
+      case 'closed':
+        return (const Color(0xFFE2E8F0), const Color(0xFF334155));
+      case 'archived':
+        return (const Color(0xFFF3F4F6), const Color(0xFF6B7280));
+      default:
+        return (
+          widget.statusBg ?? const Color(0xFFF1F5F9),
+          widget.statusText ?? const Color(0xFF475569),
+        );
+    }
+  }
 
   @override
   void setState(VoidCallback callback) {
@@ -63,6 +85,7 @@ class _MatterRowWidgetState extends State<MatterRowWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final (statusBg, statusFg) = _statusColors(context);
     return Container(
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).secondaryBackground,
@@ -91,7 +114,7 @@ class _MatterRowWidgetState extends State<MatterRowWidget> {
                         Text(
                           valueOrDefault<String>(
                             widget.name,
-                            'Whitmore v. Whitmore',
+                            '—',
                           ),
                           style: FlutterFlowTheme.of(context)
                               .bodyMedium
@@ -115,7 +138,7 @@ class _MatterRowWidgetState extends State<MatterRowWidget> {
                         Text(
                           valueOrDefault<String>(
                             widget.caseNo,
-                            '2023-DR-0812',
+                            '—',
                           ),
                           style: FlutterFlowTheme.of(context)
                               .labelSmall
@@ -148,7 +171,7 @@ class _MatterRowWidgetState extends State<MatterRowWidget> {
                     child: Text(
                       valueOrDefault<String>(
                         widget.client,
-                        'Sarah Whitmore',
+                        '—',
                       ),
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
                             font: GoogleFonts.ibmPlexSans(
@@ -182,18 +205,12 @@ class _MatterRowWidgetState extends State<MatterRowWidget> {
                           model: _model.statusBadgeModel,
                           updateCallback: () => safeSetState(() {}),
                           child: StatusBadgeWidget(
-                            bgColor: valueOrDefault<Color>(
-                              widget.statusBg,
-                              Color(0xFFDCFCE7),
-                            ),
+                            bgColor: statusBg,
                             label: valueOrDefault<String>(
-                              widget.status,
-                              'VERIFIED',
+                              widget.status.trim().toUpperCase(),
+                              '—',
                             ),
-                            textColor: valueOrDefault<Color>(
-                              widget.statusText,
-                              Color(0xFF166534),
-                            ),
+                            textColor: statusFg,
                           ),
                         ),
                       ],
@@ -213,8 +230,8 @@ class _MatterRowWidgetState extends State<MatterRowWidget> {
                         ),
                         Text(
                           valueOrDefault<String>(
-                            '${widget.items}',
-                            '142',
+                            widget.items,
+                            '—',
                           ),
                           style: FlutterFlowTheme.of(context)
                               .bodyMedium
@@ -244,19 +261,13 @@ class _MatterRowWidgetState extends State<MatterRowWidget> {
                   ),
                   Container(
                     width: 40.0,
+                    height: 40.0,
                     alignment: AlignmentDirectional(0.0, 0.0),
-                    child: FlutterFlowIconButton(
-                      borderRadius: 8.0,
-                      buttonSize: 40.0,
-                      fillColor: Colors.transparent,
-                      icon: Icon(
-                        Icons.chevron_right_rounded,
-                        color: FlutterFlowTheme.of(context).secondaryText,
-                        size: 24.0,
-                      ),
-                      onPressed: () {
-                        print('IconButton pressed ...');
-                      },
+                    // Decorative: the whole row is the tap target.
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      size: 24.0,
                     ),
                   ),
                 ].divide(SizedBox(width: 16.0)),

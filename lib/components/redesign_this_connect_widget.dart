@@ -1,9 +1,10 @@
 import '/components/button9_widget.dart';
-import '/components/text_field5_widget.dart';
 import '/flutter_flow/ff_builtin_enums.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/verin/matter/practice_tab.dart' show connectClio;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemMouseCursors;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'redesign_this_connect_model.dart';
@@ -84,6 +85,25 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
     super.dispose();
   }
 
+  bool _connecting = false;
+
+  String get _name {
+    final n = widget.providerName.trim();
+    return n.isEmpty ? 'Clio' : n;
+  }
+
+  /// Only Clio has a working (server-side OAuth) connection today.
+  bool get _isClio => _name.toLowerCase().contains('clio');
+
+  Future<void> _connect() async {
+    if (!_isClio || _connecting) return;
+    safeSetState(() => _connecting = true);
+    await connectClio(context);
+    if (!mounted) return;
+    safeSetState(() => _connecting = false);
+    await Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -133,7 +153,15 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                         color: Color(0x101A1A1A),
                       ),
                     ),
-                    child: widget.providerIcon!,
+                    alignment: AlignmentDirectional(0.0, 0.0),
+                    child: widget.providerIcon ??
+                        Icon(
+                          _isClio
+                              ? Icons.business_center_rounded
+                              : Icons.link_rounded,
+                          color: FlutterFlowTheme.of(context).secondary,
+                          size: 28.0,
+                        ),
                   ),
                   Expanded(
                     flex: 1,
@@ -145,7 +173,7 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                       textBaseline: TextBaseline.alphabetic,
                       children: [
                         Text(
-                          widget.providerName,
+                          _name,
                           textAlign: TextAlign.end,
                           style: FlutterFlowTheme.of(context)
                               .titleLarge
@@ -170,6 +198,7 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                               ),
                           overflow: TextOverflow.fade,
                         ),
+                        if (widget.providerDesc.trim().isNotEmpty)
                         Text(
                           widget.providerDesc,
                           textAlign: TextAlign.end,
@@ -200,6 +229,17 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                       ].divide(SizedBox(height: 4.0)),
                     ),
                   ),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).maybePop(),
+                      child: Icon(
+                        Icons.close_rounded,
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                        size: 24.0,
+                      ),
+                    ),
+                  ),
                 ].divide(SizedBox(width: 16.0)),
               ),
               Container(
@@ -228,10 +268,9 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                         Expanded(
                           flex: 1,
                           child: Text(
-                            valueOrDefault<String>(
-                              'You\'ll be taken to ${widget.providerName}\'s own sign-in page to connect your account. Verin never sees or stores your ${widget.providerName} password.',
-                              'You\'ll be taken to \'s own sign-in page to connect your account. Verin never sees or stores your  password.',
-                            ),
+                            _isClio
+                                ? 'You\'ll be taken to $_name\'s own sign-in page to connect your firm\'s account. Verin never sees or stores your $_name password.'
+                                : '$_name isn\'t available yet. Verin can only connect to Clio today.',
                             maxLines: 4,
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
@@ -267,10 +306,7 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    valueOrDefault<String>(
-                      'How does this matter appear in ${widget.providerName}?',
-                      'How does this matter appear in ?',
-                    ),
+                    'How do matters link to $_name?',
                     style: FlutterFlowTheme.of(context).labelLarge.override(
                           font: GoogleFonts.ibmPlexSans(
                             fontWeight: FlutterFlowTheme.of(context)
@@ -291,7 +327,7 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                         ),
                   ),
                   Text(
-                    'The matter name or file number as it shows in your account',
+                    'You connect the firm\'s $_name account once. Then open each matter\'s Practice tab and pick the $_name matter it belongs to.',
                     style: FlutterFlowTheme.of(context).bodySmall.override(
                           font: GoogleFonts.ibmPlexSans(
                             fontWeight: FlutterFlowTheme.of(context)
@@ -309,32 +345,6 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                               FlutterFlowTheme.of(context).bodySmall.fontStyle,
                           lineHeight: 1.4,
                         ),
-                  ),
-                  Container(
-                    height: 4.0,
-                  ),
-                  wrapWithModel(
-                    model: _model.textFieldModel,
-                    updateCallback: () => safeSetState(() {}),
-                    child: TextField5Widget(
-                      label: '',
-                      labelPresent: false,
-                      helper: '',
-                      helperPresent: false,
-                      leadingIcon: Icon(
-                        Icons.search_rounded,
-                        color: FlutterFlowTheme.of(context).primaryText,
-                        size: 24.0,
-                      ),
-                      leadingIconPresent: true,
-                      trailingIconPresent: false,
-                      hint: 'e.g. Whitmore v. Whitmore',
-                      value: '',
-                      onChange: '',
-                      onSubmit: '',
-                      variant: 'outlined',
-                      error: false,
-                    ),
                   ),
                 ].divide(SizedBox(height: 4.0)),
               ),
@@ -381,7 +391,7 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                             size: 16.0,
                           ),
                           Text(
-                            'Matter documents',
+                            'Finished evidence record (PDF)',
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
@@ -418,7 +428,7 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                             size: 16.0,
                           ),
                           Text(
-                            'Billing records',
+                            'Certificate of preparation & exhibit index',
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
@@ -455,7 +465,7 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
                             size: 16.0,
                           ),
                           Text(
-                            'Contact details',
+                            'Hash-chain appendix',
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
@@ -488,23 +498,32 @@ class _RedesignThisConnectWidgetState extends State<RedesignThisConnectWidget> {
               Padding(
                 padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
                 child: Container(
-                  child: Container(
+                  child: MouseRegion(
+                    cursor: (_isClio && !_connecting && !widget.isLoading)
+                        ? SystemMouseCursors.click
+                        : SystemMouseCursors.basic,
+                    child: GestureDetector(
+                    // Only Clio can be connected; other providers keep the
+                    // button disabled.
+                    onTap: (_isClio && !_connecting && !widget.isLoading)
+                        ? _connect
+                        : null,
                     child: wrapWithModel(
                       model: _model.buttonModel,
                       updateCallback: () => safeSetState(() {}),
                       child: Button9Widget(
                         iconPresent: false,
                         iconEndPresent: false,
-                        content: 'Connect to \$provider_name',
+                        content: _isClio
+                            ? 'Connect to $_name'
+                            : 'Not available yet',
                         variant: 'primary',
                         size: 'large',
                         fullWidth: true,
-                        loading: valueOrDefault<bool>(
-                          widget.isLoading,
-                          false,
-                        ),
-                        disabled: false,
+                        loading: widget.isLoading || _connecting,
+                        disabled: !_isClio,
                       ),
+                    ),
                     ),
                   ),
                 ),

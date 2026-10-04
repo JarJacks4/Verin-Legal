@@ -11,11 +11,21 @@ class InvoiceRowWidget extends StatefulWidget {
     super.key,
     String? date,
     String? amount,
-  })  : this.date = date ?? 'Oct 12, 2023',
-        this.amount = amount ?? '\$2,400.00';
+    String? status,
+    String? downloadUrl,
+  })  : this.date = date ?? '—',
+        this.amount = amount ?? '—',
+        this.status = status ?? '',
+        this.downloadUrl = downloadUrl ?? '';
 
   final String date;
   final String amount;
+
+  /// e.g. "Paid"; '—' when empty.
+  final String status;
+
+  /// Link to the invoice PDF; the download button is disabled when empty.
+  final String downloadUrl;
 
   @override
   State<InvoiceRowWidget> createState() => _InvoiceRowWidgetState();
@@ -64,7 +74,7 @@ class _InvoiceRowWidgetState extends State<InvoiceRowWidget> {
                   Text(
                     valueOrDefault<String>(
                       widget.date,
-                      'Oct 12, 2023',
+                      '—',
                     ),
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.ibmPlexSans(
@@ -82,7 +92,10 @@ class _InvoiceRowWidgetState extends State<InvoiceRowWidget> {
                         ),
                   ),
                   Text(
-                    'Paid',
+                    valueOrDefault<String>(
+                      widget.status,
+                      '—',
+                    ),
                     style: FlutterFlowTheme.of(context).labelSmall.override(
                           font: GoogleFonts.spaceGrotesk(
                             fontWeight: FlutterFlowTheme.of(context)
@@ -112,7 +125,7 @@ class _InvoiceRowWidgetState extends State<InvoiceRowWidget> {
                   Text(
                     valueOrDefault<String>(
                       widget.amount,
-                      '\$2,400.00',
+                      '—',
                     ),
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
                           font: GoogleFonts.ibmPlexSans(
@@ -138,9 +151,14 @@ class _InvoiceRowWidgetState extends State<InvoiceRowWidget> {
                       color: FlutterFlowTheme.of(context).primary,
                       size: 20.0,
                     ),
-                    onPressed: () {
-                      print('IconButton pressed ...');
-                    },
+                    disabledColor: Colors.transparent,
+                    disabledIconColor:
+                        FlutterFlowTheme.of(context).secondaryText,
+                    onPressed: widget.downloadUrl.isEmpty
+                        ? null
+                        : () async {
+                            await launchURL(widget.downloadUrl);
+                          },
                   ),
                 ].divide(SizedBox(width: 16.0)),
               ),

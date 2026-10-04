@@ -6,6 +6,15 @@ import 'package:flutter/material.dart';
 
 class InviteTeamDrawerSheetModel
     extends FlutterFlowModel<InviteTeamDrawerSheetWidget> {
+  ///  Local state fields for this component.
+
+  // Role chip selection (stored on the TeamMembers doc as-is).
+  String selectedRole = 'Paralegal';
+  // True while the invitation is being saved.
+  bool sending = false;
+  // Validation / save error shown under the form.
+  String? errorText;
+
   ///  State fields for stateful widgets in this component.
 
   // Model for TextField.

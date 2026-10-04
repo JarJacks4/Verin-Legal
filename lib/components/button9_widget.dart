@@ -21,7 +21,7 @@ class Button9Widget extends StatefulWidget {
     bool? disabled,
   })  : this.iconPresent = iconPresent ?? false,
         this.iconEndPresent = iconEndPresent ?? false,
-        this.content = content ?? 'Connect to \$provider_name',
+        this.content = content ?? 'Connect',
         this.variant = variant ?? 'primary',
         this.size = size ?? 'large',
         this.fullWidth = fullWidth ?? true,
@@ -320,14 +320,15 @@ class _Button9WidgetState extends State<Button9Widget> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     if (valueOrDefault<bool>(
-                      widget.iconPresent,
-                      false,
-                    ))
+                          widget.iconPresent,
+                          false,
+                        ) &&
+                        widget.icon != null)
                       widget.icon!,
                     Text(
                       valueOrDefault<String>(
                         widget.content,
-                        'Connect to \$provider_name',
+                        'Connect',
                       ),
                       maxLines: 1,
                       style: FlutterFlowTheme.of(context).labelMedium.override(
@@ -385,9 +386,10 @@ class _Button9WidgetState extends State<Button9Widget> {
                       overflow: TextOverflow.clip,
                     ),
                     if (valueOrDefault<bool>(
-                      widget.iconEndPresent,
-                      false,
-                    ))
+                          widget.iconEndPresent,
+                          false,
+                        ) &&
+                        widget.iconEnd != null)
                       widget.iconEnd!,
                   ].divide(SizedBox(width: 8.0)),
                 ),

@@ -1,12 +1,15 @@
 import '/backend/backend.dart';
+import '/components/confirm_approve_reject_widget.dart';
 import '/components/review_item_widget.dart';
 import '/components/side_nav_widget.dart';
 import '/components/text_field_widget.dart';
 import '/flutter_flow/flutter_flow_charts.dart';
-import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/custom_code/actions/index.dart' as actions;
+import '/verin/verin_format.dart';
+import '/verin/verin_ui.dart';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -28,17 +31,117 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  /// Item states that need a human decision (besides isQuarantined == true).
+  static const List<String> _kReviewStates = [
+    'Uncertain',
+    'uncertain',
+    'Unreadable',
+    'unreadable',
+    'pending_review',
+    'Pending Review',
+    'extraction_failed',
+  ];
+
+  /// Queue filter menu: value -> label.
+  static const Map<String, String> _kQueueFilters = {
+    'all': 'All items',
+    'quarantined': 'Quarantined',
+    'uncertain': 'Uncertain',
+    'unreadable': 'Unreadable',
+    'extraction_failed': 'Extraction failed',
+  };
+
+  StreamSubscription<List<ItemsRecord>>? _quarantinedSub;
+  StreamSubscription<List<ItemsRecord>>? _pendingSub;
+  List<ItemsRecord>? _quarantined;
+  List<ItemsRecord>? _pending;
+  String? _queueError;
+  String? _statsError;
+  String _queueFilter = 'all';
+
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => ReviewQueueModel());
 
+    // The queue is live: quarantined items plus items whose state needs
+    // review. Two single-field queries (no composite index), merged here.
+    _quarantinedSub = _itemsStream(
+      (q) => q.where('isQuarantined', isEqualTo: true),
+    ).listen(
+      (items) {
+        _quarantined = items;
+        _mergeQueue();
+      },
+      onError: (e) {
+        _quarantined ??= [];
+        _queueError = '$e';
+        _mergeQueue();
+      },
+    );
+    _pendingSub = _itemsStream(
+      (q) => q.where('state', whereIn: _kReviewStates),
+    ).listen(
+      (items) {
+        _pending = items;
+        _mergeQueue();
+      },
+      onError: (e) {
+        _pending ??= [];
+        _queueError = '$e';
+        _mergeQueue();
+      },
+    );
+
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _model.queueItems = await queryItemsRecordOnce(
-        queryBuilder: (itemsRecord) => itemsRecord.whereIn(
-            'state', ['Uncertain']).orderBy('recievedAt', descending: true),
-      );
+      _model.textFieldModel.inputTextController
+          ?.addListener(_onSearchChanged);
+      await _loadStats();
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _quarantinedSub?.cancel();
+    _pendingSub?.cancel();
+    _model.dispose();
+
+    super.dispose();
+  }
+
+  Stream<List<ItemsRecord>> _itemsStream(Query Function(Query) build) =>
+      build(ItemsRecord.collection).limit(200).snapshots().map((s) => s.docs
+          .map((d) {
+            try {
+              return ItemsRecord.fromSnapshot(d);
+            } catch (_) {
+              return null;
+            }
+          })
+          .whereType<ItemsRecord>()
+          .toList());
+
+  void _mergeQueue() {
+    if (_quarantined == null && _pending == null) return;
+    final byPath = <String, ItemsRecord>{};
+    for (final item in [...?_quarantined, ...?_pending]) {
+      byPath[item.reference.path] = item;
+    }
+    final epoch = DateTime.fromMillisecondsSinceEpoch(0);
+    _model.queueItems = byPath.values.toList()
+      ..sort((a, b) =>
+          (b.recievedAt ?? epoch).compareTo(a.recievedAt ?? epoch));
+    safeSetState(() {});
+  }
+
+  void _onSearchChanged() => safeSetState(() {});
+
+  /// Today's auto-resolved count, time saved and the 7-day volume chart.
+  Future<void> _loadStats() async {
+    try {
       _model.startOffToday = await actions.daysAgoStart(
         0,
       );
@@ -54,10 +157,11 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
             ),
       );
       _model.hoursSaved = await actions.estimateTimeSaved(
-        _model.autoResolvedTodayCount!,
+        _model.autoResolvedTodayCount ?? 0,
       );
+      // Today plus the six days before it.
       _model.startofWeek = await actions.daysAgoStart(
-        7,
+        6,
       );
       _model.weeklyProcessedItems = await queryItemsRecordOnce(
         queryBuilder: (itemsRecord) => itemsRecord
@@ -71,18 +175,100 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
             ),
       );
       _model.weeklyVolume = await actions.bucketByWeekday(
-        _model.weeklyProcessedItems!.toList(),
+        _model.weeklyProcessedItems ?? [],
       );
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+      _statsError = null;
+    } catch (e) {
+      _model.weeklyProcessedItems ??= [];
+      _statsError = '$e';
+    }
+    safeSetState(() {});
   }
 
-  @override
-  void dispose() {
-    _model.dispose();
+  /// bucketByWeekday output: [{'day': 'M', 'count': 3}, ...].
+  List<Map<String, dynamic>> get _weekBuckets {
+    final v = _model.weeklyVolume;
+    if (v is! List) return const [];
+    return v
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+  }
 
-    super.dispose();
+  String get _searchText =>
+      (_model.textFieldModel.inputTextController?.text ?? '').trim();
+
+  /// Queue narrowed by the filter menu and the search box.
+  List<ItemsRecord> _visibleQueue() {
+    final all = _model.queueItems ?? const <ItemsRecord>[];
+    final q = _searchText.toLowerCase();
+    return all.where((i) {
+      if (_queueFilter == 'quarantined' && !i.isQuarantined) return false;
+      if (_queueFilter != 'all' &&
+          _queueFilter != 'quarantined' &&
+          i.state.trim().toLowerCase() != _queueFilter) {
+        return false;
+      }
+      if (q.isEmpty) return true;
+      return [
+        i.matterName,
+        i.clientName,
+        i.senderRaw,
+        i.channel,
+        i.kind,
+        i.state,
+        i.classificationLabel,
+        i.batesId,
+      ].any((f) => f.toLowerCase().contains(q));
+    }).toList();
+  }
+
+  /// Why an item is in the queue, for its badge.
+  String _issueLabel(ItemsRecord i) {
+    if (i.isQuarantined) return 'Quarantined';
+    final raw = i.state.trim().isNotEmpty
+        ? i.state.trim()
+        : i.classificationLabel.trim();
+    if (raw.isEmpty) return '';
+    final words = raw.replaceAll('_', ' ');
+    return '${words[0].toUpperCase()}${words.substring(1)}';
+  }
+
+  (Color, Color) _issueColors(ItemsRecord i) {
+    if (i.isQuarantined) {
+      return (const Color(0xFFFEE2E2), const Color(0xFF991B1B));
+    }
+    final st = i.state.trim().toLowerCase();
+    if (st == 'unreadable' || st == 'extraction_failed') {
+      return (const Color(0xFFFFEDD5), const Color(0xFF9A3412));
+    }
+    return (const Color(0xFFFEF3C7), const Color(0xFF92400E));
+  }
+
+  Future<void> _openResolve(ItemsRecord item) async {
+    // The confirmation card is centred, so it is shown as a dialog: taps
+    // outside the card reach the barrier and dismiss it.
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return Material(
+          type: MaterialType.transparency,
+          child: ConfirmApproveRejectWidget(
+            sender:
+                item.senderRaw.isNotEmpty ? item.senderRaw : item.clientName,
+            channel: item.channel,
+            timestamp: fmtDateTime(item.recievedAt),
+            itemDoc: item.reference,
+            currentState: _issueLabel(item),
+          ),
+        );
+      },
+    );
+    if (!mounted || result == null) return;
+    showVerinSnack(
+      context,
+      result == 'approved' ? 'Item approved.' : 'Item rejected.',
+    );
   }
 
   @override
@@ -247,19 +433,45 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                             ),
                                           ),
                                         ),
-                                        FlutterFlowIconButton(
-                                          borderRadius: 6.0,
-                                          buttonSize: 40.0,
-                                          fillColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .secondaryBackground,
-                                          icon: Icon(
-                                            Icons.filter_list_rounded,
-                                            size: 24.0,
+                                        PopupMenuButton<String>(
+                                          tooltip: 'Filter queue',
+                                          initialValue: _queueFilter,
+                                          onSelected: (value) => safeSetState(
+                                              () => _queueFilter = value),
+                                          itemBuilder: (context) => [
+                                            for (final entry
+                                                in _kQueueFilters.entries)
+                                              PopupMenuItem<String>(
+                                                value: entry.key,
+                                                child: Text(
+                                                  entry.value,
+                                                  style: VerinText.body(
+                                                      context),
+                                                ),
+                                              ),
+                                          ],
+                                          child: Container(
+                                            width: 40.0,
+                                            height: 40.0,
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .secondaryBackground,
+                                              borderRadius:
+                                                  BorderRadius.circular(6.0),
+                                            ),
+                                            alignment:
+                                                AlignmentDirectional(0.0, 0.0),
+                                            child: Icon(
+                                              Icons.filter_list_rounded,
+                                              color: _queueFilter == 'all'
+                                                  ? FlutterFlowTheme.of(context)
+                                                      .primaryText
+                                                  : FlutterFlowTheme.of(context)
+                                                      .secondary,
+                                              size: 24.0,
+                                            ),
                                           ),
-                                          onPressed: () {
-                                            print('IconButton pressed ...');
-                                          },
                                         ),
                                       ].divide(SizedBox(width: 16.0)),
                                     ),
@@ -351,7 +563,11 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                       ),
                                             ),
                                             Text(
-                                              '${_model.queueItems?.length.toString()} Items',
+                                              _model.queueItems == null
+                                                  ? '—'
+                                                  : pluralize(
+                                                      _model.queueItems!.length,
+                                                      'Item'),
                                               style: FlutterFlowTheme.of(
                                                       context)
                                                   .headlineSmall
@@ -453,12 +669,9 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                   CrossAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  valueOrDefault<String>(
-                                                    _model
-                                                        .autoResolvedTodayCount
-                                                        .toString(),
-                                                    '0',
-                                                  ),
+                                                  _model.autoResolvedTodayCount
+                                                          ?.toString() ??
+                                                      '—',
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .headlineSmall
@@ -488,6 +701,9 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                         lineHeight: 1.3,
                                                       ),
                                                 ),
+                                                if ((_model.autoResolvedTodayCount ??
+                                                        0) >
+                                                    0)
                                                 Icon(
                                                   Icons.arrow_upward_rounded,
                                                   color: FlutterFlowTheme.of(
@@ -565,10 +781,9 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                       ),
                                             ),
                                             Text(
-                                              valueOrDefault<String>(
-                                                _model.hoursSaved.toString(),
-                                                '0',
-                                              ),
+                                              _model.hoursSaved == null
+                                                  ? '—'
+                                                  : '${_model.hoursSaved!.toStringAsFixed(1)} hrs',
                                               style: FlutterFlowTheme.of(
                                                       context)
                                                   .headlineSmall
@@ -703,16 +918,28 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                       ),
                                       Container(
                                         height: 190.45,
-                                        child: Container(
+                                        child: _weekBuckets.isEmpty
+                                            ? Center(
+                                                child: _statsError != null
+                                                    ? Text(
+                                                        'Processing stats are unavailable right now.',
+                                                        style: VerinText.small(
+                                                            context),
+                                                      )
+                                                    : VerinLoading(),
+                                              )
+                                            : Container(
                                           height: 151.07,
                                           child: Stack(
                                             children: [
                                               FlutterFlowBarChart(
                                                 barData: [
                                                   FFBarChartData(
-                                                    yData: _model
-                                                        .weeklyProcessedItems!
-                                                        .map((d) => d.kind)
+                                                    yData: _weekBuckets
+                                                        .map((b) =>
+                                                            b['count'] is num
+                                                                ? b['count']
+                                                                : 0)
                                                         .toList(),
                                                     color: FlutterFlowTheme.of(
                                                             context)
@@ -721,9 +948,9 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                         Color(0x2CE2E0DB),
                                                   )
                                                 ],
-                                                xLabels: _model
-                                                    .weeklyProcessedItems!
-                                                    .map((d) => d.matterName)
+                                                xLabels: _weekBuckets
+                                                    .map((b) =>
+                                                        '${b['day'] ?? ''}')
                                                     .toList(),
                                                 barWidth: 60.0,
                                                 barBorderRadius:
@@ -749,7 +976,19 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                 axisBounds: AxisBounds(
                                                   minY: 0.0,
                                                   maxX: 6.0,
-                                                  maxY: 410.4,
+                                                  maxY: math.max(
+                                                    4.0,
+                                                    _weekBuckets.fold<double>(
+                                                            0.0,
+                                                            (m, b) => math.max(
+                                                                m,
+                                                                b['count'] is num
+                                                                    ? (b['count']
+                                                                            as num)
+                                                                        .toDouble()
+                                                                    : 0.0)) *
+                                                        1.25,
+                                                  ),
                                                 ),
                                                 xAxisLabelInfo: AxisLabelInfo(
                                                   showLabels: true,
@@ -804,7 +1043,7 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                                         FlutterFlowTheme.of(
                                                                 context)
                                                             .tertiary,
-                                                        'Matters vs. Kind'),
+                                                        'Items auto-processed per day'),
                                                   ],
                                                   textStyle: TextStyle(),
                                                   indicatorSize: 5.0,
@@ -848,37 +1087,63 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                 ),
                                 Builder(
                                   builder: (context) {
-                                    final items =
-                                        _model.weeklyProcessedItems?.toList() ??
-                                            [];
+                                    if (_model.queueItems == null) {
+                                      return VerinLoading();
+                                    }
+                                    final items = _visibleQueue();
+                                    if (items.isEmpty) {
+                                      final narrowed = _searchText.isNotEmpty ||
+                                          _queueFilter != 'all';
+                                      return VerinCard(
+                                        padding: EdgeInsets.zero,
+                                        child: VerinEmptyState(
+                                          icon: narrowed
+                                              ? Icons.search_off_rounded
+                                              : Icons.inbox_rounded,
+                                          title: narrowed
+                                              ? 'No items match'
+                                              : 'Nothing waiting for review',
+                                          message: _queueError != null
+                                              ? 'Part of the queue could not be loaded. $_queueError'
+                                              : narrowed
+                                                  ? 'Try a different search or filter.'
+                                                  : 'Quarantined and uncertain items will appear here.',
+                                        ),
+                                      );
+                                    }
 
                                     return ListView.builder(
                                       padding: EdgeInsets.zero,
                                       shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
                                       scrollDirection: Axis.vertical,
                                       itemCount: items.length,
                                       itemBuilder: (context, itemsIndex) {
                                         final itemsItem = items[itemsIndex];
-                                        return Hero(
-                                          tag: 'PriorityItems',
-                                          transitionOnUserGestures: true,
+                                        final (issueBg, issueFg) =
+                                            _issueColors(itemsItem);
+                                        return Padding(
+                                          key: ValueKey(
+                                              itemsItem.reference.path),
+                                          padding: EdgeInsetsDirectional
+                                              .fromSTEB(0.0, 0.0, 0.0, 12.0),
                                           child: Material(
                                             color: Colors.transparent,
                                             child: ReviewItemWidget(
                                               key: Key(
-                                                  'Keyawb_${itemsIndex}_of_${items.length}'),
+                                                  'Keyawb_${itemsItem.reference.id}'),
                                               client: itemsItem.clientName,
-                                              date: valueOrDefault<String>(
-                                                itemsItem.recievedAt
-                                                    ?.toString(),
-                                                'a moment ago...',
-                                              ),
-                                              issue:
-                                                  itemsItem.classificationLabel,
-                                              issueBg: Color(0xFFFEE2E2),
-                                              issueText: Color(0xFF991B1B),
+                                              date: fmtDateTime(
+                                                  itemsItem.recievedAt),
+                                              issue: _issueLabel(itemsItem),
+                                              issueBg: issueBg,
+                                              issueText: issueFg,
                                               matter: itemsItem.matterName,
                                               type: itemsItem.kind,
+                                              channel: itemsItem.channel,
+                                              onResolve: () =>
+                                                  _openResolve(itemsItem),
                                             ),
                                           ),
                                         );
@@ -887,64 +1152,6 @@ class _ReviewQueueWidgetState extends State<ReviewQueueWidget> {
                                   },
                                 ),
                               ].divide(SizedBox(height: 16.0)),
-                            ),
-                            Container(
-                              child: Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 24.0, 0.0, 24.0),
-                                child: Container(
-                                  child: Container(
-                                    alignment: AlignmentDirectional(0.0, 0.0),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.max,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.info_rounded,
-                                          color: FlutterFlowTheme.of(context)
-                                              .secondaryText,
-                                          size: 14.0,
-                                        ),
-                                        Text(
-                                          'Demo workspace, fictional matters, no real data',
-                                          style: FlutterFlowTheme.of(context)
-                                              .labelSmall
-                                              .override(
-                                                font: GoogleFonts.spaceGrotesk(
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelSmall
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelSmall
-                                                          .fontStyle,
-                                                ),
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .secondaryText,
-                                                letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelSmall
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelSmall
-                                                        .fontStyle,
-                                                lineHeight: 1.2,
-                                              ),
-                                        ),
-                                      ].divide(SizedBox(width: 4.0)),
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ),
                           ].divide(SizedBox(height: 24.0)),
                         ),

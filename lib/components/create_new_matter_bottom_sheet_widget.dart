@@ -1,12 +1,15 @@
+import '/backend/backend.dart';
 import '/components/button18_widget.dart';
 import '/components/form_label_widget.dart';
 import '/components/sheet_field_widget.dart';
-import '/components/upload_dropzone_widget.dart';
 import '/flutter_flow/flutter_flow_drop_down.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
+import '/matters_tab_group_home/matters_tab_group_home_widget.dart';
+import '/verin/verin_config.dart';
+import '/verin/verin_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'create_new_matter_bottom_sheet_model.dart';
@@ -43,6 +46,118 @@ class _CreateNewMatterBottomSheetWidgetState
     _model.maybeDispose();
 
     super.dispose();
+  }
+
+  String _fieldText(SheetFieldModel field) =>
+      (field.textFieldModel.inputTextController?.text ?? '').trim();
+
+  void _close() => Navigator.of(context).maybePop();
+
+  /// Creates the Matters document, closes the sheet and opens the new
+  /// matter's detail page.
+  Future<void> _initialize() async {
+    if (_model.isSaving) return;
+    final clientName = _fieldText(_model.sheetFieldModel1);
+    final matterName = _fieldText(_model.sheetFieldModel2);
+    final caseNumber = _fieldText(_model.sheetFieldModel3);
+    final matterType = (_model.dropdownValue ?? '').trim();
+
+    if (clientName.isEmpty || matterName.isEmpty) {
+      final msg = clientName.isEmpty && matterName.isEmpty
+          ? 'Enter a client name and a matter name.'
+          : clientName.isEmpty
+              ? 'Enter a client name.'
+              : 'Enter a matter name.';
+      safeSetState(() => _model.formError = msg);
+      showVerinSnack(context, msg, error: true);
+      return;
+    }
+
+    safeSetState(() {
+      _model.isSaving = true;
+      _model.formError = null;
+    });
+    final router = GoRouter.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      final ref = MattersRecord.collection.doc();
+      // hasChainRoot is server-maintained (security rules reject it on
+      // create); it reads as false until the first receipt is chained.
+      await ref.set(createMattersRecordData(
+        firmID: currentFirmId(),
+        matterName: matterName,
+        caseTitle: matterName,
+        clientName: clientName,
+        caseNumber: caseNumber,
+        matterType: matterType,
+        practiceArea: matterType,
+        status: _model.initialStatus,
+        openedAt: getCurrentTimestamp,
+        isArchiveBuild: false,
+        hasChronologyShift: false,
+      ));
+      final matter = await MattersRecord.getDocumentOnce(ref);
+      navigator.pop();
+      router.pushNamed(
+        MattersTabGroupHomeWidget.routeName,
+        queryParameters: {
+          'matterDoc': serializeParam(matter, ParamType.Document),
+        }.withoutNulls,
+        extra: <String, dynamic>{'matterDoc': matter},
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final msg = 'Could not create the matter. $e';
+      safeSetState(() {
+        _model.isSaving = false;
+        _model.formError = msg;
+      });
+      showVerinSnack(context, msg, error: true);
+    }
+  }
+
+  Widget _statusChip(BuildContext context, String label) {
+    final t = FlutterFlowTheme.of(context);
+    final selected = _model.initialStatus == label;
+    return Expanded(
+      flex: 1,
+      child: InkWell(
+        splashColor: Colors.transparent,
+        focusColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        onTap: () => safeSetState(() => _model.initialStatus = label),
+        child: Container(
+          decoration: BoxDecoration(
+            color: selected ? t.primary10 : Colors.transparent,
+            borderRadius: BorderRadius.circular(4.0),
+            shape: BoxShape.rectangle,
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Container(
+              alignment: AlignmentDirectional(0.0, 0.0),
+              child: Text(
+                label,
+                style: t.labelMedium.override(
+                  font: GoogleFonts.ibmPlexSans(
+                    fontWeight:
+                        selected ? FontWeight.bold : t.labelMedium.fontWeight,
+                    fontStyle: t.labelMedium.fontStyle,
+                  ),
+                  color: selected ? t.primary : t.secondaryText,
+                  letterSpacing: 0.0,
+                  fontWeight:
+                      selected ? FontWeight.bold : t.labelMedium.fontWeight,
+                  fontStyle: t.labelMedium.fontStyle,
+                  lineHeight: 1.3,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -185,9 +300,7 @@ class _CreateNewMatterBottomSheetWidgetState
                                         .secondaryText,
                                     size: 24.0,
                                   ),
-                                  onPressed: () {
-                                    print('IconButton pressed ...');
-                                  },
+                                  onPressed: _model.isSaving ? null : _close,
                                 ),
                               ],
                             ),
@@ -204,7 +317,7 @@ class _CreateNewMatterBottomSheetWidgetState
                               child: SheetFieldWidget(
                                 hint: 'e.g. Elena Whitmore',
                                 label: 'Client Name',
-                                value: '42',
+                                value: '',
                               ),
                             ),
                             wrapWithModel(
@@ -213,7 +326,7 @@ class _CreateNewMatterBottomSheetWidgetState
                               child: SheetFieldWidget(
                                 hint: 'e.g. Whitmore v. Whitmore',
                                 label: 'Matter Name',
-                                value: '42',
+                                value: '',
                               ),
                             ),
                             Row(
@@ -229,7 +342,7 @@ class _CreateNewMatterBottomSheetWidgetState
                                     child: SheetFieldWidget(
                                       hint: '49D08-2404-DR-...',
                                       label: 'Case Number',
-                                      value: '42',
+                                      value: '',
                                     ),
                                   ),
                                 ),
@@ -362,173 +475,15 @@ class _CreateNewMatterBottomSheetWidgetState
                                         crossAxisAlignment:
                                             CrossAxisAlignment.center,
                                         children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .secondaryBackground,
-                                                borderRadius:
-                                                    BorderRadius.circular(4.0),
-                                                shape: BoxShape.rectangle,
-                                              ),
-                                              child: Padding(
-                                                padding: EdgeInsets.all(8.0),
-                                                child: Container(
-                                                  child: Container(
-                                                    alignment:
-                                                        AlignmentDirectional(
-                                                            0.0, 0.0),
-                                                    child: Text(
-                                                      'Open',
-                                                      style:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .labelMedium
-                                                              .override(
-                                                                font: GoogleFonts
-                                                                    .ibmPlexSans(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .primary,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontStyle,
-                                                                lineHeight: 1.3,
-                                                              ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Container(
-                                              child: Padding(
-                                                padding: EdgeInsets.all(8.0),
-                                                child: Container(
-                                                  child: Container(
-                                                    alignment:
-                                                        AlignmentDirectional(
-                                                            0.0, 0.0),
-                                                    child: Text(
-                                                      'Pending',
-                                                      style:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .labelMedium
-                                                              .override(
-                                                                font: GoogleFonts
-                                                                    .ibmPlexSans(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontStyle,
-                                                                lineHeight: 1.3,
-                                                              ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Container(
-                                              child: Padding(
-                                                padding: EdgeInsets.all(8.0),
-                                                child: Container(
-                                                  child: Container(
-                                                    alignment:
-                                                        AlignmentDirectional(
-                                                            0.0, 0.0),
-                                                    child: Text(
-                                                      'Closed',
-                                                      style:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .labelMedium
-                                                              .override(
-                                                                font: GoogleFonts
-                                                                    .ibmPlexSans(
-                                                                  fontWeight: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelMedium
-                                                                      .fontWeight,
-                                                                  fontStyle: FlutterFlowTheme.of(
-                                                                          context)
-                                                                      .labelMedium
-                                                                      .fontStyle,
-                                                                ),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                                fontWeight: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontWeight,
-                                                                fontStyle: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .labelMedium
-                                                                    .fontStyle,
-                                                                lineHeight: 1.3,
-                                                              ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
+                                          _statusChip(context, 'Open'),
+                                          _statusChip(context, 'Pending'),
+                                          _statusChip(context, 'Closed'),
                                         ].divide(SizedBox(width: 4.0)),
                                       ),
                                     ),
                                   ),
                                 ),
                               ].divide(SizedBox(height: 4.0)),
-                            ),
-                            wrapWithModel(
-                              model: _model.uploadDropzoneModel,
-                              updateCallback: () => safeSetState(() {}),
-                              child: UploadDropzoneWidget(
-                                formats: 'JPG, PNG, HEIC, MP4, MOV',
-                                label: 'Drop photos & videos here',
-                              ),
                             ),
                             Container(
                               decoration: BoxDecoration(
@@ -568,7 +523,7 @@ class _CreateNewMatterBottomSheetWidgetState
                                               alignment: AlignmentDirectional(
                                                   -1.0, -1.0),
                                               child: Text(
-                                                'Automated Intake Generation',
+                                                'Evidence intake',
                                                 style:
                                                     FlutterFlowTheme.of(context)
                                                         .labelMedium
@@ -605,7 +560,7 @@ class _CreateNewMatterBottomSheetWidgetState
                                               ),
                                             ),
                                             Text(
-                                              'A unique email, SMS, and WhatsApp intake address will be generated automatically. Clients forward evidence directly with no app installation required.',
+                                              'Add photos, videos and screenshots from the matter\'s Intake tab once it is created. Dedicated email, SMS and WhatsApp intake addresses are not available yet.',
                                               style: FlutterFlowTheme.of(
                                                       context)
                                                   .bodySmall
@@ -656,37 +611,61 @@ class _CreateNewMatterBottomSheetWidgetState
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                wrapWithModel(
-                                  model: _model.buttonModel1,
-                                  updateCallback: () => safeSetState(() {}),
-                                  child: Button18Widget(
-                                    iconPresent: false,
-                                    iconEndPresent: false,
-                                    content: 'Initialize Matter',
-                                    variant: 'primary',
-                                    size: 'large',
-                                    fullWidth: true,
-                                    loading: false,
-                                    disabled: false,
-                                    iconEnd: Icon(
-                                      Icons.arrow_forward,
-                                      color: FlutterFlowTheme.of(context)
-                                          .alternate,
+                                if (_model.formError != null)
+                                  Text(
+                                    _model.formError!,
+                                    textAlign: TextAlign.center,
+                                    style: VerinText.small(context,
+                                        color:
+                                            FlutterFlowTheme.of(context).error),
+                                  ),
+                                InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: _model.isSaving ? null : _initialize,
+                                  child: wrapWithModel(
+                                    model: _model.buttonModel1,
+                                    updateCallback: () => safeSetState(() {}),
+                                    child: Button18Widget(
+                                      iconPresent: false,
+                                      iconEndPresent: false,
+                                      content: _model.isSaving
+                                          ? 'Creating matter…'
+                                          : 'Initialize Matter',
+                                      variant: 'primary',
+                                      size: 'large',
+                                      fullWidth: true,
+                                      loading: _model.isSaving,
+                                      disabled: _model.isSaving,
+                                      iconEnd: Icon(
+                                        Icons.arrow_forward,
+                                        color: FlutterFlowTheme.of(context)
+                                            .alternate,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                wrapWithModel(
-                                  model: _model.buttonModel2,
-                                  updateCallback: () => safeSetState(() {}),
-                                  child: Button18Widget(
-                                    iconPresent: false,
-                                    iconEndPresent: false,
-                                    content: 'Discard Draft',
-                                    variant: 'ghost',
-                                    size: 'medium',
-                                    fullWidth: true,
-                                    loading: false,
-                                    disabled: false,
+                                InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: _model.isSaving ? null : _close,
+                                  child: wrapWithModel(
+                                    model: _model.buttonModel2,
+                                    updateCallback: () => safeSetState(() {}),
+                                    child: Button18Widget(
+                                      iconPresent: false,
+                                      iconEndPresent: false,
+                                      content: 'Discard Draft',
+                                      variant: 'ghost',
+                                      size: 'medium',
+                                      fullWidth: true,
+                                      loading: false,
+                                      disabled: _model.isSaving,
+                                    ),
                                   ),
                                 ),
                               ].divide(SizedBox(height: 16.0)),

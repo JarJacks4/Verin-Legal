@@ -1,3 +1,4 @@
+import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
@@ -90,7 +91,14 @@ class _SidebarBrandCapsuleWidgetState extends State<SidebarBrandCapsuleWidget> {
                         ),
                   ),
                 ),
-                Container(
+                // Plan badge: firmAccount.planName (hidden when not set).
+                StreamBuilder<List<FirmAccountRecord>>(
+                  stream: queryFirmAccountRecord(singleRecord: true),
+                  builder: (context, snapshot) {
+                    final plan = (snapshot.data?.firstOrNull?.planName ?? '')
+                        .trim();
+                    if (plan.isEmpty) return SizedBox.shrink();
+                    return Container(
                   decoration: BoxDecoration(
                     color: Color(0x26FFFFFF),
                     borderRadius: BorderRadius.circular(9999.0),
@@ -101,7 +109,7 @@ class _SidebarBrandCapsuleWidgetState extends State<SidebarBrandCapsuleWidget> {
                         EdgeInsetsDirectional.fromSTEB(16.0, 4.0, 16.0, 4.0),
                     child: Container(
                       child: Text(
-                        'Annual',
+                        plan,
                         style: FlutterFlowTheme.of(context).labelSmall.override(
                               font: GoogleFonts.spaceGrotesk(
                                 fontWeight: FlutterFlowTheme.of(context)
@@ -124,6 +132,8 @@ class _SidebarBrandCapsuleWidgetState extends State<SidebarBrandCapsuleWidget> {
                       ),
                     ),
                   ),
+                );
+                  },
                 ),
               ].divide(SizedBox(width: 16.0)),
             ),

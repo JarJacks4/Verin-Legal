@@ -1,9 +1,12 @@
+import '/auth/firebase_auth/auth_util.dart';
+import '/backend/backend.dart';
 import '/components/button5_widget.dart';
 import '/flutter_flow/ff_builtin_enums.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '/verin/verin_ui.dart';
 import 'confirm_approve_reject_model.dart';
 export 'confirm_approve_reject_model.dart';
 
@@ -28,14 +31,19 @@ class ConfirmApproveRejectWidget extends StatefulWidget {
     String? channel,
     String? timestamp,
     this.itemDoc,
+    String? currentState,
   })  : this.sender = sender ?? '',
         this.channel = channel ?? '',
-        this.timestamp = timestamp ?? '';
+        this.timestamp = timestamp ?? '',
+        this.currentState = currentState ?? '';
 
   final String sender;
   final String channel;
   final String timestamp;
   final DocumentReference? itemDoc;
+
+  /// Why the item is in the queue (e.g. "Quarantined", "Uncertain").
+  final String currentState;
 
   @override
   State<ConfirmApproveRejectWidget> createState() =>
@@ -65,6 +73,33 @@ class _ConfirmApproveRejectWidgetState
     _model.maybeDispose();
 
     super.dispose();
+  }
+
+  /// Takes the item out of the queue: isQuarantined false and state set to
+  /// [newState] ('approved' / 'rejected'). Pops with [newState] on success.
+  Future<void> _decide(String newState) async {
+    final ref = widget.itemDoc;
+    if (ref == null || _model.isSaving) return;
+    safeSetState(() {
+      _model.isSaving = true;
+      _model.errorText = null;
+    });
+    try {
+      await ref.update({
+        'isQuarantined': false,
+        'state': newState,
+        'reviewedAt': FieldValue.serverTimestamp(),
+        'reviewedBy': currentUserUid,
+      });
+      if (!mounted) return;
+      Navigator.of(context).pop(newState);
+    } catch (e) {
+      if (!mounted) return;
+      safeSetState(() {
+        _model.isSaving = false;
+        _model.errorText = 'Could not update the item. $e';
+      });
+    }
   }
 
   @override
@@ -171,7 +206,7 @@ class _ConfirmApproveRejectWidgetState
                                   textBaseline: TextBaseline.alphabetic,
                                   children: [
                                     Text(
-                                      widget.sender,
+                                      orDash(widget.sender),
                                       maxLines: 1,
                                       style: FlutterFlowTheme.of(context)
                                           .labelLarge
@@ -236,7 +271,7 @@ class _ConfirmApproveRejectWidgetState
                                                   CrossAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  widget.channel,
+                                                  orDash(widget.channel),
                                                   style: FlutterFlowTheme.of(
                                                           context)
                                                       .labelSmall
@@ -278,7 +313,7 @@ class _ConfirmApproveRejectWidgetState
                                           ),
                                         ),
                                         Text(
-                                          widget.timestamp,
+                                          orDash(widget.timestamp),
                                           style: FlutterFlowTheme.of(context)
                                               .labelSmall
                                               .override(
@@ -324,7 +359,9 @@ class _ConfirmApproveRejectWidgetState
                             color: FlutterFlowTheme.of(context).alternate,
                           ),
                           Text(
-                            'This item is currently in the review queue as Uncertain',
+                            widget.currentState.isNotEmpty
+                                ? 'This item is in the review queue as ${widget.currentState}.'
+                                : 'This item is waiting in the review queue.',
                             style:
                                 FlutterFlowTheme.of(context).bodySmall.override(
                                       font: GoogleFonts.ibmPlexSans(
@@ -362,22 +399,32 @@ class _ConfirmApproveRejectWidgetState
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        wrapWithModel(
-                          model: _model.buttonModel1,
-                          updateCallback: () => safeSetState(() {}),
-                          child: Button5Widget(
-                            iconPresent: false,
-                            iconEndPresent: false,
-                            content: 'Approve & Process',
-                            variant: 'outline',
-                            size: 'medium',
-                            fullWidth: true,
-                            loading: false,
-                            disabled: false,
+                        InkWell(
+                          splashColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: _model.isSaving || widget.itemDoc == null
+                              ? null
+                              : () => _decide('approved'),
+                          child: wrapWithModel(
+                            model: _model.buttonModel1,
+                            updateCallback: () => safeSetState(() {}),
+                            child: Button5Widget(
+                              iconPresent: false,
+                              iconEndPresent: false,
+                              content: 'Approve',
+                              variant: 'outline',
+                              size: 'medium',
+                              fullWidth: true,
+                              loading: _model.isSaving,
+                              disabled: _model.isSaving ||
+                                  widget.itemDoc == null,
+                            ),
                           ),
                         ),
                         Text(
-                          'Moves item to processed and notifies stakeholders',
+                          'Marks the item approved and removes it from the queue',
                           textAlign: TextAlign.center,
                           style: FlutterFlowTheme.of(context)
                               .labelSmall
@@ -409,22 +456,32 @@ class _ConfirmApproveRejectWidgetState
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        wrapWithModel(
-                          model: _model.buttonModel2,
-                          updateCallback: () => safeSetState(() {}),
-                          child: Button5Widget(
-                            iconPresent: false,
-                            iconEndPresent: false,
-                            content: 'Reject & Quarantine',
-                            variant: 'outline',
-                            size: 'medium',
-                            fullWidth: true,
-                            loading: false,
-                            disabled: false,
+                        InkWell(
+                          splashColor: Colors.transparent,
+                          focusColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onTap: _model.isSaving || widget.itemDoc == null
+                              ? null
+                              : () => _decide('rejected'),
+                          child: wrapWithModel(
+                            model: _model.buttonModel2,
+                            updateCallback: () => safeSetState(() {}),
+                            child: Button5Widget(
+                              iconPresent: false,
+                              iconEndPresent: false,
+                              content: 'Reject',
+                              variant: 'outline',
+                              size: 'medium',
+                              fullWidth: true,
+                              loading: false,
+                              disabled: _model.isSaving ||
+                                  widget.itemDoc == null,
+                            ),
                           ),
                         ),
                         Text(
-                          'Removes from active matter and flags for deletion',
+                          'Marks the item rejected and removes it from the queue. Nothing is deleted.',
                           textAlign: TextAlign.center,
                           style: FlutterFlowTheme.of(context)
                               .labelSmall
@@ -453,18 +510,34 @@ class _ConfirmApproveRejectWidgetState
                     ),
                   ].divide(SizedBox(height: 16.0)),
                 ),
-                wrapWithModel(
-                  model: _model.buttonModel3,
-                  updateCallback: () => safeSetState(() {}),
-                  child: Button5Widget(
-                    iconPresent: false,
-                    iconEndPresent: false,
-                    content: 'Cancel',
-                    variant: 'ghost',
-                    size: 'small',
-                    fullWidth: false,
-                    loading: false,
-                    disabled: false,
+                if (_model.errorText != null)
+                  Text(
+                    _model.errorText!,
+                    textAlign: TextAlign.center,
+                    style: VerinText.small(context,
+                        color: FlutterFlowTheme.of(context).error),
+                  ),
+                InkWell(
+                  splashColor: Colors.transparent,
+                  focusColor: Colors.transparent,
+                  hoverColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  onTap: _model.isSaving
+                      ? null
+                      : () => Navigator.of(context).maybePop(),
+                  child: wrapWithModel(
+                    model: _model.buttonModel3,
+                    updateCallback: () => safeSetState(() {}),
+                    child: Button5Widget(
+                      iconPresent: false,
+                      iconEndPresent: false,
+                      content: 'Cancel',
+                      variant: 'ghost',
+                      size: 'small',
+                      fullWidth: false,
+                      loading: false,
+                      disabled: false,
+                    ),
                   ),
                 ),
               ].divide(SizedBox(height: 24.0)),

@@ -38,6 +38,13 @@ class FirmSettingsModel extends FlutterFlowModel<FirmSettingsWidget> {
   // Model for Button.
   late Button21Model buttonModel5;
 
+  TextEditingController get firmNameController =>
+      textFieldModel1.inputTextController!;
+  TextEditingController get primaryDomainController =>
+      textFieldModel2.inputTextController!;
+  TextEditingController get physicalAddressController =>
+      textFieldModel3.inputTextController!;
+
   @override
   void initState(BuildContext context) {
     sideNavAdminModel = createModel(context, () => SideNavAdminModel());
@@ -45,6 +52,15 @@ class FirmSettingsModel extends FlutterFlowModel<FirmSettingsWidget> {
     textFieldModel1 = createModel(context, () => TextField12Model());
     textFieldModel2 = createModel(context, () => TextField12Model());
     textFieldModel3 = createModel(context, () => TextField12Model());
+    // Create the field controllers up front: TextField12 only creates its own
+    // when none exists, and would fill it with its sample value. The page
+    // seeds these from the firmAccount document instead.
+    textFieldModel1.inputTextController ??= TextEditingController();
+    textFieldModel1.inputFocusNode ??= FocusNode();
+    textFieldModel2.inputTextController ??= TextEditingController();
+    textFieldModel2.inputFocusNode ??= FocusNode();
+    textFieldModel3.inputTextController ??= TextEditingController();
+    textFieldModel3.inputFocusNode ??= FocusNode();
     switchModel1 = createModel(context, () => SwitchComponent5Model());
     switchModel2 = createModel(context, () => SwitchComponent5Model());
     buttonModel1 = createModel(context, () => Button21Model());

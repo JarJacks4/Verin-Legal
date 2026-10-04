@@ -1,81 +1,118 @@
 rules_version = '2';
+
+// Verin Legal — Firestore security rules.
+//
+// Evidence integrity rule of thumb: anything that is part of the record
+// (receipts, the hash chain, exports, extraction runs, Clio sync history) is
+// written only by Cloud Functions through the Admin SDK, which bypasses these
+// rules. Signed-in users can read it but cannot create, edit or delete it.
+//
+// This is still single-tenant (every signed-in user can see every matter).
+// When a second firm is onboarded, scope reads to the user's firmID.
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{document} {
-      allow create: if request.auth.uid == document;
-      allow read: if request.auth.uid == document;
-      allow write: if request.auth.uid == document;
-      allow delete: if request.auth.uid == document;
+
+    function signedIn() {
+      return request.auth != null;
     }
 
-    match /Matters/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+    // True if the update leaves every listed field unchanged.
+    function untouched(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
     }
 
-    match /Items/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+    match /users/{uid} {
+      allow read, write: if request.auth.uid == uid;
     }
 
-    match /chainEntries/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+    match /Matters/{matterId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && !request.resource.data.keys().hasAny(['chainHeadHash', 'chainLength', 'hasChainRoot']);
+      // Chain and integration fields are server-maintained.
+      allow update: if signedIn() && untouched([
+        'chainHeadHash', 'chainLength', 'hasChainRoot',
+        'clioMatterID', 'clioConnected', 'clioSyncedAt', 'clioMatterUrl', 'clioMatterDisplayNumber',
+        'providerMatterReference', 'providerSyncedAt',
+        'lastExportPath', 'lastExportSha256', 'lastExportAt'
+      ]);
+      allow delete: if false;
+
+      match /exports/{exportId} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
     }
 
-    match /clioSyncLog/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+    match /Receipts/{receiptId} {
+      allow read: if signedIn();
+      // Receipts are created by ingestScreenshot (server-side hashing and
+      // chaining). Staff may only change review labels on them.
+      allow create, delete: if false;
+      allow update: if signedIn() && request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['classificationLabel', 'isTranscribed', 'resolvedDate', 'hasChronologyShift']);
+
+      match /extractionRuns/{runId} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
     }
 
-    match /VerifiedStatements/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+    match /Items/{itemId} {
+      allow read, create, update: if signedIn();
+      allow delete: if false;
+
+      match /extractionRuns/{runId} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
     }
 
-    match /Sync_Status/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
-    }
-
-    match /Follow-UpRequests/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
-    }
-
-    match /Receipts/{document} {
-      allow create: if true;
-      allow read: if true;
+    match /chainEntries/{entryId} {
+      allow read: if signedIn();
       allow write: if false;
+    }
+
+    match /clioSyncLog/{logId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /VerifiedStatements/{id} {
+      allow read, create, update: if signedIn();
       allow delete: if false;
     }
 
-    match /firmAccount/{document} {
-      allow create: if true;
-      allow read: if true;
-      allow write: if false;
-      allow delete: if false;
+    match /Sync_Status/{id} {
+      allow read, write: if signedIn();
     }
 
-    match /TeamMembers/{document} {
-      allow create: if true;
-      allow read: if true;
+    match /Follow-UpRequests/{id} {
+      allow read, create, update: if signedIn();
+    }
+
+    match /firmAccount/{id} {
+      allow read, update: if signedIn();
+      allow create, delete: if false;
+    }
+
+    match /TeamMembers/{id} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    // Clio connection status the app displays; written by the Clio functions.
+    match /integrationStatus/{firmId} {
+      allow read: if signedIn();
       allow write: if false;
-      allow delete: if false;
+    }
+
+    // OAuth tokens (encrypted) and one-time OAuth state values: server only.
+    match /integrationSecrets/{id} {
+      allow read, write: if false;
+    }
+    match /oauthStates/{id} {
+      allow read, write: if false;
     }
   }
 }

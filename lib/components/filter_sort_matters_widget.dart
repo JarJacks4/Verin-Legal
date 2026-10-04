@@ -5,12 +5,67 @@ import '/flutter_flow/flutter_flow_drop_down.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/form_field_controller.dart';
-import '/custom_code/actions/index.dart' as actions;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'filter_sort_matters_model.dart';
 export 'filter_sort_matters_model.dart';
+
+const String kMatterSortNewest = 'Newest First';
+const String kMatterSortOldest = 'Oldest First';
+const String kMatterSortClientAz = 'Client Name (A–Z)';
+
+String _normStatus(String s) {
+  final v = s.trim();
+  return (v.isEmpty || v.toLowerCase() == 'all') ? 'All' : v;
+}
+
+String _normType(String s) {
+  final v = s.trim();
+  return (v.isEmpty || v.toLowerCase() == 'all types') ? 'All Types' : v;
+}
+
+String _normSort(String s) {
+  final v = s.trim().toLowerCase();
+  if (v.startsWith('oldest')) return kMatterSortOldest;
+  if (v.startsWith('client')) return kMatterSortClientAz;
+  return kMatterSortNewest;
+}
+
+/// Filters and sorts [matters] the same way the Filter & Sort sheet does.
+/// Status matching is case-insensitive ("Open" also matches "Active").
+List<MattersRecord> applyMatterFilterSort(
+  List<MattersRecord>? matters, {
+  String status = 'All',
+  String matterType = 'All Types',
+  String sort = kMatterSortNewest,
+}) {
+  final st = _normStatus(status).toLowerCase();
+  final ty = _normType(matterType).toLowerCase();
+  final result = (matters ?? const <MattersRecord>[]).where((m) {
+    final ms = m.status.trim().toLowerCase();
+    final statusOk = st == 'all' ||
+        ms == st ||
+        (st == 'open' && ms == 'active');
+    final typeOk = ty == 'all types' ||
+        m.matterType.trim().toLowerCase() == ty ||
+        m.practiceArea.trim().toLowerCase() == ty;
+    return statusOk && typeOk;
+  }).toList();
+  final epoch = DateTime.fromMillisecondsSinceEpoch(0);
+  switch (_normSort(sort)) {
+    case kMatterSortOldest:
+      result.sort((a, b) => (a.openedAt ?? epoch).compareTo(b.openedAt ?? epoch));
+      break;
+    case kMatterSortClientAz:
+      result.sort((a, b) =>
+          a.clientName.toLowerCase().compareTo(b.clientName.toLowerCase()));
+      break;
+    default:
+      result.sort((a, b) => (b.openedAt ?? epoch).compareTo(a.openedAt ?? epoch));
+  }
+  return result;
+}
 
 /// Filter & Sort (shared: Matters list + Review Queue)
 ///
@@ -50,6 +105,31 @@ class FilterSortMattersWidget extends StatefulWidget {
 class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
   late FilterSortMattersModel _model;
 
+  // Current (unapplied) selections; written to FFAppState on Apply.
+  String _status = 'All';
+  String _matterType = 'All Types';
+  String _sort = kMatterSortNewest;
+
+  /// 'All Types' plus every matter type / practice area in the list given.
+  List<String> _typeOptions() {
+    final types = <String>{};
+    for (final m in widget.allMatters ?? const <MattersRecord>[]) {
+      if (m.matterType.trim().isNotEmpty) types.add(m.matterType.trim());
+      if (m.practiceArea.trim().isNotEmpty) types.add(m.practiceArea.trim());
+    }
+    if (_matterType != 'All Types') types.add(_matterType);
+    final sorted = types.toList()..sort();
+    return ['All Types', ...sorted];
+  }
+
+  void _toggleStatus(String value) {
+    safeSetState(() => _status = _status == value ? 'All' : value);
+  }
+
+  void _setSort(String value) {
+    safeSetState(() => _sort = value);
+  }
+
   @override
   void setState(VoidCallback callback) {
     super.setState(callback);
@@ -60,6 +140,15 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => FilterSortMattersModel());
+
+    _status = _normStatus(widget.statusSelected.isNotEmpty
+        ? widget.statusSelected
+        : FFAppState().filterStatus);
+    _matterType = _normType(FFAppState().filterMatterType);
+    _sort = _normSort(widget.sortSelected.isNotEmpty
+        ? widget.sortSelected
+        : FFAppState().sortOption);
+    _model.dropdownValue = _matterType;
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
@@ -138,18 +227,16 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                     hoverColor: Colors.transparent,
                     highlightColor: Colors.transparent,
                     onTap: () async {
-                      FFAppState().filterStatus = 'All';
-                      FFAppState().filterMatterType = 'All Types';
-                      FFAppState().sortOption = 'Newest First';
-                      safeSetState(() {});
-                      _model.filterReset = await actions.sortAndFilterMatters(
-                        widget.allMatters!.toList(),
-                        '',
-                        FFAppState().filterMatterType,
-                        widget.sortSelected,
+                      safeSetState(() {
+                        _status = 'All';
+                        _matterType = 'All Types';
+                        _sort = kMatterSortNewest;
+                        _model.dropdownValue = 'All Types';
+                      });
+                      _model.dropdownValueController?.value = 'All Types';
+                      _model.filterReset = applyMatterFilterSort(
+                        widget.allMatters,
                       );
-
-                      safeSetState(() {});
                     },
                     child: Text(
                       'Reset',
@@ -232,14 +319,13 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                 hoverColor: Colors.transparent,
                                 highlightColor: Colors.transparent,
                                 onTap: () async {
-                                  FFAppState().filterStatus = 'Open';
-                                  _model.updatePage(() {});
+                                  _toggleStatus('Open');
                                 },
                                 child: Container(
                                   height: 34.0,
                                   decoration: BoxDecoration(
                                     color: valueOrDefault<Color>(
-                                      widget.statusSelected == 'Open'
+                                      _status == 'Open'
                                           ? FlutterFlowTheme.of(context).primary
                                           : Colors.transparent,
                                       Color(0x00000000),
@@ -280,8 +366,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                                           .fontStyle,
                                                 ),
                                                 color: valueOrDefault<Color>(
-                                                  widget.statusSelected ==
-                                                          'Open'
+                                                  _status == 'Open'
                                                       ? FlutterFlowTheme.of(
                                                               context)
                                                           .onPrimary
@@ -314,14 +399,13 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                 hoverColor: Colors.transparent,
                                 highlightColor: Colors.transparent,
                                 onTap: () async {
-                                  FFAppState().filterStatus = 'Closed';
-                                  _model.updatePage(() {});
+                                  _toggleStatus('Closed');
                                 },
                                 child: Container(
                                   height: 34.0,
                                   decoration: BoxDecoration(
                                     color: valueOrDefault<Color>(
-                                      widget.statusSelected == 'Closed'
+                                      _status == 'Closed'
                                           ? FlutterFlowTheme.of(context).primary
                                           : Colors.transparent,
                                       Color(0x00000000),
@@ -362,8 +446,7 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                                           .fontStyle,
                                                 ),
                                                 color: valueOrDefault<Color>(
-                                                  widget.statusSelected ==
-                                                          'Closed'
+                                                  _status == 'Closed'
                                                       ? FlutterFlowTheme.of(
                                                               context)
                                                           .onPrimary
@@ -434,20 +517,14 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                           FlutterFlowDropDown<String>(
                             controller: _model.dropdownValueController ??=
                                 FormFieldController<String>(
-                              _model.dropdownValue ??= 'All Types',
+                              _model.dropdownValue ??= _matterType,
                             ),
-                            options: [
-                              'All Types',
-                              'Litigation',
-                              'Corporate',
-                              'Real Estate',
-                              'Family Law'
-                            ],
+                            options: _typeOptions(),
                             onChanged: (val) async {
-                              safeSetState(() => _model.dropdownValue = val);
-                              FFAppState().filterMatterType =
-                                  _model.dropdownValue!;
-                              safeSetState(() {});
+                              safeSetState(() {
+                                _model.dropdownValue = val;
+                                _matterType = _normType(val ?? '');
+                              });
                             },
                             width: 200.0,
                             height: 40.0,
@@ -540,19 +617,18 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                 hoverColor: Colors.transparent,
                                 highlightColor: Colors.transparent,
                                 onTap: () async {
-                                  FFAppState().sortOption = 'Newest First';
-                                  safeSetState(() {});
+                                  _setSort(kMatterSortNewest);
                                 },
                                 child: wrapWithModel(
                                   model: _model.radioModel1,
                                   updateCallback: () => safeSetState(() {}),
                                   child: RadioWidget(
-                                    label: 'Newest First',
-                                    subtitle: 'Receive weekly updates',
+                                    label: kMatterSortNewest,
+                                    subtitle: 'Most recently opened first',
                                     color:
                                         FlutterFlowTheme.of(context).secondary,
                                     isSelected: valueOrDefault<bool>(
-                                      widget.sortSelected == 'Newest First'
+                                      _sort == kMatterSortNewest
                                           ? true
                                           : false,
                                       false,
@@ -568,19 +644,18 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                 hoverColor: Colors.transparent,
                                 highlightColor: Colors.transparent,
                                 onTap: () async {
-                                  FFAppState().sortOption = 'Oldest First';
-                                  safeSetState(() {});
+                                  _setSort(kMatterSortOldest);
                                 },
                                 child: wrapWithModel(
                                   model: _model.radioModel2,
                                   updateCallback: () => safeSetState(() {}),
                                   child: RadioWidget(
-                                    label: 'Oldest First',
-                                    subtitle: 'Receive weekly updates',
+                                    label: kMatterSortOldest,
+                                    subtitle: 'Earliest opened first',
                                     color:
                                         FlutterFlowTheme.of(context).secondary,
                                     isSelected: valueOrDefault<bool>(
-                                      widget.sortSelected == 'Oldest First'
+                                      _sort == kMatterSortOldest
                                           ? true
                                           : false,
                                       false,
@@ -596,20 +671,18 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                                 hoverColor: Colors.transparent,
                                 highlightColor: Colors.transparent,
                                 onTap: () async {
-                                  FFAppState().sortOption = 'Client Name A-Z';
-                                  safeSetState(() {});
+                                  _setSort(kMatterSortClientAz);
                                 },
                                 child: wrapWithModel(
                                   model: _model.radioModel3,
                                   updateCallback: () => safeSetState(() {}),
                                   child: RadioWidget(
-                                    label: 'Client Name (A–Z)',
-                                    subtitle: 'Receive weekly updates',
+                                    label: kMatterSortClientAz,
+                                    subtitle: 'Alphabetical by client',
                                     color:
                                         FlutterFlowTheme.of(context).secondary,
                                     isSelected: valueOrDefault<bool>(
-                                      widget.sortSelected ==
-                                              'Client Name (A–Z)'
+                                      _sort == kMatterSortClientAz
                                           ? true
                                           : false,
                                       false,
@@ -1187,20 +1260,19 @@ class _FilterSortMattersWidgetState extends State<FilterSortMattersWidget> {
                 hoverColor: Colors.transparent,
                 highlightColor: Colors.transparent,
                 onTap: () async {
-                  _model.filteredLists = await actions.sortAndFilterMatters(
-                    widget.allMatters!.toList(),
-                    FFAppState().filterStatus,
-                    FFAppState().filterMatterType,
-                    FFAppState().sortOption,
+                  final result = applyMatterFilterSort(
+                    widget.allMatters,
+                    status: _status,
+                    matterType: _matterType,
+                    sort: _sort,
                   );
-                  FFAppState().filteredList = _model.filteredLists!
-                      .map((e) => e.reference.id)
-                      .toList()
-                      .cast<String>();
-                  _model.updatePage(() {});
-                  Navigator.pop(context, _model.filteredLists);
-
-                  safeSetState(() {});
+                  _model.filteredLists = result;
+                  FFAppState().filterStatus = _status;
+                  FFAppState().filterMatterType = _matterType;
+                  FFAppState().sortOption = _sort;
+                  FFAppState().filteredList =
+                      result.map((e) => e.reference.id).toList();
+                  Navigator.pop(context, result);
                 },
                 child: wrapWithModel(
                   model: _model.buttonModel,

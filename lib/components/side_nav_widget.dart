@@ -7,6 +7,7 @@ import '/components/user_profile_modal_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
+import '/verin/verin_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'side_nav_model.dart';
@@ -33,9 +34,15 @@ class _SideNavWidgetState extends State<SideNavWidget> {
     super.initState();
     _model = createModel(context, () => SideNavModel());
 
-    // On component load action.
+    // On component load action: the firm's name for the profile row.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _model.profileRead = await queryMattersRecordOnce();
+      try {
+        final firms = await queryFirmAccountRecordOnce(singleRecord: true);
+        _model.firmAccount = firms.isEmpty ? null : firms.first;
+      } catch (_) {
+        _model.firmAccount = null;
+      }
+      safeSetState(() {});
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
@@ -48,8 +55,66 @@ class _SideNavWidgetState extends State<SideNavWidget> {
     super.dispose();
   }
 
+  /// Admin console entry is shown to Admin / Owner roles only.
+  bool get _isAdmin {
+    final role = (currentUserDocument?.role ?? '').trim().toLowerCase();
+    return role == FFAppConstants.Admin.toLowerCase() || role == 'owner';
+  }
+
+  String get _firmName {
+    final fromAccount = _model.firmAccount?.firmName.trim() ?? '';
+    if (fromAccount.isNotEmpty) return fromAccount;
+    return (currentUserDocument?.lawFirm ?? '').trim();
+  }
+
+  String _currentPath(BuildContext context) {
+    try {
+      return GoRouterState.of(context).uri.path;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  void _navigate(String routeName) {
+    context.goNamed(
+      routeName,
+      extra: <String, dynamic>{
+        '__transition_info__': TransitionInfo(
+          hasTransition: true,
+          transitionType: PageTransitionType.fade,
+          duration: Duration(milliseconds: 0),
+        ),
+      },
+    );
+  }
+
+  Future<void> _openProfile() async {
+    await showModalBottomSheet(
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: MediaQuery.viewInsetsOf(context),
+          child: UserProfileModalWidget(
+            email: currentUserEmail,
+            firm: _firmName,
+            name: currentUserDisplayName,
+            role: currentUserDocument?.role ?? '',
+          ),
+        );
+      },
+    );
+    safeSetState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    final path = _currentPath(context);
+    final onMatters = path.startsWith(MattersListWidget.routePath) ||
+        path.startsWith(MattersTabGroupHomeWidget.routePath);
+    final onReview = path.startsWith(ReviewQueueWidget.routePath);
+    final onSettings = path.startsWith(FirmSettingsWidget.routePath);
     return Container(
       width: 250.4,
       decoration: BoxDecoration(
@@ -108,16 +173,7 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                           hoverColor: Colors.transparent,
                           highlightColor: Colors.transparent,
                           onTap: () async {
-                            context.pushNamed(
-                              MattersListWidget.routeName,
-                              extra: <String, dynamic>{
-                                '__transition_info__': TransitionInfo(
-                                  hasTransition: true,
-                                  transitionType: PageTransitionType.fade,
-                                  duration: Duration(milliseconds: 11),
-                                ),
-                              },
-                            );
+                            _navigate(MattersListWidget.routeName);
                           },
                           child: wrapWithModel(
                             model: _model.navItemModel1,
@@ -129,7 +185,7 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                                 size: 20.0,
                               ),
                               label: 'Matters',
-                              selected: false,
+                              selected: onMatters,
                             ),
                           ),
                         ),
@@ -139,16 +195,7 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                           hoverColor: Colors.transparent,
                           highlightColor: Colors.transparent,
                           onTap: () async {
-                            context.pushNamed(
-                              ReviewQueueWidget.routeName,
-                              extra: <String, dynamic>{
-                                '__transition_info__': TransitionInfo(
-                                  hasTransition: true,
-                                  transitionType: PageTransitionType.fade,
-                                  duration: Duration(milliseconds: 11),
-                                ),
-                              },
-                            );
+                            _navigate(ReviewQueueWidget.routeName);
                           },
                           child: wrapWithModel(
                             model: _model.navItemModel2,
@@ -160,7 +207,7 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                                 size: 20.0,
                               ),
                               label: 'Review Queue',
-                              selected: false,
+                              selected: onReview,
                             ),
                           ),
                         ),
@@ -170,16 +217,7 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                           hoverColor: Colors.transparent,
                           highlightColor: Colors.transparent,
                           onTap: () async {
-                            context.pushNamed(
-                              FirmSettingsWidget.routeName,
-                              extra: <String, dynamic>{
-                                '__transition_info__': TransitionInfo(
-                                  hasTransition: true,
-                                  transitionType: PageTransitionType.fade,
-                                  duration: Duration(milliseconds: 9),
-                                ),
-                              },
-                            );
+                            _navigate(FirmSettingsWidget.routeName);
                           },
                           child: wrapWithModel(
                             model: _model.navItemModel3,
@@ -191,7 +229,7 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                                 size: 20.0,
                               ),
                               label: 'Settings',
-                              selected: false,
+                              selected: onSettings,
                             ),
                           ),
                         ),
@@ -226,19 +264,31 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (valueOrDefault(currentUserDocument?.role, '') ==
-                          FFAppConstants.Admin)
-                        Flexible(
-                          flex: 1,
-                          child: AuthUserStreamWidget(
-                            builder: (context) => wrapWithModel(
-                              model: _model.sidebarBrandCapsuleModel,
-                              updateCallback: () => safeSetState(() {}),
-                              updateOnChange: true,
-                              child: SidebarBrandCapsuleWidget(),
-                            ),
-                          ),
-                        ),
+                      // Admin console pill: Admin / Owner only.
+                      AuthUserStreamWidget(
+                        builder: (context) => !_isAdmin
+                            ? SizedBox.shrink()
+                            : Padding(
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 0.0, 0.0, 16.0),
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  focusColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  onTap: () async {
+                                    _navigate(
+                                        AdminDashBoardPageWidget.routeName);
+                                  },
+                                  child: wrapWithModel(
+                                    model: _model.sidebarBrandCapsuleModel,
+                                    updateCallback: () => safeSetState(() {}),
+                                    updateOnChange: true,
+                                    child: SidebarBrandCapsuleWidget(),
+                                  ),
+                                ),
+                              ),
+                      ),
                       Flexible(
                         flex: 1,
                         child: InkWell(
@@ -246,39 +296,26 @@ class _SideNavWidgetState extends State<SideNavWidget> {
                           focusColor: Colors.transparent,
                           hoverColor: Colors.transparent,
                           highlightColor: Colors.transparent,
-                          onTap: () async {
-                            await showModalBottomSheet(
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              context: context,
-                              builder: (context) {
-                                return Padding(
-                                  padding: MediaQuery.viewInsetsOf(context),
-                                  child: UserProfileModalWidget(
-                                    email: currentUserEmail,
-                                    firm: valueOrDefault(
-                                        currentUserDocument?.lawFirm, ''),
-                                    name: currentUserDisplayName,
-                                    role: valueOrDefault(
-                                        currentUserDocument?.role, ''),
-                                  ),
-                                );
-                              },
-                            ).then((value) => safeSetState(() {}));
-                          },
-                          child: wrapWithModel(
-                            model: _model.userProfileCapsuleModel,
-                            updateCallback: () => safeSetState(() {}),
-                            updateOnChange: true,
-                            child: UserProfileCapsuleWidget(
-                              email: currentUserEmail,
-                              firmName: 'Harbor Family Law',
-                              initials: 'SC',
+                          onTap: _openProfile,
+                          child: AuthUserStreamWidget(
+                            builder: (context) => wrapWithModel(
+                              model: _model.userProfileCapsuleModel,
+                              updateCallback: () => safeSetState(() {}),
+                              updateOnChange: true,
+                              child: UserProfileCapsuleWidget(
+                                email: currentUserEmail,
+                                firmName: _firmName,
+                                initials: initialsFor(
+                                  currentUserDisplayName,
+                                  email: currentUserEmail,
+                                ),
+                                onTap: _openProfile,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ].divide(SizedBox(height: 16.0)),
+                    ],
                   ),
                 ),
               ),

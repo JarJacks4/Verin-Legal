@@ -5,6 +5,13 @@ import 'package:flutter/material.dart';
 
 class ConfirmApproveRejectModel
     extends FlutterFlowModel<ConfirmApproveRejectWidget> {
+  ///  Local state fields for this component.
+
+  // True while the Items document is being updated.
+  bool isSaving = false;
+  // Shown under the buttons when the update fails.
+  String? errorText;
+
   ///  State fields for stateful widgets in this component.
 
   // Model for Button.

@@ -12,13 +12,17 @@ class UserProfileCapsuleWidget extends StatefulWidget {
     String? email,
     String? firmName,
     String? initials,
-  })  : this.email = email ?? 'paralegal@harborlaw...',
-        this.firmName = firmName ?? 'Harbor Family Law',
-        this.initials = initials ?? 'SC';
+    this.onTap,
+  })  : this.email = email ?? '',
+        this.firmName = firmName ?? '',
+        this.initials = initials ?? '';
 
   final String email;
   final String firmName;
   final String initials;
+
+  /// Called by the gear button (normally opens the profile drawer).
+  final VoidCallback? onTap;
 
   @override
   State<UserProfileCapsuleWidget> createState() =>
@@ -80,7 +84,7 @@ class _UserProfileCapsuleWidgetState extends State<UserProfileCapsuleWidget> {
                   child: Text(
                     valueOrDefault<String>(
                       widget.initials,
-                      'SC',
+                      '?',
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
@@ -113,8 +117,10 @@ class _UserProfileCapsuleWidgetState extends State<UserProfileCapsuleWidget> {
                       Text(
                         valueOrDefault<String>(
                           widget.firmName,
-                          'Harbor Family Law',
+                          '—',
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: FlutterFlowTheme.of(context).titleSmall.override(
                               font: GoogleFonts.ibmPlexSans(
                                 fontWeight: FontWeight.bold,
@@ -132,10 +138,7 @@ class _UserProfileCapsuleWidgetState extends State<UserProfileCapsuleWidget> {
                             ),
                       ),
                       Text(
-                        valueOrDefault<String>(
-                          widget.email,
-                          'paralegal@harborlaw...',
-                        ),
+                        widget.email,
                         maxLines: 1,
                         style: FlutterFlowTheme.of(context).bodySmall.override(
                               font: GoogleFonts.ibmPlexSans(
@@ -170,9 +173,7 @@ class _UserProfileCapsuleWidgetState extends State<UserProfileCapsuleWidget> {
                     color: Color(0xFF083E48),
                     size: 20.0,
                   ),
-                  onPressed: () {
-                    print('IconButton pressed ...');
-                  },
+                  onPressed: widget.onTap,
                 ),
               ].divide(SizedBox(width: 16.0)),
             ),

@@ -7,3 +7,20 @@ exports.onUserDeleted = functions.auth.user().onDelete(async (user) => {
   let userRef = firestore.doc("users/" + user.uid);
   await firestore.collection("users").doc(user.uid).delete();
 });
+
+// ---- Verin: AI screenshot extraction, hash chain, Clio (see verin/README.md) ----
+const verinExtraction = require("./verin/extraction/callable");
+exports.ingestScreenshot = verinExtraction.ingestScreenshot;
+exports.extractThreadMessages = verinExtraction.extractThreadMessages;
+
+exports.verifyMatterChain = require("./verin/chain/callable").verifyMatterChain;
+
+const verinClio = require("./verin/clio/functions");
+exports.clioAuthStart = verinClio.clioAuthStart;
+exports.clioOAuthCallback = verinClio.clioOAuthCallback;
+exports.clioDisconnect = verinClio.clioDisconnect;
+exports.clioSearchMatters = verinClio.clioSearchMatters;
+exports.clioLinkMatter = verinClio.clioLinkMatter;
+exports.clioPushDocument = verinClio.clioPushDocument;
+
+exports.exportMatterRecord = require("./verin/export/callable").exportMatterRecord;

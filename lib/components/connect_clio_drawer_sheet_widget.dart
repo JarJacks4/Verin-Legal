@@ -1,9 +1,10 @@
 import '/components/button18_widget.dart';
-import '/components/text_field10_widget.dart';
 import '/flutter_flow/ff_builtin_enums.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/verin/matter/practice_tab.dart' show connectClio;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemMouseCursors;
 import 'package:google_fonts/google_fonts.dart';
 import 'connect_clio_drawer_sheet_model.dart';
 export 'connect_clio_drawer_sheet_model.dart';
@@ -48,6 +49,33 @@ class _ConnectClioDrawerSheetWidgetState
     super.dispose();
   }
 
+  bool _connecting = false;
+
+  /// Provider shown in the drawer; this component was built for Clio, so an
+  /// empty name falls back to it.
+  String get _name {
+    final n = (widget.providerName ?? '').trim();
+    return n.isEmpty ? 'Clio' : n;
+  }
+
+  /// Only Clio has a working (server-side OAuth) connection today.
+  bool get _isClio => _name.toLowerCase().contains('clio');
+
+  String get _desc {
+    final d = (widget.providerDesc ?? '').trim();
+    if (d.isNotEmpty) return d;
+    return _isClio ? 'clio.com' : '';
+  }
+
+  Future<void> _connect() async {
+    if (!_isClio || _connecting) return;
+    safeSetState(() => _connecting = true);
+    await connectClio(context);
+    if (!mounted) return;
+    safeSetState(() => _connecting = false);
+    await Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Align(
@@ -80,7 +108,7 @@ class _ConnectClioDrawerSheetWidgetState
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            'Connect Clio',
+                            'Connect $_name',
                             style: FlutterFlowTheme.of(context)
                                 .headlineMedium
                                 .override(
@@ -100,10 +128,17 @@ class _ConnectClioDrawerSheetWidgetState
                                   lineHeight: 1.25,
                                 ),
                           ),
-                          Icon(
-                            Icons.close_rounded,
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                            size: 24.0,
+                          MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).maybePop(),
+                              child: Icon(
+                                Icons.close_rounded,
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                size: 24.0,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -183,7 +218,7 @@ class _ConnectClioDrawerSheetWidgetState
                                           textBaseline: TextBaseline.alphabetic,
                                           children: [
                                             Text(
-                                              'Clio',
+                                              _name,
                                               style: FlutterFlowTheme.of(
                                                       context)
                                                   .titleMedium
@@ -208,8 +243,9 @@ class _ConnectClioDrawerSheetWidgetState
                                                     lineHeight: 1.4,
                                                   ),
                                             ),
+                                            if (_desc.isNotEmpty)
                                             Text(
-                                              'clio.com',
+                                              _desc,
                                               style:
                                                   FlutterFlowTheme.of(context)
                                                       .labelSmall
@@ -280,7 +316,9 @@ class _ConnectClioDrawerSheetWidgetState
                                         Expanded(
                                           flex: 1,
                                           child: Text(
-                                            'You\'ll be taken to Clio\'s own sign-in page to connect your account. Verin never sees or stores your Clio password.',
+                                            _isClio
+                                                ? 'You\'ll be taken to $_name\'s own sign-in page to connect your firm\'s account. Verin never sees or stores your $_name password.'
+                                                : '$_name isn\'t available yet. Verin can only connect to Clio today.',
                                             style: FlutterFlowTheme.of(context)
                                                 .bodySmall
                                                 .override(
@@ -323,7 +361,7 @@ class _ConnectClioDrawerSheetWidgetState
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'How does this matter appear in Clio?',
+                                    'How do matters link to $_name?',
                                     style: FlutterFlowTheme.of(context)
                                         .labelLarge
                                         .override(
@@ -352,7 +390,7 @@ class _ConnectClioDrawerSheetWidgetState
                                         ),
                                   ),
                                   Text(
-                                    'The matter name or file number as it shows in your Clio account.',
+                                    'You connect the firm\'s $_name account once. Then open each matter\'s Practice tab and pick the $_name matter it belongs to.',
                                     style: FlutterFlowTheme.of(context)
                                         .bodySmall
                                         .override(
@@ -380,24 +418,6 @@ class _ConnectClioDrawerSheetWidgetState
                                           lineHeight: 1.5,
                                         ),
                                   ),
-                                  wrapWithModel(
-                                    model: _model.textFieldModel,
-                                    updateCallback: () => safeSetState(() {}),
-                                    child: TextField10Widget(
-                                      label: '',
-                                      labelPresent: false,
-                                      helper: '',
-                                      helperPresent: false,
-                                      leadingIconPresent: false,
-                                      trailingIconPresent: false,
-                                      hint: 'e.g. Whitmore v. Whitmore',
-                                      value: '',
-                                      onChange: '',
-                                      onSubmit: '',
-                                      variant: 'filled',
-                                      error: false,
-                                    ),
-                                  ),
                                 ].divide(SizedBox(height: 8.0)),
                               ),
                               Container(
@@ -417,7 +437,7 @@ class _ConnectClioDrawerSheetWidgetState
                                           CrossAxisAlignment.center,
                                       children: [
                                         Text(
-                                          'What gets synced to Clio',
+                                          'What gets synced to $_name',
                                           style: FlutterFlowTheme.of(context)
                                               .labelMedium
                                               .override(
@@ -635,25 +655,37 @@ class _ConnectClioDrawerSheetWidgetState
                   ),
                   Padding(
                     padding: EdgeInsets.all(24.0),
-                    child: Container(
+                    child: MouseRegion(
+                      cursor: (_isClio && !_connecting)
+                          ? SystemMouseCursors.click
+                          : SystemMouseCursors.basic,
+                      child: GestureDetector(
+                      // Only Clio can be connected; other providers keep the
+                      // button disabled.
+                      onTap: (_isClio && !_connecting) ? _connect : null,
                       child: wrapWithModel(
                         model: _model.buttonModel,
                         updateCallback: () => safeSetState(() {}),
                         child: Button18Widget(
                           iconPresent: false,
                           iconEndPresent: false,
-                          content: 'Connect to Clio',
+                          content: !_isClio
+                              ? 'Not available yet'
+                              : _connecting
+                                  ? 'Opening $_name…'
+                                  : 'Connect to $_name',
                           variant: 'primary',
                           size: 'large',
                           fullWidth: true,
                           loading: false,
-                          disabled: false,
+                          disabled: !_isClio || _connecting,
                           iconEnd: Icon(
                             Icons.arrow_forward,
                             color:
                                 FlutterFlowTheme.of(context).primaryBackground,
                           ),
                         ),
+                      ),
                       ),
                     ),
                   ),

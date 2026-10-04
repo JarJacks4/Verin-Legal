@@ -13,7 +13,7 @@ class SheetFieldWidget extends StatefulWidget {
     String? value,
   })  : this.hint = hint ?? 'e.g. Elena Whitmore',
         this.label = label ?? 'Client Name',
-        this.value = value ?? '42';
+        this.value = value ?? '';
 
   final String hint;
   final String label;
@@ -81,10 +81,7 @@ class _SheetFieldWidgetState extends State<SheetFieldWidget> {
                   widget.hint,
                   'e.g. Elena Whitmore',
                 ),
-                value: valueOrDefault<String>(
-                  widget.value,
-                  '42',
-                ),
+                value: widget.value,
                 onChange: '',
                 onSubmit: '',
                 variant: 'outlined',

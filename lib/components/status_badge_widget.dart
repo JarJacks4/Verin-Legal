@@ -11,9 +11,9 @@ class StatusBadgeWidget extends StatefulWidget {
     Color? bgColor,
     String? label,
     Color? textColor,
-  })  : this.bgColor = bgColor ?? const Color(0x00000000),
-        this.label = label ?? 'SlotValue(\$status)',
-        this.textColor = textColor ?? const Color(0x00000000);
+  })  : this.bgColor = bgColor ?? const Color(0xFFF1F5F9),
+        this.label = label ?? '',
+        this.textColor = textColor ?? const Color(0xFF475569);
 
   final Color bgColor;
   final String label;
@@ -64,7 +64,7 @@ class _StatusBadgeWidgetState extends State<StatusBadgeWidget> {
           child: Text(
             valueOrDefault<String>(
               widget.label,
-              'SlotValue(\$status)',
+              '—',
             ),
             style: FlutterFlowTheme.of(context).bodyMedium.override(
                   font: GoogleFonts.ibmPlexSans(
