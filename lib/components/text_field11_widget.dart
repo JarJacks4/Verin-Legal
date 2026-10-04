@@ -22,6 +22,7 @@ class TextField11Widget extends StatefulWidget {
     String? onSubmit,
     String? variant,
     bool? error,
+    bool? obscure,
   })  : this.label = label ?? '',
         this.labelPresent = labelPresent ?? false,
         this.helper = helper ?? '',
@@ -33,7 +34,8 @@ class TextField11Widget extends StatefulWidget {
         this.onChange = onChange ?? '',
         this.onSubmit = onSubmit ?? '',
         this.variant = variant ?? 'filled',
-        this.error = error ?? false;
+        this.error = error ?? false,
+        this.obscure = obscure ?? false;
 
   final String label;
   final bool labelPresent;
@@ -49,6 +51,7 @@ class TextField11Widget extends StatefulWidget {
   final String onSubmit;
   final String variant;
   final bool error;
+  final bool obscure;
 
   @override
   State<TextField11Widget> createState() => _TextField11WidgetState();
@@ -375,7 +378,7 @@ class _TextField11WidgetState extends State<TextField11Widget> {
                     child: TextFormField(
                       controller: _model.inputTextController,
                       focusNode: _model.inputFocusNode,
-                      obscureText: false,
+                      obscureText: widget.obscure,
                       decoration: InputDecoration(
                         isDense: true,
                         hintText: valueOrDefault<String>(

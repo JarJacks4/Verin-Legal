@@ -1,6 +1,9 @@
 import '/components/button19_widget.dart';
 import '/components/step_indicator_widget.dart';
 import '/components/text_field11_widget.dart';
+import '/verin/auth/auth_shell.dart';
+import '/create_account_step2/create_account_step2_widget.dart';
+import '/firm_workspace_sign_in/firm_workspace_sign_in_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +22,24 @@ class CreateAccountStep1CompWidget extends StatefulWidget {
 class _CreateAccountStep1CompWidgetState
     extends State<CreateAccountStep1CompWidget> {
   late CreateAccountStep1CompModel _model;
+  String? _error;
+
+  String _text(TextField11Model m) => (m.inputTextController?.text ?? '').trim();
+
+  void _continue() {
+    final name = _text(_model.textFieldModel1);
+    final firm = _text(_model.textFieldModel2);
+    final role = _text(_model.textFieldModel3);
+    if (name.isEmpty || firm.isEmpty || role.isEmpty) {
+      setState(() => _error = 'Enter your full name, firm name and role to continue.');
+      return;
+    }
+    SignupDraft.fullName = name;
+    SignupDraft.firmName = firm;
+    SignupDraft.role = role;
+    setState(() => _error = null);
+    context.pushNamed(CreateAccountStep2Widget.routeName);
+  }
 
   @override
   void setState(VoidCallback callback) {
@@ -44,8 +65,6 @@ class _CreateAccountStep1CompWidgetState
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 452.0,
-      height: 898.4,
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).secondaryBackground,
       ),
@@ -171,7 +190,7 @@ class _CreateAccountStep1CompWidgetState
                             leadingIconPresent: false,
                             trailingIconPresent: false,
                             hint: 'Sarah Chen',
-                            value: '',
+                            value: SignupDraft.fullName,
                             onChange: '',
                             onSubmit: '',
                             variant: 'filled',
@@ -220,7 +239,7 @@ class _CreateAccountStep1CompWidgetState
                             leadingIconPresent: false,
                             trailingIconPresent: false,
                             hint: 'Harbor Family Law',
-                            value: '',
+                            value: SignupDraft.firmName,
                             onChange: '',
                             onSubmit: '',
                             variant: 'filled',
@@ -269,7 +288,7 @@ class _CreateAccountStep1CompWidgetState
                             leadingIconPresent: false,
                             trailingIconPresent: false,
                             hint: 'Paralegal',
-                            value: '',
+                            value: SignupDraft.role,
                             onChange: '',
                             onSubmit: '',
                             variant: 'filled',
@@ -285,7 +304,9 @@ class _CreateAccountStep1CompWidgetState
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    wrapWithModel(
+                    VerinTap(
+                      onTap: _continue,
+                      child: wrapWithModel(
                       model: _model.buttonModel1,
                       updateCallback: () => safeSetState(() {}),
                       child: Button19Widget(
@@ -303,7 +324,7 @@ class _CreateAccountStep1CompWidgetState
                         loading: false,
                         disabled: false,
                       ),
-                    ),
+                    )),
                     Row(
                       mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -354,7 +375,9 @@ class _CreateAccountStep1CompWidgetState
                         ),
                       ].divide(SizedBox(width: 16.0)),
                     ),
-                    wrapWithModel(
+                    VerinTap(
+                      onTap: () => context.pushNamed(FirmWorkspaceSignInWidget.routeName),
+                      child: wrapWithModel(
                       model: _model.buttonModel2,
                       updateCallback: () => safeSetState(() {}),
                       child: Button19Widget(
@@ -367,33 +390,10 @@ class _CreateAccountStep1CompWidgetState
                         loading: false,
                         disabled: false,
                       ),
-                    ),
+                    )),
                   ].divide(SizedBox(height: 16.0)),
                 ),
-                Container(
-                  alignment: AlignmentDirectional(0.0, 0.0),
-                  child: Text(
-                    'Demo workspace · fictional matters · no real data',
-                    style: FlutterFlowTheme.of(context).labelSmall.override(
-                          font: GoogleFonts.spaceGrotesk(
-                            fontWeight: FlutterFlowTheme.of(context)
-                                .labelSmall
-                                .fontWeight,
-                            fontStyle: FlutterFlowTheme.of(context)
-                                .labelSmall
-                                .fontStyle,
-                          ),
-                          color: FlutterFlowTheme.of(context).accent3,
-                          letterSpacing: 0.0,
-                          fontWeight: FlutterFlowTheme.of(context)
-                              .labelSmall
-                              .fontWeight,
-                          fontStyle:
-                              FlutterFlowTheme.of(context).labelSmall.fontStyle,
-                          lineHeight: 1.2,
-                        ),
-                  ),
-                ),
+                VerinAuthError(message: _error),
               ].divide(SizedBox(height: 32.0)),
             ),
           ].divide(SizedBox(height: 32.0)),
