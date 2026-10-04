@@ -1,0 +1,83 @@
+# Verin Legal — build the Flutter web app and deploy it to Firebase Hosting.
+#
+#   push to main      -> checks, then deploys to the live site
+#   pull request      -> checks, then a temporary preview URL posted on the PR
+#
+# One-time setup: add a repository secret named FIREBASE_SERVICE_ACCOUNT
+# (GitHub repo -> Settings -> Secrets and variables -> Actions -> New repository secret)
+# containing the JSON key of a Google Cloud service account with the
+# "Firebase Hosting Admin" role on project verin-legal-fbzp5w. See DEPLOYMENT.md.
+#
+# Cloud Functions, rules and indexes are NOT deployed here (they need secrets
+# set with the Firebase CLI); deploy those by hand per DEPLOYMENT.md step 4.
+
+name: Deploy web app
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+concurrency:
+  group: deploy-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Analyze (fails on errors only)
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Backend tests
+        working-directory: firebase/functions
+        run: |
+          npm install --no-audit --no-fund
+          npm test
+
+      - name: Build web
+        run: flutter build web --release --output firebase/public
+
+      - name: Deploy preview (pull requests)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: verin-legal-fbzp5w
+          entryPoint: ./firebase
+          expires: 7d
+
+      - name: Deploy live (main)
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: verin-legal-fbzp5w
+          entryPoint: ./firebase
+          channelId: live

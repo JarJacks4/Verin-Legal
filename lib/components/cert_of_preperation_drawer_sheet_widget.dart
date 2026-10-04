@@ -23,7 +23,7 @@ class CertOfPreperationDrawerSheetWidget extends StatefulWidget {
     this.parameter7,
     this.parameter8,
     required this.parameter9,
-    List<ItemsRecord>? parameter10,
+    this.parameter10,
   });
 
   final String? parameter1;
