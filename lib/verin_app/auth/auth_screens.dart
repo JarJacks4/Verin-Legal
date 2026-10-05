@@ -546,7 +546,7 @@ class _SignUpViewState extends State<SignUpView> with _RedirectIfSignedIn {
       return;
     }
     if (result != null) showVToast(context, result, error: true);
-    context.goNamedAuth(kHomeRoute, context.mounted);
+    context.goNamedAuth('GettingStarted', context.mounted);
   }
 
   @override

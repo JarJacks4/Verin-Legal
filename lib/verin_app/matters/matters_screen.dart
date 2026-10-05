@@ -13,6 +13,9 @@ import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../widgets/motion.dart';
 import 'new_matter_drawer.dart';
+import '../onboarding/tour.dart';
+import '../onboarding/tours.dart';
+import '/auth/firebase_auth/auth_util.dart' show currentUserDocument;
 
 const kMatterDetailRoute = 'MattersTabGroupHome';
 
@@ -69,7 +72,15 @@ class _MattersScreenState extends State<MattersScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => TourLauncher(
+        tourId: 'matters',
+        enabled: !widget.admin,
+        beforeStart: sendToIntroIfNew,
+        steps: mattersTour(admin: VUser.fromRecord(currentUserDocument).isAdmin),
+        child: _page(context),
+      );
+
+  Widget _page(BuildContext context) {
     final c = VC.of(context);
     return StreamBuilder<List<MattersRecord>>(
       stream: _matters,
@@ -105,12 +116,14 @@ class _MattersScreenState extends State<MattersScreen> {
                         ],
                       ),
                     ),
-                    VButton(label: 'New matter', icon: Icons.add, onPressed: _newMatter),
+                    TourTarget(id: 'matters_new', child: VButton(label: 'New matter', icon: Icons.add, onPressed: _newMatter)),
                   ],
                 ),
 ),
                 const SizedBox(height: 28.0),
-                ConstrainedBox(
+                TourTarget(
+                  id: 'matters_search',
+                  child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 360.0),
                   child: TextField(
                     controller: _q,
@@ -124,13 +137,16 @@ class _MattersScreenState extends State<MattersScreen> {
                     ).copyWith(fillColor: c.card),
                   ),
                 ),
+                ),
                 const SizedBox(height: 16.0),
                 if (snap.hasError)
                   VErrorBox(message: 'Matters could not be loaded: ${snap.error}')
                 else if (!snap.hasData)
                   const VLoading()
                 else
-                  StreamBuilder<Map<String, List<ReceiptsRecord>>>(
+                  TourTarget(
+                    id: 'matters_list',
+                    child: StreamBuilder<Map<String, List<ReceiptsRecord>>>(
                     stream: _receipts,
                     builder: (context, rs) => StreamBuilder<Map<String, dynamic>>(
                       stream: _intg,
@@ -143,6 +159,7 @@ class _MattersScreenState extends State<MattersScreen> {
                         onNew: _newMatter,
                       ),
                     ),
+                  ),
                   ),
               ],
             ),

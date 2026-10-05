@@ -13,6 +13,8 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../matter/receipt_detail_drawer.dart';
+import '../onboarding/tour.dart';
+import '../onboarding/tours.dart';
 
 class ReviewScreen extends StatefulWidget {
   const ReviewScreen({super.key});
@@ -26,7 +28,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
   late final Stream<List<ReceiptsRecord>> _flagged = flaggedReceiptsStream();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => TourLauncher(tourId: 'review', steps: reviewTour, child: _page(context));
+
+  Widget _page(BuildContext context) {
     final c = VC.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(40.0, 36.0, 40.0, 48.0),
@@ -44,7 +48,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
               style: VT.muted(context),
             ),
             const SizedBox(height: 28.0),
-            StreamBuilder<List<MattersRecord>>(
+            TourTarget(
+              id: 'review_list',
+              child: StreamBuilder<List<MattersRecord>>(
               stream: _matters,
               builder: (context, ms) => StreamBuilder<List<ReceiptsRecord>>(
                 stream: _flagged,
@@ -114,6 +120,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   );
                 },
               ),
+            ),
             ),
           ],
         ),

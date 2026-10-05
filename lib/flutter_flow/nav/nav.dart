@@ -107,6 +107,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => const VMattersPage(),
         ),
         FFRoute(
+          name: 'GettingStarted',
+          path: '/getting-started',
+          requireAuth: true,
+          builder: (context, params) => const VOnboardingPage(),
+        ),
+        FFRoute(
           name: ReviewQueueWidget.routeName,
           path: ReviewQueueWidget.routePath,
           requireAuth: true,

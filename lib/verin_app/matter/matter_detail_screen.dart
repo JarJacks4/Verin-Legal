@@ -13,6 +13,8 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../widgets/motion.dart';
+import '../onboarding/tour.dart';
+import '../onboarding/tours.dart';
 import 'intake_tab.dart';
 import 'integrity_tab.dart';
 import 'practice_tab.dart';
@@ -59,7 +61,14 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => TourLauncher(
+        tourId: 'matter',
+        enabled: widget.matter != null,
+        steps: matterTour,
+        child: _page(context),
+      );
+
+  Widget _page(BuildContext context) {
     final c = VC.of(context);
     if (widget.matter == null || _matter == null) {
       return Center(
@@ -119,7 +128,9 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                               runSpacing: 12.0,
                               spacing: 16.0,
                               children: [
-                                ConstrainedBox(
+                                TourTarget(
+                                  id: 'matter_header',
+                                  child: ConstrainedBox(
                                   constraints: const BoxConstraints(maxWidth: 680.0),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,6 +153,7 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                                     ],
                                   ),
                                 ),
+                                ),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 8.0),
                                   child: Row(
@@ -157,7 +169,7 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                             ),
 ),
                             const SizedBox(height: 24.0),
-                            _TabBar(value: _tab, onChanged: (t) => setState(() => _tab = t)),
+                            TourTarget(id: 'matter_tabs', child: _TabBar(value: _tab, onChanged: (t) => setState(() => _tab = t))),
                           ],
                         ),
                       ),
@@ -167,7 +179,15 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                           alignment: Alignment.topLeft,
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 880.0),
-                            child: VFadeSwitch(
+                            child: TourLauncher(
+                              key: ValueKey<String>('tip-${_tab.name}'),
+                              tourId: 'tab_${_tab.name}',
+                              enabled: _tab != MatterTab.intake && tabTips.containsKey(_tab.name),
+                              steps: [if (tabTips[_tab.name] != null) tabTips[_tab.name]!],
+                              delay: const Duration(milliseconds: 450),
+                              child: TourTarget(
+                              id: 'matter_body',
+                              child: VFadeSwitch(
                               switchKey: _tab,
                               child: switch (_tab) {
                               MatterTab.intake => IntakeTab(matter: m),
@@ -178,6 +198,8 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                               MatterTab.integrity => IntegrityTab(matter: m, receipts: receipts),
                               MatterTab.practice => PracticeTab(matter: m, receipts: receipts, firmConnected: firmClio, firmStatus: ig.data ?? const {}),
                               },
+                            ),
+                            ),
                             ),
                           ),
                         ),
