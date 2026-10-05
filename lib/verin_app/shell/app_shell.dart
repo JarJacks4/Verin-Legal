@@ -15,6 +15,7 @@ import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
 import '../widgets/motion.dart';
 import '../onboarding/tour.dart';
+import 'demo_banner.dart';
 
 enum ConsoleNav { matters, review, annotations }
 
@@ -56,6 +57,9 @@ class _AppShellState extends State<AppShell> {
                 return Scaffold(
                   key: _scaffoldKey,
                   backgroundColor: c.background,
+                  appBar: isDemoFirm(firmSnap.data)
+                      ? PreferredSize(preferredSize: const Size.fromHeight(34.0), child: DemoBanner(firm: firmSnap.data, user: user))
+                      : null,
                   drawer: narrow ? Drawer(width: 260.0, backgroundColor: c.card, child: sidebar) : null,
                   body: SafeArea(
                     child: narrow

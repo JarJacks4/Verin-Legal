@@ -158,6 +158,13 @@ class VerinApi {
   static Future<Map<String, dynamic>> produceExhibits({required String matterId, required String productionId}) =>
       _call('produceExhibits', {'matterId': matterId, 'productionId': productionId}, timeout: const Duration(seconds: 540));
 
+  // ---------------------------------------------------------------- demo
+
+  /// Makes this firm an NFR demo workspace, or resets one to the sample data.
+  /// Returns { ok, matters, items }.
+  static Future<Map<String, dynamic>> seedDemoWorkspace() =>
+      _call('seedDemoWorkspace', {}, timeout: const Duration(seconds: 540));
+
   // ---------------------------------------------------------------- intake
 
   /// Gives the matter its intake email address and texting number now.

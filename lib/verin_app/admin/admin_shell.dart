@@ -13,6 +13,7 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/motion.dart';
 import '../onboarding/tour.dart';
+import '../shell/demo_banner.dart';
 import '../onboarding/tours.dart';
 
 enum AdminNav { dashboard, matters, billing, team, program, settings }
@@ -84,6 +85,9 @@ class _AdminShellState extends State<AdminShell> {
               return Scaffold(
                 key: _scaffoldKey,
                 backgroundColor: c.background,
+                appBar: isDemoFirm(firm)
+                    ? PreferredSize(preferredSize: const Size.fromHeight(34.0), child: DemoBanner(firm: firm, user: user))
+                    : null,
                 drawer: narrow ? Drawer(width: 270.0, backgroundColor: c.panel, child: sidebar) : null,
                 body: SafeArea(
                   child: narrow

@@ -281,12 +281,21 @@ class _ManualEntryFormState extends State<ManualEntryForm> {
           ],
           if (_kind == EvidenceKind.photo || _kind == EvidenceKind.video) ...[
             const SizedBox(height: 16.0),
+            // Left button = left side of the screenshot, right button = right side.
+            // Whoever's phone it is sits on the right in a message app.
             VSegmented<String>(
-              label: _kind == EvidenceKind.photo ? "In message screenshots, the client's messages are on the" : "In screen recordings of messages, the client's messages are on the",
+              label: _kind == EvidenceKind.photo ? 'Whose phone are these screenshots from?' : 'Whose phone is this screen recording from?',
               value: _clientSide,
-              options: const ['right', 'left'],
-              labelFor: (s) => s == 'right' ? 'Right side' : 'Left side',
+              options: const ['left', 'right'],
+              labelFor: (s) => s == 'right' ? 'Client Side' : 'Other Side / Opposing Counsel',
               onChanged: (s) => setState(() => _clientSide = s),
+            ),
+            const SizedBox(height: 6.0),
+            Text(
+              _clientSide == 'right'
+                  ? "The client's messages are on the right, the other party's on the left."
+                  : "The client's messages are on the left, the other side's on the right.",
+              style: VT.muted(context, size: 12.0),
             ),
           ],
           const SizedBox(height: 20.0),

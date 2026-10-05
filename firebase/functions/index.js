@@ -56,3 +56,6 @@ exports.onMatterIntake = verinIntake.onMatterIntake;
 exports.provisionIntake = verinIntake.provisionIntake;
 exports.approveQuarantined = verinIntake.approveQuarantined;
 exports.assignUnrouted = verinIntake.assignUnrouted;
+
+// ---- Verin: NFR demo workspace ----
+exports.seedDemoWorkspace = require("./verin/demo/seed").seedDemoWorkspace;
