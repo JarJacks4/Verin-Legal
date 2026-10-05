@@ -204,7 +204,7 @@ service cloud.firestore {
       allow read: if inMyFirm(resource.data.firmID);
       allow create, delete: if false;
       allow update: if inMyFirm(resource.data.firmID) && isAdmin() && (
-        untouched(planFields().concat(['firmID', 'ownerUid']))
+        untouched(planFields().concat(['firmID', 'ownerUid', 'isDemo', 'demoResetting', 'demoSeededAt', 'demoSeededBy', 'smsNumber']))
         || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['retentionPolicy', 'retentionRequest'])
             && request.resource.data.get('retentionPolicy', 'standard') == 'standard'));
 
