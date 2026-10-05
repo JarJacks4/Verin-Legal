@@ -17,6 +17,7 @@ exports.verifyMatterChain = require("./verin/chain/callable").verifyMatterChain;
 
 const verinAccount = require("./verin/account/setup");
 exports.setupAccount = verinAccount.setupAccount;
+exports.deleteAccount = require("./verin/account/delete").deleteAccount;
 
 const verinClio = require("./verin/clio/functions");
 exports.clioAuthStart = verinClio.clioAuthStart;

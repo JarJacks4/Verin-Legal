@@ -1,10 +1,13 @@
 // Firm console shell — the Make's Sidebar + <main>, and the Profile drawer.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/verin/auth/auth_shell.dart' show authErrorMessage;
+import '/verin/verin_api.dart';
 
 import '../data/model.dart';
 import '../theme/tokens.dart';
@@ -230,83 +233,252 @@ Future<void> signOutAndLeave(BuildContext context) async {
   router.goNamed(kSignInRouteName);
 }
 
-class ProfileDrawerBody extends StatelessWidget {
+class ProfileDrawerBody extends StatefulWidget {
   const ProfileDrawerBody({super.key, required this.user, this.firm});
 
+  /// What the opening screen had; replaced by live data as soon as it loads.
   final VUser user;
   final FirmAccountRecord? firm;
 
   @override
+  State<ProfileDrawerBody> createState() => _ProfileDrawerBodyState();
+}
+
+class _ProfileDrawerBodyState extends State<ProfileDrawerBody> {
+  late final Stream<UsersRecord?> _user = currentUserStream();
+  late final Stream<FirmAccountRecord?> _firm = firmAccountStream();
+  late final Stream<Map<String, dynamic>> _intg = integrationStatusStream();
+
+  @override
   Widget build(BuildContext context) {
+    return StreamBuilder<UsersRecord?>(
+      stream: _user,
+      builder: (context, us) => StreamBuilder<FirmAccountRecord?>(
+        stream: _firm,
+        builder: (context, fs) => StreamBuilder<Map<String, dynamic>>(
+          stream: _intg,
+          builder: (context, snap) => _body(
+            context,
+            us.data != null ? VUser.fromRecord(us.data) : widget.user,
+            fs.data ?? widget.firm,
+            snap.data?['clioConnected'] == true,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context, VUser user, FirmAccountRecord? firm, bool clio) {
     final c = VC.of(context);
     final firmName = (firm?.firmName.isNotEmpty ?? false) ? firm!.firmName : user.firm;
     final plan = (firm?.planName.isNotEmpty ?? false) ? firm!.planName : '—';
-    return StreamBuilder<Map<String, dynamic>>(
-      stream: integrationStatusStream(),
-      builder: (context, snap) {
-        final clio = snap.data?['clioConnected'] == true;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.only(bottom: 28.0),
-              margin: const EdgeInsets.only(bottom: 28.0),
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.border))),
-              child: Column(
-                children: [
-                  VAvatar(initials: user.initials, size: 80.0),
-                  const SizedBox(height: 16.0),
-                  Text(user.name.isEmpty ? '—' : user.name, textAlign: TextAlign.center, style: VT.h2(context, size: 22.0)),
-                  const SizedBox(height: 4.0),
-                  Text(user.email, style: VT.muted(context)),
-                  if (user.role.isNotEmpty) ...[
-                    const SizedBox(height: 10.0),
-                    VBadge(label: user.role, icon: Icons.work_outline, bg: c.tealPale, fg: c.tealDeep, bold: true),
+    final roleLabel = user.roleLabel;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.only(bottom: 28.0),
+          margin: const EdgeInsets.only(bottom: 28.0),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.border))),
+          child: Column(
+            children: [
+              VAvatar(initials: user.initials, size: 80.0),
+              const SizedBox(height: 16.0),
+              Text(user.name.isEmpty ? '—' : user.name, textAlign: TextAlign.center, style: VT.h2(context, size: 22.0)),
+              const SizedBox(height: 4.0),
+              Text(user.email, style: VT.muted(context)),
+              if (roleLabel.isNotEmpty || user.isAdmin) ...[
+                const SizedBox(height: 10.0),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 6.0,
+                  runSpacing: 6.0,
+                  children: [
+                    if (roleLabel.isNotEmpty) VBadge(label: roleLabel, icon: Icons.work_outline, bg: c.tealPale, fg: c.tealDeep, bold: true),
+                    if (user.isAdmin && roleLabel.toLowerCase() != user.role.toLowerCase())
+                      VBadge(label: 'Admin', icon: Icons.shield_outlined, bg: c.secondary, fg: c.tealDeep, bold: true),
                   ],
-                ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        _ProfileRow(label: 'Firm', value: firmName.isEmpty ? '—' : firmName, icon: Icons.apartment_outlined),
+        _ProfileRow(label: 'Role', value: roleLabel.isEmpty ? '—' : roleLabel, icon: Icons.work_outline),
+        _ProfileRow(label: 'Email', value: user.email, icon: Icons.mail_outline),
+        _ProfileRow(label: 'Plan', value: plan, icon: Icons.bolt_outlined),
+        const SizedBox(height: 24.0),
+        VPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('WORKSPACE', style: VT.eyebrow(context)),
+              const SizedBox(height: 8.0),
+              Text('${firmName.isEmpty ? 'Your firm' : firmName} · family-law practice', style: VT.body(context, size: 13.0)),
+              const SizedBox(height: 2.0),
+              Text(
+                clio ? 'Integrations: Clio connected · MyCase and Smokeball coming soon' : 'Integrations: Clio available · MyCase and Smokeball coming soon',
+                style: VT.muted(context, size: 12.0),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24.0),
+        VButton(
+          label: 'Sign out',
+          icon: Icons.logout,
+          kind: VButtonKind.danger,
+          fullWidth: true,
+          onPressed: () async {
+            final nav = Navigator.of(context);
+            final router = GoRouter.of(context);
+            nav.pop();
+            router.prepareAuthEvent();
+            await authManager.signOut();
+            router.clearRedirectLocation();
+            router.goNamed(kSignInRouteName);
+          },
+        ),
+        const SizedBox(height: 12.0),
+        Center(
+          child: VButton(
+            label: 'Delete account',
+            kind: VButtonKind.link,
+            size: VButtonSize.sm,
+            onPressed: () => _confirmDelete(context, firmName),
+          ),
+        ),
+        const SizedBox(height: 12.0),
+        Text('Verin Evidence Record · v1.0', textAlign: TextAlign.center, style: VT.muted(context, size: 11.0)),
+      ],
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, String firmName) async {
+    final router = GoRouter.of(context);
+    final nav = Navigator.of(context);
+    final deleted = await showVDialog<bool>(context, builder: (ctx) => _DeleteAccountForm(firmName: firmName));
+    if (deleted != true) return;
+    nav.pop(); // close the profile drawer
+    router.prepareAuthEvent();
+    try {
+      await authManager.signOut();
+    } catch (_) {/* the account is already gone */}
+    router.clearRedirectLocation();
+    router.goNamed(kSignInRouteName);
+  }
+}
+
+class _DeleteAccountForm extends StatefulWidget {
+  const _DeleteAccountForm({required this.firmName});
+
+  final String firmName;
+
+  @override
+  State<_DeleteAccountForm> createState() => _DeleteAccountFormState();
+}
+
+class _DeleteAccountFormState extends State<_DeleteAccountForm> {
+  final _password = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _delete() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email ?? '';
+    if (user == null || email.isEmpty) {
+      setState(() => _error = 'Sign in again, then try deleting your account.');
+      return;
+    }
+    if (_password.text.isEmpty) {
+      setState(() => _error = 'Enter your password to confirm.');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await user.reauthenticateWithCredential(EmailAuthProvider.credential(email: email, password: _password.text));
+      await user.getIdToken(true);
+      await VerinApi.deleteAccount();
+      if (mounted) Navigator.of(context).pop(true);
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = authErrorMessage(e.code, e.message);
+        });
+      }
+    } on VerinApiException catch (e) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = e.message;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final firm = widget.firmName.isEmpty ? 'your firm' : widget.firmName;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Delete your account?', style: VT.body(context, size: 16.0, weight: FontWeight.w600)),
+        const SizedBox(height: 8.0),
+        Text(
+          'This removes your sign-in and profile, and takes you off $firm\'s team list. It can\'t be undone.',
+          style: VT.muted(context, size: 13.0),
+        ),
+        const SizedBox(height: 8.0),
+        Text(
+          'Matters, evidence and annotations belong to the firm and stay in its record — deleting your account doesn\'t delete them.',
+          style: VT.muted(context, size: 13.0),
+        ),
+        const SizedBox(height: 16.0),
+        if (_error != null) ...[VErrorBox(message: _error!), const SizedBox(height: 12.0)],
+        VTextField(
+          controller: _password,
+          label: 'Password',
+          hint: '••••••••',
+          obscure: true,
+          autofillHints: const [AutofillHints.password],
+          onSubmitted: (_) => _delete(),
+        ),
+        const SizedBox(height: 20.0),
+        Row(
+          children: [
+            Expanded(
+              child: VButton(
+                label: 'Cancel',
+                kind: VButtonKind.secondary,
+                fullWidth: true,
+                onPressed: _busy ? null : () => Navigator.of(context).pop(false),
               ),
             ),
-            _ProfileRow(label: 'Firm', value: firmName.isEmpty ? '—' : firmName, icon: Icons.apartment_outlined),
-            _ProfileRow(label: 'Role', value: user.role.isEmpty ? '—' : user.role, icon: Icons.work_outline),
-            _ProfileRow(label: 'Email', value: user.email, icon: Icons.mail_outline),
-            _ProfileRow(label: 'Plan', value: plan, icon: Icons.bolt_outlined),
-            const SizedBox(height: 24.0),
-            VPanel(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('WORKSPACE', style: VT.eyebrow(context)),
-                  const SizedBox(height: 8.0),
-                  Text('${firmName.isEmpty ? 'Your firm' : firmName} · family-law practice', style: VT.body(context, size: 13.0)),
-                  const SizedBox(height: 2.0),
-                  Text(
-                    clio ? 'Integrations: Clio connected · MyCase and Smokeball coming soon' : 'Integrations: Clio available · MyCase and Smokeball coming soon',
-                    style: VT.muted(context, size: 12.0),
-                  ),
-                ],
+            const SizedBox(width: 12.0),
+            Expanded(
+              child: VButton(
+                label: 'Delete account',
+                loadingLabel: 'Deleting…',
+                kind: VButtonKind.danger,
+                fullWidth: true,
+                loading: _busy,
+                onPressed: _delete,
               ),
             ),
-            const SizedBox(height: 24.0),
-            VButton(
-              label: 'Sign out',
-              icon: Icons.logout,
-              kind: VButtonKind.danger,
-              fullWidth: true,
-              onPressed: () async {
-                final nav = Navigator.of(context);
-                final router = GoRouter.of(context);
-                nav.pop();
-                router.prepareAuthEvent();
-                await authManager.signOut();
-                router.clearRedirectLocation();
-                router.goNamed(kSignInRouteName);
-              },
-            ),
-            const SizedBox(height: 16.0),
-            Text('Verin Evidence Record · v1.0', textAlign: TextAlign.center, style: VT.muted(context, size: 11.0)),
           ],
-        );
-      },
+        ),
+      ],
     );
   }
 }

@@ -76,3 +76,12 @@ test('invitations: open only for the invited email, unexpired, with a firm', () 
   assert.equal(inviteIsOpen(snap({ ...ok, firmID: '' }), 'jane@firm.com', Date.now()), false);
   assert.equal(inviteIsOpen({ exists: false }, 'jane@firm.com', Date.now()), false);
 });
+
+const { blockingReason } = require('../account/delete');
+
+test('the only admin of a firm with other members cannot delete their account', () => {
+  assert.match(blockingReason({ isAdmin: true, otherMembers: 2, otherAdmins: 0, firmName: 'Harbow Law' }), /only admin of Harbow Law/);
+  assert.equal(blockingReason({ isAdmin: true, otherMembers: 2, otherAdmins: 1 }), null);
+  assert.equal(blockingReason({ isAdmin: true, otherMembers: 0, otherAdmins: 0 }), null);
+  assert.equal(blockingReason({ isAdmin: false, otherMembers: 3, otherAdmins: 0 }), null);
+});

@@ -163,6 +163,10 @@ class VerinApi {
         if ((inviteId ?? '').trim().isNotEmpty) 'inviteId': inviteId!.trim(),
       }, timeout: const Duration(seconds: 120));
 
+  /// Deletes the signed-in account (the firm's records stay). Needs a sign-in
+  /// within the last few minutes — reauthenticate first.
+  static Future<void> deleteAccount() => _call('deleteAccount', {});
+
   // ---------------------------------------------------------------- Clio
 
   /// Returns the Clio authorize URL to open in the browser.
