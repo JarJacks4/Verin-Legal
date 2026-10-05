@@ -108,8 +108,9 @@ class Participant {
       : name = _s(m['name']),
         key = _s(m['key']),
         count = _i(m['count']),
-        confirmedAs = _s(m['confirmedAs']);
-  final String name, key, confirmedAs;
+        confirmedAs = _s(m['confirmedAs']),
+        side = _s(m['side']);
+  final String name, key, confirmedAs, side;
   final int count;
 }
 
@@ -234,6 +235,13 @@ Map<String, String> participantAliases(MattersRecord m) {
   final v = m.snapshotData['participantAliases'];
   if (v is! Map) return const {};
   return {for (final e in v.entries) if (e.key is String && e.value is String) e.key as String: e.value as String};
+}
+
+/// Staff-set sides: personKey -> 'client' | 'other'.
+Map<String, String> participantSides(MattersRecord m) {
+  final v = m.snapshotData['participantSides'];
+  if (v is! Map) return const {};
+  return {for (final e in v.entries) if (e.key is String && (e.value == 'client' || e.value == 'other')) e.key as String: e.value as String};
 }
 
 String matterClientEmail(MattersRecord m) => _s(m.snapshotData['clientEmail']);

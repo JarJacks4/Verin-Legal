@@ -66,6 +66,15 @@ function aliasesOf(matter) {
   return a && typeof a === 'object' ? a : {};
 }
 
+function sidesOf(matter) {
+  const a = matter && matter.participantSides;
+  return a && typeof a === 'object' ? a : {};
+}
+
+function namingOf(matter) {
+  return { aliases: aliasesOf(matter), sides: sidesOf(matter), clientName: (matter && matter.clientName) || '' };
+}
+
 /**
  * Rebuilds a matter's thread. With arrivedId, also classifies that item's
  * arrival (once), resolves follow-ups it answers and logs it.
@@ -75,10 +84,10 @@ async function rebuildMatter(db, matterRef, { arrivedId = null } = {}) {
   if (!matterSnap.exists) return null;
   const matter = matterSnap.data();
   const firmId = matter.firmID || '';
-  const aliases = aliasesOf(matter);
+  const naming = namingOf(matter);
 
   const receipts = (await db.collection('Receipts').where('matterId', '==', matterRef).get()).docs.map(plain);
-  const thread = reconstruct(receipts, { aliases });
+  const thread = reconstruct(receipts, naming);
   const suggestions = suggestFollowUps({ thread, receipts });
 
   const doc = fitThread({
@@ -102,7 +111,7 @@ async function rebuildMatter(db, matterRef, { arrivedId = null } = {}) {
       if (!existing.exists) {
         const before = reconstruct(
           receipts.filter((r) => r.id !== arrivedId),
-          { aliases },
+          naming,
         );
         const c = classifyArrival({ receipt, before, after: thread, others: receipts });
         await updRef.set({
@@ -177,7 +186,7 @@ exports.onReceiptWritten = onDocumentWritten({ document: 'Receipts/{receiptId}',
 exports.onMatterNamesChanged = onDocumentUpdated({ document: 'Matters/{matterId}', memory: '1GiB', timeoutSeconds: 300 }, async (event) => {
   const b = event.data.before.data() || {};
   const a = event.data.after.data() || {};
-  if (JSON.stringify(aliasesOf(b)) === JSON.stringify(aliasesOf(a))) return;
+  if (JSON.stringify(namingOf(b)) === JSON.stringify(namingOf(a))) return;
   await rebuildMatter(getFirestore(), event.data.after.ref);
 });
 

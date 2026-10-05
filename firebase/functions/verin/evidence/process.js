@@ -280,7 +280,15 @@ async function processReceipt(deps, receiptRef, { force = false, uid = null } = 
     if (t.truncated) extra = 'The document text was truncated for length; describe only what is included.';
   }
 
+  // The client's name lets the reading tell sides apart in emails and documents.
+  let clientName = '';
+  try {
+    if (r.matterId && typeof r.matterId.get === 'function') clientName = String((await r.matterId.get()).get('clientName') || '');
+  } catch (_) {
+    clientName = '';
+  }
   const res = await analyzeWithClaude({
+    clientName,
     anthropic: deps.anthropic(),
     model: deps.claudeModel,
     maxTokens: deps.maxTokens,

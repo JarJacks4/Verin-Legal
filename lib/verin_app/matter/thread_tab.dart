@@ -559,13 +559,17 @@ class _NamesFormState extends State<_NamesForm> {
   late final Map<String, TextEditingController> _c = {
     for (final p in _people) p.key: TextEditingController(text: p.confirmedAs.isNotEmpty ? p.confirmedAs : _default(p)),
   };
+  late final Map<String, String> _side = {
+    for (final p in _people) p.key: p.side.isNotEmpty ? p.side : (widget.thread.clientNames.contains(p) ? 'client' : 'other'),
+  };
   bool _busy = false;
 
   String _default(Participant p) {
     final isClient = widget.thread.clientNames.contains(p);
     if (isClient) return widget.matter.clientName.isNotEmpty ? widget.matter.clientName : p.name;
-    // Suggest the most-used name on that side; staff change it if it's someone else.
-    return widget.thread.otherNames.isNotEmpty ? widget.thread.otherNames.first.name : p.name;
+    // Start from the name as shown (without any email address); staff give
+    // names that are the same person the same name.
+    return p.name.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 
   @override
@@ -579,6 +583,7 @@ class _NamesFormState extends State<_NamesForm> {
   Future<void> _save() async {
     setState(() => _busy = true);
     final aliases = {...participantAliases(widget.matter)};
+    final sides = {...participantSides(widget.matter)};
     for (final p in _people) {
       final v = _c[p.key]!.text.trim();
       if (v.isEmpty) {
@@ -586,9 +591,10 @@ class _NamesFormState extends State<_NamesForm> {
       } else {
         aliases[p.key] = v;
       }
+      sides[p.key] = _side[p.key] ?? 'other';
     }
     try {
-      await widget.matter.reference.update({'participantAliases': aliases});
+      await widget.matter.reference.update({'participantAliases': aliases, 'participantSides': sides});
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {
@@ -609,6 +615,14 @@ class _NamesFormState extends State<_NamesForm> {
               Text('Shown as "${p.name}" · ${p.count} message${p.count == 1 ? '' : 's'}', style: VT.body(context, size: 12.0, weight: FontWeight.w600)),
               const SizedBox(height: 6.0),
               VTextField(controller: _c[p.key]!, hint: 'Who this is'),
+              const SizedBox(height: 8.0),
+              VSegmented<String>(
+                value: _side[p.key] ?? 'other',
+                options: const ['client', 'other'],
+                labelFor: (s) => s == 'client' ? 'Client\'s side' : 'Other side',
+                fontSize: 12.0,
+                onChanged: (s) => setState(() => _side[p.key] = s),
+              ),
             ],
           ),
         );
@@ -616,7 +630,7 @@ class _NamesFormState extends State<_NamesForm> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Phones save the same person differently — "Mike", "Michael R.", a bare number. Give names that are the same person the same name; anything you leave different stays separate.',
+          'Phones and email save the same person differently — "Mike", "Michael R.", a bare number. Give names that are the same person the same name, and say which side each one is on (it decides which side their messages show on).',
           style: VT.muted(context, size: 13.0),
         ),
         const SizedBox(height: 20.0),
