@@ -393,7 +393,31 @@ class _ThreadTabState extends State<ThreadTab> {
             opacity: 0.8,
             child: Text(speaker, style: VT.body(context, size: 11.0, weight: FontWeight.w500, color: mine ? c.primaryFg : c.foreground)),
           ),
-          const SizedBox(height: 2.0),
+          // Which file this message was read from — tap to check it against the original.
+          VHover(
+            onTap: r == null ? null : () => showVerificationView(context, receipt: r, matter: matter, messageIndex: e.index),
+            builder: (context, hovered) {
+              final tone = mine ? c.primaryFg.withValues(alpha: hovered ? 1.0 : 0.75) : (hovered ? c.teal : c.mutedFg);
+              return Padding(
+                padding: const EdgeInsets.only(top: 1.0, bottom: 4.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(_fileIcon(r), size: 11.0, color: tone),
+                    const SizedBox(width: 4.0),
+                    Flexible(
+                      child: Text(
+                        source,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: VT.body(context, size: 10.5, color: tone).copyWith(decoration: hovered ? TextDecoration.underline : null),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
           Text(fix?.corrected ?? e.text, style: VT.body(context, height: 1.35, color: mine ? c.primaryFg : c.foreground)),
         ],
       ),
@@ -461,12 +485,9 @@ class _ThreadTabState extends State<ThreadTab> {
                   spacing: 8.0,
                   runSpacing: 4.0,
                   children: [
-                    VHover(
-                      onTap: r == null ? null : () => showVerificationView(context, receipt: r, matter: matter, messageIndex: e.index),
-                      builder: (context, hovered) => Text(
-                        '${e.whenLabel} · $source${e.alsoIn.isNotEmpty ? ' · also in ${e.alsoIn.length}' : ''}',
-                        style: VT.body(context, size: 10.0, color: hovered ? c.teal : c.mutedFg),
-                      ),
+                    Text(
+                      '${e.whenLabel}${e.alsoIn.isNotEmpty ? ' · also in ${e.alsoIn.length} other file${e.alsoIn.length == 1 ? '' : 's'}' : ''}',
+                      style: VT.body(context, size: 10.0, color: c.mutedFg),
                     ),
                     for (final (label, tone) in flags) VBadge(label: label, bg: tone.withValues(alpha: 0.12), fg: tone, size: 9.5),
                   ],
@@ -510,6 +531,15 @@ class _ThreadTabState extends State<ThreadTab> {
       ),
     );
   }
+}
+
+IconData _fileIcon(ReceiptsRecord? r) {
+  final k = r?.itemKind ?? '';
+  if (k == 'screenshot' || k == 'photo' || k == 'image') return Icons.image_outlined;
+  if (k == 'video' || k == 'screen_recording') return Icons.videocam_outlined;
+  if (k == 'audio') return Icons.graphic_eq;
+  if (k == 'email') return Icons.mail_outline;
+  return Icons.description_outlined;
 }
 
 /// Staff confirm which names are the same person. Saved on the matter as

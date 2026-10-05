@@ -168,6 +168,19 @@ async function apiRequest({ fetch, region, accessToken, method = 'GET', path, qu
   });
   const json = await readJson(res);
   if (!res.ok) {
+    if (json && json.raw) {
+      // An HTML page instead of Clio's JSON: something in front of Clio refused it.
+      const h = (k) => (res.headers && res.headers.get ? res.headers.get(k) : null) || '';
+      console.error('Clio API returned non-JSON', {
+        method,
+        path,
+        status: res.status,
+        server: h('server'),
+        via: h('via'),
+        requestId: h('x-request-id') || h('x-amzn-requestid') || h('x-amz-cf-id') || h('cf-ray'),
+        body: json.raw.slice(0, 300),
+      });
+    }
     throw new ClioApiError(`Clio ${method} ${path} failed (${res.status}): ${errorMessage(json, res.statusText)}`, {
       status: res.status,
       body: json,

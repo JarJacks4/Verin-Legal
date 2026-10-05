@@ -31,6 +31,8 @@ const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const P = require('../common/params');
 const access = require('../common/access');
 const clio = require('./clioApi');
+// Clio's firewall rejects Node's built-in fetch fingerprint; see http.js.
+const { nodeFetch: fetch } = require('./http');
 const { seal, open } = require('./tokenCrypto');
 
 if (!getApps().length) initializeApp();
