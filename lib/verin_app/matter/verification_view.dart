@@ -20,6 +20,7 @@ import '/verin/verin_config.dart';
 
 import '../data/corrections.dart';
 import '../data/format.dart';
+import '../data/model.dart';
 import '../data/record_view.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';

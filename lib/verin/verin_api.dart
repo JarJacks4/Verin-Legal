@@ -154,6 +154,10 @@ class VerinApi {
   static Future<Map<String, dynamic>> refreshMatterRecord(String matterId) =>
       _call('refreshMatterRecord', {'matterId': matterId}, timeout: const Duration(seconds: 300));
 
+  /// Produces a draft production: Bates-stamped exhibits, index and ZIP.
+  static Future<Map<String, dynamic>> produceExhibits({required String matterId, required String productionId}) =>
+      _call('produceExhibits', {'matterId': matterId, 'productionId': productionId}, timeout: const Duration(seconds: 540));
+
   // ---------------------------------------------------------------- account
 
   /// Attaches the signed-in account to a firm: joins the firm that invited

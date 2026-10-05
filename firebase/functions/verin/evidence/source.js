@@ -9,6 +9,10 @@
 // guessed at, and the statement still links to its source item.
 
 const STATEMENT_KINDS = ['date', 'amount', 'person', 'place', 'event', 'other'];
+// What court rules commonly require redacting in filings (e.g. Fed. R. Civ. P.
+// 5.2 and state equivalents), plus contact details family courts often protect.
+const SENSITIVE_CATEGORIES = ['ssn', 'tax_id', 'account', 'birth_date', 'minor_name', 'address', 'phone', 'email', 'other'];
+const MAX_SENSITIVE = 60;
 const MAX_STATEMENTS = 25;
 
 const BOX_SCHEMA = {
@@ -34,6 +38,18 @@ const STATEMENT_SCHEMA = {
     box: BOX_SCHEMA,
   },
   required: ['text', 'kind', 'page', 'box'],
+  additionalProperties: false,
+};
+
+const SENSITIVE_SCHEMA = {
+  type: 'object',
+  properties: {
+    text: { type: 'string', description: 'The exact characters to redact, copied verbatim.' },
+    category: { type: 'string', enum: SENSITIVE_CATEGORIES },
+    page: { type: 'integer', description: '1-based PDF page; 0 otherwise.' },
+    box: BOX_SCHEMA,
+  },
+  required: ['text', 'category', 'page', 'box'],
   additionalProperties: false,
 };
 
@@ -87,6 +103,23 @@ function cleanStatements(list) {
     if (statements.length >= MAX_STATEMENTS) break;
   }
   return { statements, skipped };
+}
+
+/// Redaction suggestions: same shape rules as statements.
+function cleanSensitive(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (const s of list) {
+    if (!s || typeof s.text !== 'string' || !s.text.trim() || !SENSITIVE_CATEGORIES.includes(s.category)) continue;
+    const it = { text: s.text.trim().slice(0, 300), category: s.category };
+    const page = cleanPage(s.page);
+    if (page) it.page = page;
+    const box = cleanBox(s.box);
+    if (box) it.box = box;
+    out.push(it);
+    if (out.length >= MAX_SENSITIVE) break;
+  }
+  return out;
 }
 
 /// Pixel size of a PNG, JPEG, GIF or WebP from its bytes, or null.
@@ -172,6 +205,9 @@ function jpegOrientation(buf) {
 }
 
 module.exports = {
+  SENSITIVE_CATEGORIES,
+  SENSITIVE_SCHEMA,
+  cleanSensitive,
   STATEMENT_KINDS,
   MAX_STATEMENTS,
   BOX_SCHEMA,

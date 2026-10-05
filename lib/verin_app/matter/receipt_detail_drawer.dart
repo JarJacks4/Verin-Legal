@@ -236,7 +236,7 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
               const SizedBox(height: 10.0),
               VButton(
                 label: 'Verify against the original',
-                icon: Icons.compare_outlined,
+                icon: Icons.compare,
                 kind: VButtonKind.tonal,
                 size: VButtonSize.sm,
                 onPressed: () => showVerificationView(context, receipt: r, matter: widget.matter),
