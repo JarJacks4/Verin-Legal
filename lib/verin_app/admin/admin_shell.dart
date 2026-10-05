@@ -12,6 +12,8 @@ import '../shell/app_shell.dart' show showProfileDrawer;
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/motion.dart';
+import '../onboarding/tour.dart';
+import '../onboarding/tours.dart';
 
 enum AdminNav { dashboard, matters, billing, team, program, settings }
 
@@ -68,7 +70,13 @@ class _AdminShellState extends State<AdminShell> {
             } else if (!user.isAdmin) {
               body = const _NoAccess();
             } else {
-              body = widget.builder(context, user, firm);
+              body = TourLauncher(
+                key: ValueKey<String>('admin-tour-${widget.nav.name}'),
+                tourId: 'admin_${widget.nav.name}',
+                enabled: adminTours.containsKey(widget.nav.name),
+                steps: adminTours[widget.nav.name] ?? const <TourStep>[],
+                child: TourTarget(id: 'admin_body', child: widget.builder(context, user, firm)),
+              );
             }
             final sidebar = AdminSidebar(nav: widget.nav, user: user, firm: firm);
             return LayoutBuilder(builder: (context, box) {
@@ -187,10 +195,14 @@ class AdminSidebar extends StatelessWidget {
             const SizedBox(height: 16.0),
           Expanded(
             child: SingleChildScrollView(
-              child: Column(
+              child: TourTarget(
+                id: 'admin_nav',
+                child: Column(
                 children: [
                   for (final (id, icon, label) in items)
-                    Padding(
+                    TourTarget(
+                      id: 'admin_nav_${id.name}',
+                      child: Padding(
                       padding: const EdgeInsets.only(bottom: 2.0),
                       child: VHover(
                         onTap: () => context.goNamed(adminRoute(id)),
@@ -214,7 +226,9 @@ class AdminSidebar extends StatelessWidget {
                         },
                       ),
                     ),
+                    ),
                 ],
+              ),
               ),
             ),
           ),

@@ -14,6 +14,7 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
 import '../widgets/motion.dart';
+import '../onboarding/tour.dart';
 
 enum ConsoleNav { matters, review }
 
@@ -106,7 +107,9 @@ class ConsoleSidebar extends StatelessWidget {
       final on = nav == id;
       return Padding(
         padding: const EdgeInsets.only(bottom: 4.0),
-        child: VHover(
+        child: TourTarget(
+          id: id == ConsoleNav.review ? 'nav_review' : 'nav_matters',
+          child: VHover(
           onTap: () => context.goNamed(route),
           builder: (context, hovered) => Container(
             padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
@@ -122,6 +125,7 @@ class ConsoleSidebar extends StatelessWidget {
               ],
             ),
           ),
+        ),
         ),
       );
     }
@@ -149,7 +153,9 @@ class ConsoleSidebar extends StatelessWidget {
                     const SizedBox(height: 20.0),
                     const VHairline(),
                     const SizedBox(height: 24.0),
-                    VHover(
+                    TourTarget(
+                      id: 'nav_admin',
+                      child: VHover(
                       onTap: () => context.goNamed(kAdminHomeRoute),
                       builder: (context, hovered) => Opacity(
                         opacity: hovered ? 0.92 : 1.0,
@@ -172,6 +178,7 @@ class ConsoleSidebar extends StatelessWidget {
                         ),
                       ),
                     ),
+                    ),
                   ],
                 ],
               ),
@@ -179,7 +186,9 @@ class ConsoleSidebar extends StatelessWidget {
           ),
           const VThemeToggle(style: VThemeToggleStyle.row),
           const SizedBox(height: 4.0),
-          VHover(
+          TourTarget(
+            id: 'nav_profile',
+            child: VHover(
             onTap: () => showProfileDrawer(context, user: user, firm: firm),
             builder: (context, hovered) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
@@ -205,6 +214,7 @@ class ConsoleSidebar extends StatelessWidget {
                 ],
               ),
             ),
+          ),
           ),
         ],
       ),
@@ -325,6 +335,20 @@ class _ProfileDrawerBodyState extends State<ProfileDrawerBody> {
           ),
         ),
         const SizedBox(height: 24.0),
+        VButton(
+          label: 'Replay the walkthrough',
+          icon: Icons.slideshow_outlined,
+          kind: VButtonKind.tonal,
+          fullWidth: true,
+          onPressed: () async {
+            final nav = Navigator.of(context);
+            final router = GoRouter.of(context);
+            TourProgress.reset();
+            nav.pop();
+            router.goNamed('GettingStarted');
+          },
+        ),
+        const SizedBox(height: 12.0),
         VButton(
           label: 'Sign out',
           icon: Icons.logout,

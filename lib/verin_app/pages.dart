@@ -14,6 +14,7 @@ import 'admin/admin_team.dart';
 import 'auth/auth_screens.dart';
 import 'matter/matter_detail_screen.dart';
 import 'matters/matters_screen.dart';
+import 'onboarding/onboarding_screen.dart';
 import 'review/review_screen.dart';
 import 'shell/app_shell.dart';
 import 'shell/firm_gate.dart';
@@ -42,6 +43,12 @@ class VMattersPage extends StatelessWidget {
   const VMattersPage({super.key});
   @override
   Widget build(BuildContext context) => const FirmGate(child: AppShell(nav: ConsoleNav.matters, child: MattersScreen()));
+}
+
+class VOnboardingPage extends StatelessWidget {
+  const VOnboardingPage({super.key});
+  @override
+  Widget build(BuildContext context) => const FirmGate(child: OnboardingScreen());
 }
 
 class VReviewPage extends StatelessWidget {
