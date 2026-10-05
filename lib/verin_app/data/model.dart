@@ -64,11 +64,12 @@ String channelLabel(VChannel c) => switch (c) {
 // Receipt state
 // ---------------------------------------------------------------------------
 
-enum VItemState { processed, uncertain, unreadable, processing }
+enum VItemState { processed, uncertain, unreadable, processing, quarantined }
 
 VItemState itemStateOf(ReceiptsRecord r) {
   final label = r.classificationLabel.trim().toLowerCase();
   final ex = r.extractionState;
+  if (ex == 'quarantined' || label == 'quarantined') return VItemState.quarantined;
   if (label == 'processed') return VItemState.processed;
   if (label == 'unreadable') return VItemState.unreadable;
   if (label == 'uncertain') return VItemState.uncertain;
@@ -84,6 +85,7 @@ String labelForState(VItemState s) => switch (s) {
       VItemState.uncertain => 'Uncertain',
       VItemState.unreadable => 'Unreadable',
       VItemState.processing => 'Processing',
+      VItemState.quarantined => 'Quarantined',
     };
 
 extension VerinReceiptMore on ReceiptsRecord {
@@ -250,7 +252,7 @@ Stream<List<ReceiptsRecord>> matterReceiptsStream(DocumentReference matterRef) =
 /// Receipts waiting for a person, across all matters (filtered to the
 /// firm's matters by the caller).
 Stream<List<ReceiptsRecord>> flaggedReceiptsStream() => queryReceiptsRecord(
-      queryBuilder: (q) => q.where('firmID', isEqualTo: currentFirmId()).where('classificationLabel', whereIn: ['Uncertain', 'Unreadable']),
+      queryBuilder: (q) => q.where('firmID', isEqualTo: currentFirmId()).where('classificationLabel', whereIn: ['Uncertain', 'Unreadable', 'Quarantined']),
     );
 
 Stream<MattersRecord> matterStream(DocumentReference ref) => MattersRecord.getDocument(ref);

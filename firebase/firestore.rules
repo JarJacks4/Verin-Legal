@@ -112,7 +112,9 @@ service cloud.firestore {
       // Receipts are created by Cloud Functions (server-side hashing and
       // chaining). Staff may only change review labels on them.
       allow create, delete: if false;
+      // Quarantined items change only through approveQuarantined.
       allow update: if inMyFirm(resource.data.firmID)
+        && resource.data.get('extractionState', '') != 'quarantined'
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['classificationLabel', 'isTranscribed', 'resolvedDate', 'hasChronologyShift',
                     'reviewedByUid', 'reviewedAt']);
@@ -238,6 +240,19 @@ service cloud.firestore {
     match /oauthStates/{id} {
       allow read, write: if false;
     }
+    // Client email / text intake (verin/intake): server-only, except that a
+    // firm sees texts from numbers it doesn't know yet, to file them.
+    match /InboundEvents/{id} {
+      allow read, write: if false;
+    }
+    match /intakeAddresses/{id} {
+      allow read, write: if false;
+    }
+    match /UnroutedIntake/{id} {
+      allow read: if inMyFirm(resource.data.firmID);
+      allow write: if false;
+    }
+
     match /firmScope/{id} {
       allow read, write: if false;
     }

@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
 import 'atoms.dart';
+import '../onboarding/tour.dart';
+import '../onboarding/tours.dart' show drawerTours, drawerTourForTitle;
 
 Future<T?> showVDrawer<T>(
   BuildContext context, {
@@ -13,7 +15,11 @@ Future<T?> showVDrawer<T>(
   String? title,
   double width = 500.0,
   bool scroll = true,
+  String? tour,
 }) {
+  // First-time tips for this sheet (onboarding/tours.dart), by id or title.
+  final tourId = tour ?? drawerTourForTitle[title];
+  final steps = tourId == null ? null : drawerTours[tourId];
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: true,
@@ -21,7 +27,15 @@ Future<T?> showVDrawer<T>(
     barrierColor: VC.of(context).scrim,
     transitionDuration: const Duration(milliseconds: 420),
     pageBuilder: (dialogContext, _, __) {
-      return VDrawerFrame(title: title, width: width, scroll: scroll, child: Builder(builder: builder));
+      final body = Builder(builder: builder);
+      return VDrawerFrame(
+        title: title,
+        width: width,
+        scroll: scroll,
+        child: steps == null
+            ? body
+            : TourLauncher(tourId: 'sheet_$tourId', steps: steps, delay: const Duration(milliseconds: 550), child: body),
+      );
     },
     transitionBuilder: (context, anim, _, child) {
       // Glides in with a long ease-out; leaves quicker with an ease-in.
@@ -79,12 +93,15 @@ class VDrawerFrame extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: scroll
-                      ? SingleChildScrollView(
-                          padding: const EdgeInsets.all(24.0),
-                          child: child,
-                        )
-                      : child,
+                  child: TourTarget(
+                    id: 'drawer_body',
+                    child: scroll
+                        ? SingleChildScrollView(
+                            padding: const EdgeInsets.all(24.0),
+                            child: child,
+                          )
+                        : child,
+                  ),
                 ),
               ],
             ),

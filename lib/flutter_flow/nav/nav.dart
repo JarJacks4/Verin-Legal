@@ -107,6 +107,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => const VMattersPage(),
         ),
         FFRoute(
+          name: 'Annotations',
+          path: '/annotations',
+          requireAuth: true,
+          builder: (context, params) => const VAnnotationsPage(),
+        ),
+        FFRoute(
           name: 'GettingStarted',
           path: '/getting-started',
           requireAuth: true,
@@ -171,6 +177,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               ParamType.Document,
             ),
             fromAdmin: params.getParam<String>('from', ParamType.String) == 'admin',
+            initialTab: params.getParam<String>('tab', ParamType.String) ?? '',
           ),
         ),
         FFRoute(

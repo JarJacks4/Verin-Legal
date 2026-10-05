@@ -16,10 +16,11 @@ import '../widgets/drawer.dart';
 import '../widgets/motion.dart';
 import '../onboarding/tour.dart';
 
-enum ConsoleNav { matters, review }
+enum ConsoleNav { matters, review, annotations }
 
 const kMattersRoute = 'MattersList';
 const kReviewRoute = 'ReviewQueue';
+const kAnnotationsRoute = 'Annotations';
 const kAdminHomeRoute = 'AdminDashBoardPage';
 const kSignInRouteName = 'FirmWorkspaceSignIn';
 
@@ -108,7 +109,7 @@ class ConsoleSidebar extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.only(bottom: 4.0),
         child: TourTarget(
-          id: id == ConsoleNav.review ? 'nav_review' : 'nav_matters',
+          id: 'nav_${id.name}',
           child: VHover(
           onTap: () => context.goNamed(route),
           builder: (context, hovered) => Container(
@@ -149,6 +150,7 @@ class ConsoleSidebar extends StatelessWidget {
                 children: [
                   item(ConsoleNav.matters, Icons.folder_open_outlined, 'Matters', kMattersRoute),
                   item(ConsoleNav.review, Icons.checklist, 'Review queue', kReviewRoute),
+                  item(ConsoleNav.annotations, Icons.sticky_note_2_outlined, 'Annotations', kAnnotationsRoute),
                   if (user.isAdmin) ...[
                     const SizedBox(height: 20.0),
                     const VHairline(),
@@ -335,7 +337,9 @@ class _ProfileDrawerBodyState extends State<ProfileDrawerBody> {
           ),
         ),
         const SizedBox(height: 24.0),
-        VButton(
+        TourTarget(
+          id: 'profile_replay',
+          child: VButton(
           label: 'Replay the walkthrough',
           icon: Icons.slideshow_outlined,
           kind: VButtonKind.tonal,
@@ -347,6 +351,7 @@ class _ProfileDrawerBodyState extends State<ProfileDrawerBody> {
             nav.pop();
             router.goNamed('GettingStarted');
           },
+        ),
         ),
         const SizedBox(height: 12.0),
         VButton(

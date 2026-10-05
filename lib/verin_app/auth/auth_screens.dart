@@ -32,7 +32,7 @@ class AuthLeftPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = VC.of(context);
     const points = [
-      (Icons.inbox_outlined, 'Per-matter intake by email, text, and WhatsApp — nothing for the client to install.'),
+      (Icons.inbox_outlined, 'Per-matter intake by email and text — nothing for the client to install.'),
       (Icons.verified_user_outlined, 'SHA-256 + RFC 3161 at receipt — integrity sealed before anyone opens the file.'),
       (Icons.apartment_outlined, 'Finished records write back to Clio, MyCase, and Smokeball automatically.'),
     ];

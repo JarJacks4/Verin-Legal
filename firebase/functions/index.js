@@ -46,3 +46,13 @@ const verinArchive = require("./verin/export/archive");
 exports.exportRecordZip = verinArchive.exportRecordZip;
 exports.exportFirmData = verinArchive.exportFirmData;
 exports.exportIntegrationReport = verinArchive.exportIntegrationReport;
+
+// ---- Verin: client email and text intake (SendGrid / Postmark, Twilio) ----
+const verinIntake = require("./verin/intake/functions");
+exports.inboundEmail = verinIntake.inboundEmail;
+exports.inboundSms = verinIntake.inboundSms;
+exports.onInboundEvent = verinIntake.onInboundEvent;
+exports.onMatterIntake = verinIntake.onMatterIntake;
+exports.provisionIntake = verinIntake.provisionIntake;
+exports.approveQuarantined = verinIntake.approveQuarantined;
+exports.assignUnrouted = verinIntake.assignUnrouted;

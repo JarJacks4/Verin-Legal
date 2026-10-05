@@ -14,6 +14,7 @@ import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../matter/receipt_detail_drawer.dart';
 import '../onboarding/tour.dart';
+import 'unrouted_texts.dart';
 import '../onboarding/tours.dart';
 
 class ReviewScreen extends StatefulWidget {
@@ -48,6 +49,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
               style: VT.muted(context),
             ),
             const SizedBox(height: 28.0),
+            const UnroutedTexts(),
             TourTarget(
               id: 'review_list',
               child: StreamBuilder<List<MattersRecord>>(

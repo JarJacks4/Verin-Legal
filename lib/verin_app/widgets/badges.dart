@@ -42,6 +42,7 @@ class StateBadge extends StatelessWidget {
       VItemState.uncertain => VBadge(label: 'Uncertain', icon: Icons.help_outline, bg: c.pendingBg, fg: c.pending),
       VItemState.unreadable => VBadge(label: 'Unreadable', icon: Icons.cancel_outlined, bg: c.brokenBg, fg: c.broken),
       VItemState.processing => VBadge(label: 'Reading…', icon: Icons.auto_awesome_outlined, bg: c.tealPale, fg: c.tealDeep),
+      VItemState.quarantined => VBadge(label: 'Quarantined', icon: Icons.shield_outlined, bg: c.pendingBg, fg: c.pending),
     };
   }
 }

@@ -164,7 +164,11 @@ class _TourTargetState extends State<TourTarget> {
 // ---------------------------------------------------------------------------
 
 class TourStep {
-  const TourStep({this.target, required this.title, required this.body, this.icon});
+  const TourStep({this.target, required this.title, required this.body, this.icon, this.optional = false});
+
+  /// Leave the step out when its target isn't on screen (e.g. a quarantine
+  /// panel that only some items have).
+  final bool optional;
 
   /// TourTarget id to spotlight; null (or not on screen) shows a centred card.
   final String? target;
@@ -252,29 +256,35 @@ class _TourLauncherState extends State<TourLauncher> {
 }
 
 class VTour {
-  static OverlayEntry? _entry;
+  /// Tours on screen, oldest first. One whose page is covered (a drawer was
+  /// opened on top) hides and lets the drawer's own tour run above it.
+  static final List<(OverlayEntry, ValueNotifier<bool>)> _open = [];
 
-  static bool get active => _entry != null;
+  /// A tour is showing (not counting ones hidden under a drawer).
+  static bool get active => _open.any((t) => !t.$2.value);
 
   static void show(BuildContext context, {required String tourId, required List<TourStep> steps}) {
-    if (_entry != null || steps.isEmpty) return;
+    steps = steps.where((s) => !s.optional || (s.target != null && TourTarget.rectOf(s.target!) != null)).toList();
+    if (active || steps.isEmpty) return;
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
     TourProgress._shownThisSession.add(tourId);
     final route = ModalRoute.of(context);
+    final covered = ValueNotifier<bool>(false);
     late final OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) => _TourOverlay(
         steps: steps,
         route: route,
+        covered: covered,
         onClose: () {
           if (entry.mounted) entry.remove();
-          if (identical(_entry, entry)) _entry = null;
+          _open.removeWhere((t) => identical(t.$1, entry));
           TourProgress.mark(tourId);
         },
       ),
     );
-    _entry = entry;
+    _open.add((entry, covered));
     overlay.insert(entry);
   }
 }
@@ -284,10 +294,11 @@ class VTour {
 // ---------------------------------------------------------------------------
 
 class _TourOverlay extends StatefulWidget {
-  const _TourOverlay({required this.steps, required this.route, required this.onClose});
+  const _TourOverlay({required this.steps, required this.route, required this.covered, required this.onClose});
 
   final List<TourStep> steps;
   final ModalRoute<dynamic>? route;
+  final ValueNotifier<bool> covered;
   final VoidCallback onClose;
 
   @override
@@ -345,6 +356,7 @@ class _TourOverlayState extends State<_TourOverlay> with TickerProviderStateMixi
     }
     final covered = r != null && !r.isCurrent;
     if (covered != _covered) {
+      widget.covered.value = covered;
       setState(() => _covered = covered);
       return;
     }
