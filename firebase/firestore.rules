@@ -92,6 +92,27 @@ service cloud.firestore {
       }
     }
 
+    // Thread annotations: the firm's notes on reconstructed messages. Work
+    // product beside the evidence; nothing here touches a receipt or the chain.
+    match /Annotations/{id} {
+      function validNote(d) {
+        return d.text is string && d.text.size() > 0 && d.text.size() <= 4000
+          && d.tag in ['note', 'key', 'followup', 'question'];
+      }
+      function isAuthorOrAdmin() {
+        return resource.data.authorUid == request.auth.uid || isAdmin();
+      }
+      allow read: if inMyFirm(resource.data.firmID);
+      allow create: if inMyFirm(request.resource.data.get('firmID', ''))
+        && request.resource.data.authorUid == request.auth.uid
+        && get(request.resource.data.matterId).data.get('firmID', '') == request.resource.data.firmID
+        && validNote(request.resource.data);
+      allow update: if inMyFirm(resource.data.firmID) && isAuthorOrAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'tag', 'updatedAt'])
+        && validNote(request.resource.data);
+      allow delete: if inMyFirm(resource.data.firmID) && isAuthorOrAdmin();
+    }
+
     match /chainEntries/{entryId} {
       allow read: if inMyFirm(resource.data.firmID);
       allow write: if false;

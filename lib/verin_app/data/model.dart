@@ -168,12 +168,20 @@ String matterPractice(MattersRecord m) =>
 // ---------------------------------------------------------------------------
 
 class VUser {
-  const VUser({required this.name, required this.email, required this.firm, required this.role});
+  const VUser({required this.name, required this.email, required this.firm, required this.role, this.title = ''});
 
   final String name;
   final String email;
   final String firm;
+
+  /// Access role (Admin, Attorney, Paralegal…), set by the server.
   final String role;
+
+  /// Job title the person chose at sign-up.
+  final String title;
+
+  /// What to show as someone's role: their job title, else their access role.
+  String get roleLabel => title.isNotEmpty ? title : role;
 
   String get initials {
     final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
@@ -198,6 +206,7 @@ class VUser {
       email: currentUserEmail,
       firm: d?.lawFirm ?? '',
       role: d?.role ?? '',
+      title: _titleOf(d),
     );
   }
 
@@ -208,7 +217,13 @@ class VUser {
       email: d.email.isNotEmpty ? d.email : currentUserEmail,
       firm: d.lawFirm,
       role: d.role,
+      title: _titleOf(d),
     );
+  }
+
+  static String _titleOf(UsersRecord? d) {
+    final v = d?.snapshotData['title'];
+    return v is String ? v.trim() : '';
   }
 }
 
