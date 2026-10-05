@@ -87,12 +87,13 @@ function systemPrompt() {
   ].join('\n');
 }
 
-function userText({ clientSide, kind, fileName, extra }) {
+function userText({ clientSide, kind, fileName, extra, clientName }) {
   const side = clientSide === 'left' ? 'left' : 'right';
   const other = side === 'right' ? 'left' : 'right';
   return [
     `Item kind as filed: ${kind || 'unknown'}${fileName ? ` (file name: ${fileName})` : ''}.`,
     `In message screenshots, messages on the ${side} side were sent by the client; messages on the ${other} side are from the other party.`,
+    clientName ? `The client is ${String(clientName).replace(/[\r\n]/g, ' ').slice(0, 120)}. In emails and documents, messages sent by the client are "client"; everyone else is "other".` : '',
     extra || '',
     'Read this item.',
   ]
@@ -101,12 +102,12 @@ function userText({ clientSide, kind, fileName, extra }) {
 }
 
 /// content: Anthropic content blocks for the item (image / document / text).
-function buildAnalysisRequest({ model, maxTokens, content, clientSide, kind, fileName, extra }) {
+function buildAnalysisRequest({ model, maxTokens, content, clientSide, kind, fileName, extra, clientName }) {
   const req = {
     model,
     max_tokens: maxTokens,
     system: systemPrompt(),
-    messages: [{ role: 'user', content: [...content, { type: 'text', text: userText({ clientSide, kind, fileName, extra }) }] }],
+    messages: [{ role: 'user', content: [...content, { type: 'text', text: userText({ clientSide, kind, fileName, extra, clientName }) }] }],
     output_config: { format: { type: 'json_schema', schema: ANALYSIS_SCHEMA } },
   };
   if (isLegacySamplingModel(model)) req.temperature = 0;
@@ -167,11 +168,11 @@ function validateAnalysis(parsed) {
 
 /// Calls Claude. Never throws for API/model problems. Returns
 /// { ok: true, value, threadMessages, audit } or { ok: false, errors, audit }.
-async function analyzeWithClaude({ anthropic, model, maxTokens, content, clientSide, kind, fileName, extra, sourceUrl }) {
+async function analyzeWithClaude({ anthropic, model, maxTokens, content, clientSide, kind, fileName, extra, sourceUrl, clientName }) {
   const audit = { model, engine: 'claude' };
   let response;
   try {
-    response = await anthropic.messages.create(buildAnalysisRequest({ model, maxTokens, content, clientSide, kind, fileName, extra }));
+    response = await anthropic.messages.create(buildAnalysisRequest({ model, maxTokens, content, clientSide, kind, fileName, extra, clientName }));
   } catch (e) {
     return { ok: false, errors: [`Claude API error: ${e && e.message ? e.message : e}`], audit: { ...audit, apiStatus: e && e.status ? e.status : null } };
   }

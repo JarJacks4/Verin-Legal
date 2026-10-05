@@ -36,9 +36,38 @@ function norm(s) {
 function personKey(name) {
   const s = String(name || '').trim();
   if (!s) return '';
+  // An email address is the most specific identity a sender line carries.
+  const mail = s.match(/[^\s<>"'(),;:]+@[^\s<>"'(),;:]+\.[a-z]{2,}/i);
+  if (mail) return `mail:${mail[0].toLowerCase()}`;
   const digits = s.replace(/\D/g, '');
   if (digits.length >= 7 && !/\p{L}/u.test(s)) return `tel:${digits.slice(-10)}`;
   return s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+/// The display-name part of a sender line ("Ben Miller <b@x.com>" -> "Ben Miller").
+function displayName(sender) {
+  return String(sender || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[^\s<>"'(),;:]+@[^\s<>"'(),;:]+/g, ' ')
+    .replace(/["']/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function nameTokens(s) {
+  return String(s || '')
+    .toLowerCase()
+    .split(/[^\p{L}]+/u)
+    .filter((t) => t.length >= 2);
+}
+
+/// True when a sender line names the client: their first and last names both
+/// appear (middle names and initials may differ). Never matches on one name.
+function namesClient(sender, clientName) {
+  const c = nameTokens(clientName);
+  if (c.length < 2) return false;
+  const s = new Set(nameTokens(displayName(sender)));
+  return s.has(c[0]) && s.has(c[c.length - 1]);
 }
 
 function msgKey(m) {
@@ -167,7 +196,7 @@ function findBlocks(segEntries, runEntries) {
  * aliases:  { [personKey]: 'Display name' } confirmed by staff (optional)
  * Returns { entries, gaps, participants, stats, notes }.
  */
-function reconstruct(receipts, { aliases = {} } = {}) {
+function reconstruct(receipts, { aliases = {}, sides = {}, clientName = '' } = {}) {
   const sources = receipts
     .filter((r) => !r.isDuplicate && Array.isArray(r.threadMessages) && r.threadMessages.length)
     .sort((x, y) => receivedMs(x) - receivedMs(y) || String(x.id).localeCompare(String(y.id)));
@@ -316,6 +345,21 @@ function reconstruct(receipts, { aliases = {} } = {}) {
     for (const e of run.entries) e.orderBasis = run.firstDate ? 'date' : 'received';
   });
 
+  // Which side each sender is on. Screenshots say it by bubble side; emails
+  // and documents don't, so a side staff set for a name wins, then a sender
+  // line that names the matter's client; otherwise the reading's own call.
+  for (const e of entries) {
+    if (e.kind !== 'msg' || !e.sender) continue;
+    const pk = personKey(e.sender);
+    if (sides[pk] === 'client' || sides[pk] === 'other') {
+      e.speaker = sides[pk];
+      e.sideBasis = 'confirmed';
+    } else if (clientName && namesClient(e.sender, clientName)) {
+      e.speaker = 'client';
+      e.sideBasis = 'client_name';
+    }
+  }
+
   // Who is who: every name each side appears under.
   const names = { client: new Map(), other: new Map() };
   for (const e of entries) {
@@ -331,7 +375,7 @@ function reconstruct(receipts, { aliases = {} } = {}) {
   for (const side of ['client', 'other']) {
     participants[side] = [...names[side].values()]
       .sort((a, b) => b.count - a.count)
-      .map((n) => ({ ...n, confirmedAs: aliases[n.key] || '' }));
+      .map((n) => ({ ...n, confirmedAs: aliases[n.key] || '', side: sides[n.key] || '' }));
   }
   const otherNames = participants.other.length;
 
@@ -348,10 +392,10 @@ function reconstruct(receipts, { aliases = {} } = {}) {
     }
     if (e.read < LOW_READ) e.flags.push('hard_to_read');
     const pk = personKey(e.sender);
-    e.person = pk && aliases[pk] ? aliases[pk] : e.sender || '';
+    e.person = pk && aliases[pk] ? aliases[pk] : displayName(e.sender) || e.sender || '';
     if (e.speaker === 'other') {
       if (!e.sender) e.flags.push('sender_not_shown');
-      else if (otherNames > 1 && !aliases[pk]) e.flags.push('name_unconfirmed');
+      else if (otherNames > 1 && !aliases[pk] && !sides[pk]) e.flags.push('name_unconfirmed');
     }
   }
 
@@ -379,4 +423,4 @@ function reconstruct(receipts, { aliases = {} } = {}) {
   return { entries, gaps, participants, stats, notes };
 }
 
-module.exports = { reconstruct, dateSegment, findBlocks, personKey, msgKey, norm, snippet, anchorFor, LOW_READ };
+module.exports = { reconstruct, dateSegment, findBlocks, personKey, displayName, namesClient, msgKey, norm, snippet, anchorFor, LOW_READ };

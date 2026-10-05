@@ -196,3 +196,29 @@ test('rebuild: an oversized thread is trimmed to fit one document', () => {
   assert.ok(JSON.stringify(out).length <= 900000);
   assert.equal(out.truncated, true);
 });
+
+test('email senders: the client by name, others by confirmed side, keys by address', () => {
+  const r = rec('E', '2026-03-10T10:00:00Z', [
+    msg('other', 'Of course. I want your views.', { senderName: 'Ben miller <bmiller2005@gmail.com>' }),
+    msg('other', 'Sure, we can wipe the slate clean.', { senderName: 'Courtney Miller <curtis.courtney@gmail.com>' }),
+  ]);
+  assert.equal(T.personKey('Ben miller <bmiller2005@gmail.com>'), 'mail:bmiller2005@gmail.com');
+  assert.equal(T.displayName('Ben miller <bmiller2005@gmail.com>'), 'Ben miller');
+  assert.equal(T.namesClient('Courtney Miller <curtis.courtney@gmail.com>', 'Courtney Curtis Miller'), true);
+  assert.equal(T.namesClient('Ben miller <b@x.com>', 'Courtney Curtis Miller'), false);
+  assert.equal(T.namesClient('Courtney', 'Courtney Curtis Miller'), false); // one name never matches
+
+  const t = T.reconstruct([r], { clientName: 'Courtney Curtis Miller' });
+  const [ben, courtney] = t.entries.filter((e) => e.kind === 'msg');
+  assert.equal(ben.speaker, 'other');
+  assert.equal(ben.person, 'Ben miller');
+  assert.equal(courtney.speaker, 'client');
+  assert.equal(courtney.sideBasis, 'client_name');
+
+  // Staff can put any name on either side.
+  const t2 = T.reconstruct([r], { sides: { 'mail:bmiller2005@gmail.com': 'client', 'mail:curtis.courtney@gmail.com': 'other' } });
+  const [b2, c2] = t2.entries.filter((e) => e.kind === 'msg');
+  assert.equal(b2.speaker, 'client');
+  assert.equal(c2.speaker, 'other');
+  assert.equal(b2.sideBasis, 'confirmed');
+});
