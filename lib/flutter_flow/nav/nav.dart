@@ -6,12 +6,13 @@ import '/backend/backend.dart';
 
 import '/auth/base_auth_user_provider.dart';
 
-import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
 import '/index.dart';
 import '/verin_app/admin/admin_shell.dart' show AdminNav;
 import '/verin_app/pages.dart';
+import '/verin_app/widgets/atoms.dart' show kBrandNavy;
+import '/verin_app/widgets/motion.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -402,14 +403,10 @@ class FFRoute {
                   builder: (context, _) => builder(context, ffParams),
                 )
               : builder(context, ffParams);
+          // While auth resolves, the launch splash (VSplashOverlay) covers
+          // the app; this is just its backdrop.
           final child = appStateNotifier.loading
-              ? Container(
-                  color: FlutterFlowTheme.of(context).primaryBackground,
-                  child: Image.asset(
-                    'assets/images/verin_counsel_lockup_light.png',
-                    fit: BoxFit.contain,
-                  ),
-                )
+              ? const ColoredBox(color: kBrandNavy, child: SizedBox.expand())
               : page;
 
           final transitionInfo = state.transitionInfo;
@@ -434,8 +431,14 @@ class FFRoute {
                     child,
                   ),
                 )
-              : MaterialPage(
-                  key: state.pageKey, name: state.name, child: child);
+              : CustomTransitionPage(
+                  key: state.pageKey,
+                  name: state.name,
+                  child: child,
+                  transitionDuration: VMotion.page,
+                  reverseTransitionDuration: VMotion.pageReverse,
+                  transitionsBuilder: vPageTransition,
+                );
         },
         routes: routes,
       );

@@ -11,6 +11,7 @@ import '../data/model.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
+import '../widgets/motion.dart';
 import 'new_matter_drawer.dart';
 
 const kMatterDetailRoute = 'MattersTabGroupHome';
@@ -264,7 +265,10 @@ class _MattersTable extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(m.title.isEmpty ? 'Untitled matter' : m.title, style: VT.serif(context, size: 15.0)),
+                  TextHero(
+                    tag: matterTitleTag(m.reference.path),
+                    child: Text(m.title.isEmpty ? 'Untitled matter' : m.title, style: VT.serif(context, size: 15.0)),
+                  ),
                   const SizedBox(height: 2.0),
                   Text(sub, style: VT.muted(context, size: 12.0)),
                   if (compact) ...[

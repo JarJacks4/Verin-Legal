@@ -84,7 +84,8 @@ class _ValueReportState extends State<ValueReport> {
   Stream<List<Map<String, dynamic>>> _stream() {
     var q = FirebaseFirestore.instance.collection('Activity').where('firmID', isEqualTo: currentFirmId());
     if (_days > 0) q = q.where('at', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now().subtract(Duration(days: _days))));
-    return q.orderBy('at').limit(20000).snapshots().map((s) => s.docs.map((d) => d.data()).toList());
+    // Firestore caps a query at 10,000 documents.
+    return q.orderBy('at').limit(10000).snapshots().map((s) => s.docs.map((d) => d.data()).toList());
   }
 
   _Totals _sum(List<Map<String, dynamic>> events, ValueBaseline b) {

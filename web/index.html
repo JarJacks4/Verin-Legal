@@ -55,15 +55,60 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#0B1622">
 
   <link rel="manifest" href="manifest.json">
+
+  <!-- Launch splash (painted before Flutter boots; see lib/verin_app/shell/splash.dart) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@700&display=block" rel="stylesheet">
+  <style>
+    html, body { margin: 0; height: 100%; background: #0B1622; }
+    #verin-splash {
+      position: fixed; inset: 0; z-index: 9999; background: #0B1622;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 420ms cubic-bezier(.4,0,.2,1);
+    }
+    #verin-splash.out { opacity: 0; pointer-events: none; }
+    #verin-splash svg { width: 88px; height: 88px; display: block; overflow: visible; }
+    #verin-splash .b {
+      transform-box: fill-box; transform-origin: 50% 50%;
+      opacity: 0; transform: translateY(40px) scaleX(.7);
+      animation: verin-bar 620ms cubic-bezier(.22,1,.36,1) forwards;
+    }
+    #verin-splash .b4 { animation-delay: 60ms; }
+    #verin-splash .b3 { animation-delay: 180ms; }
+    #verin-splash .b2 { animation-delay: 300ms; }
+    #verin-splash .b1 { animation-delay: 420ms; }
+    #verin-splash .b0 { animation-delay: 540ms; }
+    #verin-splash .name {
+      margin-top: 28px; font-family: 'Spectral', Georgia, serif; font-weight: 700;
+      font-size: 34px; line-height: 1.2; letter-spacing: .3px; color: #F6F3EE;
+      opacity: 0; transform: translateY(8px);
+      animation: verin-name 600ms cubic-bezier(.22,1,.36,1) 620ms forwards;
+    }
+    @keyframes verin-bar { to { opacity: 1; transform: none; } }
+    @keyframes verin-name { to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      #verin-splash .b, #verin-splash .name { animation-duration: 1ms; animation-delay: 0ms; }
+    }
+  </style>
   
 </head>
 <body>
-  
-  
-  
-  
-  
-  
+  <div id="verin-splash" aria-label="Verin Legal" role="img">
+    <svg viewBox="0 0 550 550" aria-hidden="true"><rect class="b b0" x="173.5" y="0" width="203" height="72" rx="18" fill="#0E6E7D"/><rect class="b b1" x="124" y="119" width="302" height="72" rx="18" fill="#F6F3EE"/><rect class="b b2" x="77" y="238" width="396" height="72" rx="18" fill="#F6F3EE"/><rect class="b b3" x="38.5" y="357" width="473" height="72" rx="18" fill="#F6F3EE"/><rect class="b b4" x="0" y="476" width="550" height="72" rx="18" fill="#F6F3EE"/></svg>
+    <div class="name">Verin Legal</div>
+  </div>
+  <script>
+    // Flutter draws the same splash underneath, then flies the mark into place.
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('verin-splash');
+      if (!el) return;
+      setTimeout(function () {
+        el.classList.add('out');
+        setTimeout(function () { el.remove(); }, 500);
+      }, 450);
+    });
+  </script>
   <script>
     {{flutter_bootstrap_js}}
   </script>

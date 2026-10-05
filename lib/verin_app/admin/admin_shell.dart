@@ -11,6 +11,7 @@ import '../data/model.dart';
 import '../shell/app_shell.dart' show showProfileDrawer;
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
+import '../widgets/motion.dart';
 
 enum AdminNav { dashboard, matters, billing, team, program, settings }
 
@@ -90,7 +91,7 @@ class _AdminShellState extends State<AdminShell> {
                                     icon: Icon(Icons.menu, color: c.paper),
                                     onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                                   ),
-                                  const VWordmark(size: 20.0, onDark: true),
+                                  const VWordmark(size: 20.0, onDark: true, anchor: true),
                                 ],
                               ),
                             ),
@@ -99,7 +100,7 @@ class _AdminShellState extends State<AdminShell> {
                         )
                       : Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [sidebar, Expanded(child: body)],
+                          children: [StillHero(tag: 'admin-sidebar', child: sidebar), Expanded(child: body)],
                         ),
                 ),
               );
@@ -156,7 +157,7 @@ class AdminSidebar extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const VWordmark(size: 22.0, onDark: true),
+                const VWordmark(size: 22.0, onDark: true, anchor: true),
                 const SizedBox(height: 6.0),
                 Opacity(
                   opacity: 0.7,

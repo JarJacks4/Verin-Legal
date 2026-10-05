@@ -13,6 +13,7 @@ import '../data/model.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
+import '../widgets/motion.dart';
 
 enum ConsoleNav { matters, review }
 
@@ -66,7 +67,7 @@ class _AppShellState extends State<AppShell> {
                                   children: [
                                     VIconButton(icon: Icons.menu, tooltip: 'Menu', onPressed: () => _scaffoldKey.currentState?.openDrawer()),
                                     const SizedBox(width: 8.0),
-                                    const VWordmark(size: 20.0),
+                                    const VWordmark(size: 20.0, anchor: true),
                                   ],
                                 ),
                               ),
@@ -76,7 +77,7 @@ class _AppShellState extends State<AppShell> {
                         : Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              sidebar,
+                              StillHero(tag: 'console-sidebar', child: sidebar),
                               Expanded(child: widget.child),
                             ],
                           ),
@@ -135,7 +136,7 @@ class ConsoleSidebar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(padding: EdgeInsets.symmetric(horizontal: 8.0), child: Align(alignment: Alignment.centerLeft, child: VWordmark(size: 24.0))),
+          const Padding(padding: EdgeInsets.symmetric(horizontal: 8.0), child: Align(alignment: Alignment.centerLeft, child: VWordmark(size: 24.0, anchor: true))),
           const SizedBox(height: 32.0),
           Expanded(
             child: SingleChildScrollView(

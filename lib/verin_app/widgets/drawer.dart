@@ -19,15 +19,19 @@ Future<T?> showVDrawer<T>(
     barrierDismissible: true,
     barrierLabel: 'Close',
     barrierColor: VC.of(context).scrim,
-    transitionDuration: const Duration(milliseconds: 300),
+    transitionDuration: const Duration(milliseconds: 420),
     pageBuilder: (dialogContext, _, __) {
       return VDrawerFrame(title: title, width: width, scroll: scroll, child: Builder(builder: builder));
     },
     transitionBuilder: (context, anim, _, child) {
-      final curved = CurvedAnimation(parent: anim, curve: const Cubic(0.32, 0.72, 0, 1));
+      // Glides in with a long ease-out; leaves quicker with an ease-in.
+      final curved = CurvedAnimation(parent: anim, curve: const Cubic(0.22, 1.0, 0.36, 1.0), reverseCurve: const Cubic(0.4, 0.0, 1.0, 1.0));
       return SlideTransition(
         position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(curved),
-        child: child,
+        child: FadeTransition(
+          opacity: CurvedAnimation(parent: anim, curve: const Interval(0.0, 0.5, curve: Curves.easeOut)),
+          child: child,
+        ),
       );
     },
   );
@@ -98,7 +102,7 @@ Future<T?> showVDialog<T>(BuildContext context, {required Widget Function(BuildC
     barrierDismissible: true,
     barrierLabel: 'Close',
     barrierColor: const Color(0x73000000),
-    transitionDuration: const Duration(milliseconds: 180),
+    transitionDuration: const Duration(milliseconds: 260),
     pageBuilder: (ctx, _, __) {
       final c = VC.of(ctx);
       return Center(
@@ -115,7 +119,13 @@ Future<T?> showVDialog<T>(BuildContext context, {required Widget Function(BuildC
         ),
       );
     },
-    transitionBuilder: (ctx, anim, _, child) => FadeTransition(opacity: anim, child: child),
+    transitionBuilder: (ctx, anim, _, child) {
+      final curved = CurvedAnimation(parent: anim, curve: const Cubic(0.22, 1.0, 0.36, 1.0), reverseCurve: Curves.easeIn);
+      return FadeTransition(
+        opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut, reverseCurve: Curves.easeIn),
+        child: ScaleTransition(scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved), child: child),
+      );
+    },
   );
 }
 
