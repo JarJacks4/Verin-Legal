@@ -24,6 +24,8 @@ exports.onReceiptWritten = verinThread.onReceiptWritten;
 exports.onMatterNamesChanged = verinThread.onMatterNamesChanged;
 exports.refreshMatterRecord = verinThread.refreshMatterRecord;
 
+exports.produceExhibits = require("./verin/exhibits/produce").produceExhibits;
+
 const verinClio = require("./verin/clio/functions");
 exports.clioAuthStart = verinClio.clioAuthStart;
 exports.clioOAuthCallback = verinClio.clioOAuthCallback;

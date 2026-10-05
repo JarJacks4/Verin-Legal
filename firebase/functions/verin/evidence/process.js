@@ -54,6 +54,7 @@ function fieldsFromAnalysis(value, threadMessages) {
     detectedPlatform: threadMessages.length ? value.conversation.platform : '',
     evidenceType: value.evidenceType,
     statements: value.statements || [],
+    sensitive: value.sensitive || [],
     classificationLabel: reasons.length ? 'Uncertain' : 'Processed',
     reviewReason: reasons.join(' '),
   };

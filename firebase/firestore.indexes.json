@@ -165,6 +165,20 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "Activity",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "firmID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "at",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

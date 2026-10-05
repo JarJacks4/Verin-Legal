@@ -16,10 +16,11 @@ import 'intake_tab.dart';
 import 'integrity_tab.dart';
 import 'practice_tab.dart';
 import 'receipts_tab.dart';
+import 'exhibits_tab.dart';
 import 'follow_ups.dart';
 import 'thread_tab.dart';
 
-enum MatterTab { intake, receipts, thread, followups, integrity, practice }
+enum MatterTab { intake, receipts, thread, followups, exhibits, integrity, practice }
 
 class MatterDetailScreen extends StatefulWidget {
   const MatterDetailScreen({super.key, required this.matter, this.admin = false});
@@ -166,6 +167,7 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                               MatterTab.intake => IntakeTab(matter: m),
                               MatterTab.receipts => ReceiptsTab(matter: m, receipts: receipts, loading: !rs.hasData, error: rs.error),
                               MatterTab.thread => ThreadTab(matter: m, receipts: receipts),
+                              MatterTab.exhibits => ExhibitsTab(matter: m, receipts: receipts),
                               MatterTab.followups => FollowUpsTab(matter: m, receipts: receipts, onShowInThread: () => setState(() => _tab = MatterTab.thread)),
                               MatterTab.integrity => IntegrityTab(matter: m, receipts: receipts),
                               MatterTab.practice => PracticeTab(matter: m, receipts: receipts, firmConnected: firmClio, firmStatus: ig.data ?? const {}),
@@ -199,6 +201,7 @@ class _TabBar extends StatelessWidget {
       (MatterTab.receipts, 'Receipts', Icons.description_outlined),
       (MatterTab.thread, 'Thread', Icons.layers_outlined),
       (MatterTab.followups, 'Follow-ups', Icons.mark_email_unread_outlined),
+      (MatterTab.exhibits, 'Exhibits', Icons.folder_copy_outlined),
       (MatterTab.integrity, 'Integrity', Icons.verified_user_outlined),
       (MatterTab.practice, 'Practice mgmt', Icons.apartment_outlined),
     ];

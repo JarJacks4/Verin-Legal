@@ -10,7 +10,7 @@
 const { SPEAKERS } = require('../extraction/schema');
 const { validateExtraction, toThreadMessages, parseModelResponse } = require('../extraction/validate');
 const { isLegacySamplingModel, truncate } = require('../extraction/extractor');
-const { BOX_SCHEMA, STATEMENT_SCHEMA, messageSource, cleanStatements } = require('./source');
+const { BOX_SCHEMA, STATEMENT_SCHEMA, SENSITIVE_SCHEMA, messageSource, cleanStatements, cleanSensitive } = require('./source');
 
 const CONFIDENCE = ['high', 'medium', 'low', 'none'];
 const EVIDENCE_TYPES = ['conversation', 'photo', 'document', 'email', 'other'];
@@ -44,8 +44,9 @@ const ANALYSIS_SCHEMA = {
     platform: { type: 'string' },
     messages: { type: 'array', items: MESSAGE_SCHEMA },
     statements: { type: 'array', items: STATEMENT_SCHEMA },
+    sensitive: { type: 'array', items: SENSITIVE_SCHEMA },
   },
-  required: ['evidenceType', 'summary', 'eventDate', 'eventDateSource', 'eventDateConfidence', 'containsConversation', 'platform', 'messages', 'statements'],
+  required: ['evidenceType', 'summary', 'eventDate', 'eventDateSource', 'eventDateConfidence', 'containsConversation', 'platform', 'messages', 'statements', 'sensitive'],
   additionalProperties: false,
 };
 
@@ -80,6 +81,9 @@ function systemPrompt() {
     'Statements (documents, letters, emails, forms, photos with text — not message threads):',
     '- statements: up to 25 passages that state a fact a lawyer would need to check: dates, amounts, names, places, and events. Copy each passage verbatim (a sentence or line, not a paraphrase), with kind, page and box.',
     '- For a message thread, statements is [] (the messages already cover it).',
+    '',
+    'Sensitive details (suggestions for a person to review before anything is filed; never a judgment):',
+    '- sensitive: every visible Social Security number (ssn), taxpayer ID (tax_id), financial account or card number (account), full birth date (birth_date), name of a child under 18 when the item makes that clear (minor_name), home street address (address), phone number (phone) and email address (email). Copy each exactly as shown, with page and box. [] if none.',
   ].join('\n');
 }
 
@@ -156,6 +160,7 @@ function validateAnalysis(parsed) {
       // Where each message sits in the original, in the same order.
       messageSources: (Array.isArray(parsed.messages) ? parsed.messages : []).map(messageSource),
       ...cleanStatements(parsed.statements),
+      sensitive: cleanSensitive(parsed.sensitive),
     },
   };
 }

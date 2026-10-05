@@ -66,7 +66,8 @@ service cloud.firestore {
         'chainHeadHash', 'chainLength', 'hasChainRoot',
         'clioMatterID', 'clioConnected', 'clioSyncedAt', 'clioMatterUrl', 'clioMatterDisplayNumber',
         'providerMatterReference', 'providerSyncedAt',
-        'lastExportPath', 'lastExportSha256', 'lastExportAt'
+        'lastExportPath', 'lastExportSha256', 'lastExportAt',
+        'batesNext', 'productionCount'
       ]);
       allow delete: if false;
 
@@ -84,6 +85,25 @@ service cloud.firestore {
       match /updates/{updateId} {
         allow read: if inMyFirm(matterFirm(matterId));
         allow write: if false;
+      }
+
+      // Exhibit productions. Staff edit drafts (items, order, reviewed
+      // redactions); only the produceExhibits function makes one final, and a
+      // final version never changes.
+      match /productions/{productionId} {
+        function finalFields() {
+          return ['version', 'finalizedAt', 'finalizedBy', 'finalizedByName', 'batesStart', 'batesEnd',
+                  'pageCount', 'template', 'exhibits', 'files'];
+        }
+        allow read: if inMyFirm(matterFirm(matterId));
+        allow create: if inMyFirm(matterFirm(matterId))
+          && request.resource.data.status == 'draft'
+          && request.resource.data.createdBy == request.auth.uid
+          && !request.resource.data.keys().hasAny(finalFields());
+        allow update: if inMyFirm(matterFirm(matterId))
+          && resource.data.status == 'draft' && request.resource.data.status == 'draft'
+          && untouched(finalFields().concat(['createdBy', 'createdAt']));
+        allow delete: if inMyFirm(matterFirm(matterId)) && resource.data.status == 'draft';
       }
     }
 

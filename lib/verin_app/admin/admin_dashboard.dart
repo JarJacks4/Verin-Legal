@@ -15,6 +15,7 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import 'admin_shell.dart';
+import 'value_report.dart';
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -173,6 +174,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     children: [Expanded(child: lagCard), const SizedBox(width: 24.0), Expanded(child: volCard)],
                   );
                 }),
+                const SizedBox(height: 32.0),
+                ValueReport(firm: widget.firm),
                 const SizedBox(height: 32.0),
                 VCard(
                   padding: EdgeInsets.zero,
