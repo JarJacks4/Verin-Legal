@@ -17,6 +17,25 @@ import '../widgets/upload_zone.dart';
 Future<MattersRecord?> showNewMatterDrawer(BuildContext context) =>
     showVDrawer<MattersRecord>(context, title: 'New matter', width: 500.0, builder: (_) => const NewMatterForm());
 
+/// Practice areas offered when opening a matter. Verin is built for family
+/// law, so its common matter types come first.
+const kPracticeAreas = [
+  'Family law',
+  'Divorce',
+  'Child custody',
+  'Child support',
+  'Protective / restraining order',
+  'Domestic violence',
+  'Adoption',
+  'Guardianship',
+  'Estate & probate',
+  'Personal injury',
+  'Employment',
+  'Criminal defense',
+  'Immigration',
+  'Other',
+];
+
 class NewMatterForm extends StatefulWidget {
   const NewMatterForm({super.key});
 
@@ -29,6 +48,7 @@ class _NewMatterFormState extends State<NewMatterForm> {
   final _client = TextEditingController();
   final _cause = TextEditingController();
   String _status = 'Open';
+  String _practiceArea = kPracticeAreas.first;
   bool _archive = false;
   final List<StagedFile> _staged = [];
   final Map<int, double> _progress = {};
@@ -79,7 +99,7 @@ class _NewMatterFormState extends State<NewMatterForm> {
           clientName: _client.text.trim(),
           caseNumber: _cause.text.trim(),
           matterType: 'Family law',
-          practiceArea: 'Family law',
+          practiceArea: _practiceArea,
           status: _status,
           openedAt: getCurrentTimestamp,
           isArchiveBuild: _archive,
@@ -146,7 +166,13 @@ class _NewMatterFormState extends State<NewMatterForm> {
         const SizedBox(height: 16.0),
         VTextField(controller: _cause, label: 'Cause number', hint: '49D08-2026-DR-XXXXXX'),
         const SizedBox(height: 16.0),
-        const VStaticField(label: 'Practice area', value: 'Family law'),
+        VSelect<String>(
+          label: 'Practice area',
+          value: _practiceArea,
+          items: kPracticeAreas,
+          labelFor: (a) => a,
+          onChanged: (a) => setState(() => _practiceArea = a),
+        ),
         const SizedBox(height: 16.0),
         VSegmented<String>(
           label: 'Status',
