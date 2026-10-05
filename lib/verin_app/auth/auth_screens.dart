@@ -11,6 +11,7 @@ import '/verin/auth/auth_shell.dart' show SignupDraft, looksLikeEmail;
 
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
+import '../widgets/motion.dart';
 
 const kWelcomeRoute = 'WelcomeScreen';
 const kSignInRoute = 'FirmWorkspaceSignIn';
@@ -42,7 +43,7 @@ class AuthLeftPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const VWordmark(size: 32.0, onDark: true),
+          const VWordmark(size: 32.0, onDark: true, anchor: true),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -114,7 +115,7 @@ class AuthLayout extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (!wide) ...[
-                              const Align(alignment: Alignment.centerLeft, child: VWordmark(size: 28.0)),
+                              const Align(alignment: Alignment.centerLeft, child: VWordmark(size: 28.0, brand: true)),
                               const SizedBox(height: 32.0),
                             ],
                             child,
@@ -133,7 +134,11 @@ class AuthLayout extends StatelessWidget {
                       ? Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Expanded(flex: 55, child: AuthLeftPanel()),
+                            Expanded(
+                              flex: 55,
+                              // Stays put while the form side changes.
+                              child: const StillHero(tag: 'auth-panel', child: AuthLeftPanel()),
+                            ),
                             Expanded(flex: 45, child: form),
                           ],
                         )

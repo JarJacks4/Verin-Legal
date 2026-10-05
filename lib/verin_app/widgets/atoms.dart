@@ -12,50 +12,172 @@ import '../theme/tokens.dart';
 // Brand
 // ---------------------------------------------------------------------------
 
-/// Five-bar "cairn" mark: the top bar carries the teal accent.
-class VMark extends StatelessWidget {
-  const VMark({super.key, this.size = 28.0, this.onDark = false});
+/// Five-bar "cairn" mark: the top bar carries the teal accent. Geometry is
+/// taken from the brand icon (550-unit square, bars 72 tall, 47 apart).
+const kBrandHeroTag = 'verin-mark';
+const kBrandNavy = Color(0xFF0B1622);
+const kBrandTeal = Color(0xFF0E6E7D);
+const kBrandPaper = Color(0xFFF6F3EE);
 
+class VMark extends StatelessWidget {
+  const VMark({
+    super.key,
+    this.size = 28.0,
+    this.onDark = false,
+    this.hero = false,
+    this.anchor = false,
+    this.baseColor,
+    this.accentColor,
+    this.reveal,
+  });
+
+  /// Width and height of the (square) mark.
   final double size;
 
   /// true on the dark brand panel (paper ribs), false on paper (ink ribs).
   final bool onDark;
 
+  /// Fly between pages as a Hero (only one per page).
+  final bool hero;
+
+  /// Where the launch splash lands its logo.
+  final bool anchor;
+
+  final Color? baseColor, accentColor;
+
+  /// 0→1 builds the mark bar by bar, bottom first.
+  final Animation<double>? reveal;
+
   @override
   Widget build(BuildContext context) {
     final c = VC.of(context);
-    final unit = size / 28.0;
-    final base = onDark ? c.paper : c.ink;
-    final bars = <(double, Color)>[
-      (10.0, c.teal),
-      (16.0, base),
-      (22.0, base),
-      (28.0, base),
-    ];
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < bars.length; i++) ...[
-          if (i > 0) SizedBox(height: 3 * unit),
-          Opacity(
-            opacity: i == 0 ? 1.0 : (0.92 - i * 0.06),
-            child: Container(
-              width: bars[i].$1 * unit,
-              height: 3.5 * unit,
-              decoration: BoxDecoration(color: bars[i].$2, borderRadius: BorderRadius.circular(999)),
-            ),
-          ),
-        ],
-      ],
+    final base = baseColor ?? (onDark ? c.paper : c.ink);
+    final accent = accentColor ?? c.teal;
+    Widget mark = SizedBox.square(
+      dimension: size,
+      child: CustomPaint(painter: VMarkPainter(base: base, accent: accent, reveal: reveal)),
     );
+    if (anchor) mark = BrandAnchor(base: base, accent: accent, child: mark);
+    if (hero) {
+      mark = Hero(
+        tag: kBrandHeroTag,
+        // The same mark on both pages; no need to rebuild anchors mid-flight.
+        flightShuttleBuilder: (_, __, ___, ____, to) => SizedBox.square(
+          dimension: size,
+          child: CustomPaint(painter: VMarkPainter(base: base, accent: accent)),
+        ),
+        child: mark,
+      );
+    }
+    return mark;
   }
 }
 
+class VMarkPainter extends CustomPainter {
+  VMarkPainter({required this.base, required this.accent, this.reveal}) : super(repaint: reveal);
+
+  final Color base, accent;
+  final Animation<double>? reveal;
+
+  static const _widths = [203.0, 302.0, 396.0, 473.0, 550.0];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final u = size.width / 550.0;
+    final t = reveal?.value ?? 1.0;
+    for (var i = 0; i < 5; i++) {
+      // Bottom bar first; each takes 45% of the run.
+      final start = (4 - i) * 0.1375;
+      final p = reveal == null ? 1.0 : Curves.easeOutCubic.transform(((t - start) / 0.45).clamp(0.0, 1.0));
+      if (p <= 0.0) continue;
+      final w = _widths[i] * u * (0.7 + 0.3 * p);
+      final h = 72.0 * u;
+      final y = i * 119.0 * u + (1.0 - p) * 40.0 * u;
+      final r = RRect.fromRectAndRadius(Rect.fromLTWH((size.width - w) / 2.0, y, w, h), Radius.circular(18.0 * u));
+      final color = i == 0 ? accent : base;
+      canvas.drawRRect(r, Paint()..color = color.withValues(alpha: color.a * p));
+    }
+  }
+
+  @override
+  bool shouldRepaint(VMarkPainter old) => old.base != base || old.accent != accent || old.reveal != reveal;
+}
+
+/// Registers a mark as a landing spot for the launch splash, and hides it
+/// while the splash's copy is in flight.
+class BrandAnchor extends StatefulWidget {
+  const BrandAnchor({super.key, required this.base, required this.accent, required this.child});
+
+  final Color base, accent;
+  final Widget child;
+
+  static final Set<_BrandAnchorState> _live = {};
+
+  /// True while the splash flies its mark into place.
+  static final ValueNotifier<bool> hidden = ValueNotifier<bool>(false);
+
+  /// The visible anchor on the current page, as a global rect.
+  static ({Rect rect, Color base, Color accent})? find(Size screen) {
+    ({Rect rect, Color base, Color accent})? best;
+    for (final a in _live) {
+      final ctx = a._key.currentContext;
+      if (ctx == null) continue;
+      final route = a._route;
+      if (route != null && !route.isCurrent) continue;
+      final box = ctx.findRenderObject();
+      if (box is! RenderBox || !box.attached || !box.hasSize) continue;
+      final rect = box.localToGlobal(Offset.zero) & box.size;
+      if (rect.isEmpty || !(Offset.zero & screen).overlaps(rect)) continue;
+      if (best == null || rect.width > best.rect.width) best = (rect: rect, base: a.widget.base, accent: a.widget.accent);
+    }
+    return best;
+  }
+
+  @override
+  State<BrandAnchor> createState() => _BrandAnchorState();
+}
+
+class _BrandAnchorState extends State<BrandAnchor> {
+  final _key = GlobalKey();
+  ModalRoute<dynamic>? _route;
+
+  @override
+  void initState() {
+    super.initState();
+    BrandAnchor._live.add(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _route = ModalRoute.of(context);
+  }
+
+  @override
+  void dispose() {
+    BrandAnchor._live.remove(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+        valueListenable: BrandAnchor.hidden,
+        builder: (context, hide, child) => Opacity(opacity: hide ? 0.0 : 1.0, child: child),
+        child: KeyedSubtree(key: _key, child: widget.child),
+      );
+}
+
 class VWordmark extends StatelessWidget {
-  const VWordmark({super.key, this.size = 28.0, this.onDark = false});
+  const VWordmark({super.key, this.size = 28.0, this.onDark = false, this.brand = false, this.anchor = false});
 
   final double size;
   final bool onDark;
+
+  /// Hero between pages and landing spot for the launch splash.
+  final bool brand;
+
+  /// Landing spot only (for logos that may appear twice on one page).
+  final bool anchor;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +185,7 @@ class VWordmark extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        VMark(size: size, onDark: onDark),
+        VMark(size: size, onDark: onDark, hero: brand, anchor: brand || anchor),
         const SizedBox(width: 10.0),
         Column(
           mainAxisSize: MainAxisSize.min,

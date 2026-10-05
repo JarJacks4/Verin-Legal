@@ -12,6 +12,7 @@ import '../data/model.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
+import '../widgets/motion.dart';
 import 'intake_tab.dart';
 import 'integrity_tab.dart';
 import 'practice_tab.dart';
@@ -123,7 +124,10 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(m.title.isEmpty ? 'Untitled matter' : m.title, style: VT.h1(context, size: 28.0)),
+                                      TextHero(
+                                        tag: matterTitleTag(m.reference.path),
+                                        child: Text(m.title.isEmpty ? 'Untitled matter' : m.title, style: VT.h1(context, size: 28.0)),
+                                      ),
                                       const SizedBox(height: 4.0),
                                       Text(
                                         [
@@ -163,7 +167,9 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                           alignment: Alignment.topLeft,
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 880.0),
-                            child: switch (_tab) {
+                            child: VFadeSwitch(
+                              switchKey: _tab,
+                              child: switch (_tab) {
                               MatterTab.intake => IntakeTab(matter: m),
                               MatterTab.receipts => ReceiptsTab(matter: m, receipts: receipts, loading: !rs.hasData, error: rs.error),
                               MatterTab.thread => ThreadTab(matter: m, receipts: receipts),
@@ -171,7 +177,8 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                               MatterTab.followups => FollowUpsTab(matter: m, receipts: receipts, onShowInThread: () => setState(() => _tab = MatterTab.thread)),
                               MatterTab.integrity => IntegrityTab(matter: m, receipts: receipts),
                               MatterTab.practice => PracticeTab(matter: m, receipts: receipts, firmConnected: firmClio, firmStatus: ig.data ?? const {}),
-                            },
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -217,10 +224,12 @@ class _TabBar extends StatelessWidget {
                 builder: (context, hovered) {
                   final on = id == value;
                   final color = on ? c.tealDeep : (hovered ? c.foreground : c.mutedFg);
-                  return Container(
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: VMotion.standard,
                     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                     decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: on ? c.teal : Colors.transparent, width: 2.0)),
+                      border: Border(bottom: BorderSide(color: on ? c.teal : c.teal.withValues(alpha: 0.0), width: 2.0)),
                     ),
                     child: Row(
                       children: [
