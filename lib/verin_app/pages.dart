@@ -11,6 +11,7 @@ import 'admin/admin_program.dart';
 import 'admin/admin_settings.dart';
 import 'admin/admin_shell.dart';
 import 'admin/admin_team.dart';
+import 'annotations/annotations_screen.dart';
 import 'auth/auth_screens.dart';
 import 'matter/matter_detail_screen.dart';
 import 'matters/matters_screen.dart';
@@ -51,6 +52,12 @@ class VOnboardingPage extends StatelessWidget {
   Widget build(BuildContext context) => const FirmGate(child: OnboardingScreen());
 }
 
+class VAnnotationsPage extends StatelessWidget {
+  const VAnnotationsPage({super.key});
+  @override
+  Widget build(BuildContext context) => const FirmGate(child: AppShell(nav: ConsoleNav.annotations, child: AnnotationsScreen()));
+}
+
 class VReviewPage extends StatelessWidget {
   const VReviewPage({super.key});
   @override
@@ -58,23 +65,24 @@ class VReviewPage extends StatelessWidget {
 }
 
 class VMatterPage extends StatelessWidget {
-  const VMatterPage({super.key, required this.matter, this.fromAdmin = false});
+  const VMatterPage({super.key, required this.matter, this.fromAdmin = false, this.initialTab = ''});
   final MattersRecord? matter;
   final bool fromAdmin;
+  final String initialTab;
   @override
   Widget build(BuildContext context) {
     if (fromAdmin) {
       return FirmGate(
         child: AdminShell(
         nav: AdminNav.matters,
-          builder: (context, user, firm) => MatterDetailScreen(key: ValueKey(matter?.reference.path), matter: matter, admin: true),
+          builder: (context, user, firm) => MatterDetailScreen(key: ValueKey(matter?.reference.path), matter: matter, admin: true, initialTab: initialTab),
         ),
       );
     }
     return FirmGate(
       child: AppShell(
         nav: ConsoleNav.matters,
-        child: MatterDetailScreen(key: ValueKey(matter?.reference.path), matter: matter),
+        child: MatterDetailScreen(key: ValueKey(matter?.reference.path), matter: matter, initialTab: initialTab),
       ),
     );
   }

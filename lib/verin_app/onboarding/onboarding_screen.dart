@@ -39,7 +39,7 @@ List<_Slide> _slides(bool admin) => [
         eyebrow: 'STEP 1 · RECEIVE',
         title: 'Every matter gets its own inbox',
         body: 'Create a matter and Verin gives it a private intake address. Your client forwards evidence there — nothing to install, no accounts for them.',
-        points: const ['Email, text and WhatsApp all work', 'You can also upload files yourself'],
+        points: const ['Email and text messages (with photos) both work', 'You can also upload files yourself'],
         demo: () => const IntakeDemo(),
       ),
       _Slide(

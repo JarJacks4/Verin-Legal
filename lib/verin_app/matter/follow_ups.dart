@@ -37,6 +37,7 @@ Future<bool> showFollowUpComposer(BuildContext context, {required MattersRecord 
     context,
     title: requests.length == 1 ? 'Request missing evidence' : 'Request ${requests.length} items',
     width: 560.0,
+    tour: 'followup_composer',
     builder: (_) => _Composer(matter: matter, requests: requests),
   );
   return r == true;

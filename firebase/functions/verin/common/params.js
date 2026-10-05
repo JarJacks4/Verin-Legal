@@ -39,6 +39,21 @@ module.exports = {
   // Where the "Return to Verin" link on the Clio result page goes.
   APP_URL: defineString('APP_URL', { default: '' }),
 
+  // Client email and text intake (verin/intake). Secrets:
+  //   INBOUND_WEBHOOK_KEY  long random string; part of the inbound-email URL
+  //   TWILIO_AUTH_TOKEN    verifies Twilio's signature and fetches photos
+  INBOUND_WEBHOOK_KEY: defineSecret('INBOUND_WEBHOOK_KEY'),
+  TWILIO_AUTH_TOKEN: defineSecret('TWILIO_AUTH_TOKEN'),
+  // Matters get <name>-<4 digits>@INBOUND_EMAIL_DOMAIN. Empty = no addresses.
+  INBOUND_EMAIL_DOMAIN: defineString('INBOUND_EMAIL_DOMAIN', { default: '' }),
+  TWILIO_ACCOUNT_SID: defineString('TWILIO_ACCOUNT_SID', { default: '' }),
+  // The texting number shown on matters when a firm has none of its own.
+  TWILIO_SMS_NUMBER: defineString('TWILIO_SMS_NUMBER', { default: '' }),
+  // The exact URL configured in Twilio for incoming messages (signature check).
+  TWILIO_WEBHOOK_URL: defineString('TWILIO_WEBHOOK_URL', { default: '' }),
+  // "true" sends a short "Received" reply (needs A2P / toll-free registration).
+  SMS_AUTO_REPLY: defineString('SMS_AUTO_REPLY', { default: 'false' }),
+
   // Single-tenant fallback: the firmID every matter is filed under today.
   DEFAULT_FIRM_ID: defineString('DEFAULT_FIRM_ID', { default: 'harbow-law' }),
 };

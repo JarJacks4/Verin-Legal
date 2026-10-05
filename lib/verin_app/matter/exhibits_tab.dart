@@ -227,6 +227,7 @@ class _ExhibitsTabState extends State<ExhibitsTab> {
         context,
         title: p.name.isEmpty ? 'Production' : p.name,
         width: 980.0,
+        tour: 'production_editor',
         builder: (_) => ProductionEditor(matter: widget.matter, receipts: widget.receipts, production: p, template: ExhibitTemplate.of(_firm), nextBates: _nextBates),
       );
 

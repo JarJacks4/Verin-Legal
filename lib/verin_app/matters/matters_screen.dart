@@ -19,12 +19,13 @@ import '/auth/firebase_auth/auth_util.dart' show currentUserDocument;
 
 const kMatterDetailRoute = 'MattersTabGroupHome';
 
-void openMatter(BuildContext context, MattersRecord m, {bool admin = false}) {
+void openMatter(BuildContext context, MattersRecord m, {bool admin = false, String? tab}) {
   context.pushNamed(
     kMatterDetailRoute,
     queryParameters: {
       'matterDoc': serializeParam(m, ParamType.Document),
       if (admin) 'from': 'admin',
+      if (tab != null) 'tab': tab,
     }.withoutNulls,
     extra: <String, dynamic>{'matterDoc': m},
   );

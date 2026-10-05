@@ -26,17 +26,20 @@ import 'thread_tab.dart';
 enum MatterTab { intake, receipts, thread, followups, exhibits, integrity, practice }
 
 class MatterDetailScreen extends StatefulWidget {
-  const MatterDetailScreen({super.key, required this.matter, this.admin = false});
+  const MatterDetailScreen({super.key, required this.matter, this.admin = false, this.initialTab = ''});
 
   final MattersRecord? matter;
   final bool admin;
+
+  /// MatterTab name to open on (e.g. 'thread' from Annotations).
+  final String initialTab;
 
   @override
   State<MatterDetailScreen> createState() => _MatterDetailScreenState();
 }
 
 class _MatterDetailScreenState extends State<MatterDetailScreen> {
-  MatterTab _tab = MatterTab.intake;
+  late MatterTab _tab = MatterTab.values.firstWhere((t) => t.name == widget.initialTab, orElse: () => MatterTab.intake);
   Stream<MattersRecord>? _matter;
   Stream<List<ReceiptsRecord>>? _receipts;
   late final Stream<Map<String, dynamic>> _intg = integrationStatusStream();

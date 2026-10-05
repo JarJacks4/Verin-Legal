@@ -13,6 +13,7 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
 import '../widgets/upload_zone.dart';
+import '../onboarding/tour.dart';
 
 Future<MattersRecord?> showNewMatterDrawer(BuildContext context) =>
     showVDrawer<MattersRecord>(context, title: 'New matter', width: 500.0, builder: (_) => const NewMatterForm());
@@ -47,6 +48,8 @@ class _NewMatterFormState extends State<NewMatterForm> {
   final _name = TextEditingController();
   final _client = TextEditingController();
   final _cause = TextEditingController();
+  final _phone = TextEditingController();
+  final _email = TextEditingController();
   String _status = 'Open';
   String _practiceArea = kPracticeAreas.first;
   bool _archive = false;
@@ -70,6 +73,8 @@ class _NewMatterFormState extends State<NewMatterForm> {
     _name.dispose();
     _client.dispose();
     _cause.dispose();
+    _phone.dispose();
+    _email.dispose();
     super.dispose();
   }
 
@@ -105,6 +110,9 @@ class _NewMatterFormState extends State<NewMatterForm> {
           isArchiveBuild: _archive,
           hasChronologyShift: false,
         ),
+        // Used to match the client's texts and recognise their email.
+        if (_phone.text.trim().isNotEmpty) ...{'clientPhone': _phone.text.trim(), 'clientPhones': [_phone.text.trim()]},
+        if (_email.text.trim().isNotEmpty) ...{'clientEmail': _email.text.trim().toLowerCase(), 'clientEmails': [_email.text.trim().toLowerCase()]},
       });
 
       final failures = <String>[];
@@ -165,6 +173,13 @@ class _NewMatterFormState extends State<NewMatterForm> {
         VTextField(controller: _client, label: 'Client name', hint: 'Jane Smith'),
         const SizedBox(height: 16.0),
         VTextField(controller: _cause, label: 'Cause number', hint: '49D08-2026-DR-XXXXXX'),
+        const SizedBox(height: 16.0),
+        TourTarget(
+          id: 'nm_phone',
+          child: VTextField(controller: _phone, label: 'Client mobile', optional: 'for texts', hint: '(317) 555-0142', keyboardType: TextInputType.phone),
+        ),
+        const SizedBox(height: 16.0),
+        VTextField(controller: _email, label: 'Client email', optional: 'optional', hint: 'client@example.com', keyboardType: TextInputType.emailAddress),
         const SizedBox(height: 16.0),
         VSelect<String>(
           label: 'Practice area',
@@ -271,10 +286,12 @@ class _NewMatterFormState extends State<NewMatterForm> {
         const SizedBox(height: 24.0),
         const VInfoPanel(
           title: 'Intake channels',
-          body: 'Each matter gets its own email address, SMS number, and WhatsApp line routing only to this record. They appear on the Intake channel tab once intake is switched on for your firm.',
+          body: 'Each matter gets its own email address, and texts from the client\'s mobile are matched to it. Both appear on the Intake channel tab as soon as the matter is created.',
         ),
         const SizedBox(height: 24.0),
-        VButton(
+        TourTarget(
+          id: 'nm_create',
+          child: VButton(
           label: 'Create matter',
           icon: Icons.add,
           size: VButtonSize.lg,
@@ -282,6 +299,7 @@ class _NewMatterFormState extends State<NewMatterForm> {
           loading: _submitting,
           loadingLabel: _staged.isEmpty ? 'Creating…' : 'Creating and filing evidence…',
           onPressed: _valid ? _create : null,
+          ),
         ),
       ],
     );

@@ -158,6 +158,22 @@ class VerinApi {
   static Future<Map<String, dynamic>> produceExhibits({required String matterId, required String productionId}) =>
       _call('produceExhibits', {'matterId': matterId, 'productionId': productionId}, timeout: const Duration(seconds: 540));
 
+  // ---------------------------------------------------------------- intake
+
+  /// Gives the matter its intake email address and texting number now.
+  /// Returns { emailAddress, smsNumber, emailConfigured, smsConfigured }.
+  static Future<Map<String, dynamic>> provisionIntake(String matterId) => _call('provisionIntake', {'matterId': matterId});
+
+  /// Reads a quarantined item (and everything else from the same sender on
+  /// this matter). [remember] adds the sender to the matter's known senders.
+  static Future<Map<String, dynamic>> approveQuarantined(String receiptId, {bool remember = true}) =>
+      _call('approveQuarantined', {'receiptId': receiptId, 'remember': remember}, timeout: const Duration(seconds: 540));
+
+  /// Files a text from an unknown number into [matterId] (or dismisses it).
+  static Future<Map<String, dynamic>> assignUnrouted(String id, {String? matterId, bool remember = true, bool dismiss = false}) =>
+      _call('assignUnrouted', {'id': id, if (matterId != null) 'matterId': matterId, 'remember': remember, 'dismiss': dismiss},
+          timeout: const Duration(seconds: 300));
+
   // ---------------------------------------------------------------- account
 
   /// Attaches the signed-in account to a firm: joins the firm that invited

@@ -18,6 +18,7 @@ import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../widgets/drawer.dart';
 import 'verification_view.dart';
+import '../onboarding/tour.dart';
 
 Future<void> showReceiptDrawer(BuildContext context, {required ReceiptsRecord receipt, required MattersRecord matter, VoidCallback? onOpenMatter}) =>
     showVDrawer<void>(
@@ -153,6 +154,10 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
           const SizedBox(height: 12.0),
           VNotice(text: r.reviewReason),
         ],
+        if (state == VItemState.quarantined) ...[
+          const SizedBox(height: 12.0),
+          TourTarget(id: 'receipt_quarantine', child: QuarantineActions(receipt: r)),
+        ],
         const SizedBox(height: 16.0),
 
         // Video record (spec §8 language).
@@ -234,12 +239,15 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
             ],
             if (r.threadMessages.isNotEmpty || statementCount > 0) ...[
               const SizedBox(height: 10.0),
-              VButton(
-                label: 'Verify against the original',
-                icon: Icons.compare,
-                kind: VButtonKind.tonal,
-                size: VButtonSize.sm,
-                onPressed: () => showVerificationView(context, receipt: r, matter: widget.matter),
+              TourTarget(
+                id: 'receipt_verify',
+                child: VButton(
+                  label: 'Verify against the original',
+                  icon: Icons.compare,
+                  kind: VButtonKind.tonal,
+                  size: VButtonSize.sm,
+                  onPressed: () => showVerificationView(context, receipt: r, matter: widget.matter),
+                ),
               ),
             ],
             if (transcript.isNotEmpty) ...[
@@ -401,5 +409,80 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
     final m = n ~/ 60;
     final sec = n % 60;
     return '$m:${sec.toString().padLeft(2, '0')}';
+  }
+}
+
+/// Approve an unknown sender: their items on this matter are read, and they
+/// are remembered so future messages skip quarantine.
+class QuarantineActions extends StatefulWidget {
+  const QuarantineActions({super.key, required this.receipt});
+
+  final ReceiptsRecord receipt;
+
+  @override
+  State<QuarantineActions> createState() => _QuarantineActionsState();
+}
+
+class _QuarantineActionsState extends State<QuarantineActions> {
+  bool _busy = false;
+  bool _remember = true;
+
+  Future<void> _approve() async {
+    setState(() => _busy = true);
+    try {
+      final r = await VerinApi.approveQuarantined(widget.receipt.reference.id, remember: _remember);
+      if (mounted) {
+        final n = (r['approved'] as num?)?.toInt() ?? 1;
+        showVToast(context, n == 1 ? 'Approved — reading now' : 'Approved $n items from this sender — reading now');
+      }
+    } catch (e) {
+      if (mounted) showVToast(context, 'Could not approve', error: true, description: e is VerinApiException ? e.message : '$e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    final sender = widget.receipt.snapshotData['senderKey'];
+    final who = sender is String ? sender.replaceFirst(RegExp(r'^(mail|tel):'), '') : '';
+    return Container(
+      padding: const EdgeInsets.all(14.0),
+      decoration: BoxDecoration(color: c.pendingBg, borderRadius: BorderRadius.circular(VR.card), border: Border.all(color: c.pending.withValues(alpha: 0.4))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.shield_outlined, size: 16.0, color: c.pending),
+              const SizedBox(width: 8.0),
+              Expanded(child: Text('Held in quarantine', style: VT.body(context, size: 13.5, weight: FontWeight.w600, color: c.pending))),
+            ],
+          ),
+          const SizedBox(height: 6.0),
+          Text(
+            'It is stored, hashed and in the chain, but nobody has read it yet. Approve it if ${who.isEmpty ? 'this sender' : who} belongs on this matter.',
+            style: VT.muted(context, size: 12.5),
+          ),
+          const SizedBox(height: 10.0),
+          Row(
+            children: [
+              VSwitch(value: _remember, onChanged: (v) => setState(() => _remember = v)),
+              const SizedBox(width: 8.0),
+              Expanded(child: Text('Remember this sender for this matter', style: VT.body(context, size: 12.5))),
+            ],
+          ),
+          const SizedBox(height: 10.0),
+          VButton(
+            label: 'Approve and read',
+            icon: Icons.check,
+            loading: _busy,
+            loadingLabel: 'Approving…',
+            onPressed: _busy ? null : _approve,
+          ),
+        ],
+      ),
+    );
   }
 }

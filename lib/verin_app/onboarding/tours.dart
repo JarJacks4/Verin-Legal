@@ -40,6 +40,12 @@ List<TourStep> mattersTour({required bool admin}) => [
         title: 'Review queue',
         body: 'When Verin is not sure how to read something, it waits here for a quick human check. Nothing is guessed silently.',
       ),
+      const TourStep(
+        target: 'nav_annotations',
+        icon: Icons.sticky_note_2_outlined,
+        title: 'Annotations',
+        body: 'Every note your firm adds to thread messages, in one place — filter by tag or matter and jump back to the message.',
+      ),
       if (admin)
         const TourStep(
           target: 'nav_admin',
@@ -178,4 +184,215 @@ const Map<String, List<TourStep>> adminTours = {
       body: 'Connections like Clio, your exhibit template, API access and retention. Changes apply to the whole firm.',
     ),
   ],
+};
+
+const annotationsTour = [
+  TourStep(
+    target: 'ann_tags',
+    icon: Icons.sell_outlined,
+    title: 'Your notes by tag',
+    body: 'Key evidence, Follow up, Question and Note. Click a tile to show only that tag; click it again to clear.',
+  ),
+  TourStep(
+    target: 'ann_filters',
+    icon: Icons.filter_list_rounded,
+    title: 'Narrow it down',
+    body: 'Switch between your notes and everyone\'s, pick a matter, or search the note, the message or the author.',
+  ),
+  TourStep(
+    target: 'ann_list',
+    icon: Icons.sticky_note_2_outlined,
+    title: 'Edit, remove or jump back',
+    body: 'Edit or delete your own notes here. "Open in thread" takes you to the conversation the note belongs to.',
+    optional: true,
+  ),
+  TourStep(
+    target: 'ann_copy',
+    icon: Icons.content_copy,
+    title: 'Take them with you',
+    body: 'Copy what you are looking at, grouped by matter, to paste into a brief, a memo or an email.',
+  ),
+];
+
+/// Sheet tips, keyed by tour id. Sheets find theirs by title
+/// ([drawerTourForTitle]) or pass `tour:` to showVDrawer.
+const Map<String, List<TourStep>> drawerTours = {
+  'new_matter': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.create_new_folder_outlined,
+      title: 'Create a matter',
+      body: 'Name it, add the client and the cause number. Each matter gets its own record and its own hash chain.',
+    ),
+    TourStep(
+      target: 'nm_phone',
+      icon: Icons.smartphone,
+      title: "Add the client's mobile",
+      body: 'Texts from this number go straight into this matter. Adding their email means their messages are read right away.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'nm_create',
+      icon: Icons.check_rounded,
+      title: 'Create it',
+      body: 'Verin gives the matter its intake email and texting number straight away. Files you add here are hashed on arrival.',
+      optional: true,
+    ),
+  ],
+  'receipt': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.description_outlined,
+      title: 'Everything about one item',
+      body: 'What it is, who sent it, when it arrived and what Verin read from it. You can open the file exactly as received.',
+    ),
+    TourStep(
+      target: 'receipt_quarantine',
+      icon: Icons.shield_outlined,
+      title: 'From someone new',
+      body: 'Items from unknown senders wait here, stored and hashed but unread. Approve the sender to read them.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'receipt_verify',
+      icon: Icons.compare,
+      title: 'Check it against the original',
+      body: 'See the original beside what Verin read, with each line highlighted where it came from.',
+      optional: true,
+    ),
+  ],
+  'verify': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.compare,
+      title: 'Original on one side, record on the other',
+      body: 'Click a line to see where it sits in the original. If a word is wrong, correct it — the original never changes and every correction is kept.',
+    ),
+  ],
+  'manual': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.edit_outlined,
+      title: 'Add evidence yourself',
+      body: 'For files you already have, or physical items like a printed letter or a USB drive. It is hashed and chained just like client uploads.',
+    ),
+  ],
+  'followup_composer': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.mark_email_unread_outlined,
+      title: 'Ask for what is missing',
+      body: 'Check the wording, then open it in your own email to send. Verin marks it sent and closes it when the evidence arrives.',
+    ),
+  ],
+  'production_editor': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.folder_copy_outlined,
+      title: 'Build the exhibit set',
+      body: 'Choose items and their order, review redactions, then produce. You get Bates-stamped PDFs, an index and a ZIP.',
+    ),
+  ],
+  'redactions': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.format_strikethrough,
+      title: 'Review redactions',
+      body: 'Verin suggests things like account numbers and addresses. Drag to add a box, click one to remove it. Redactions are burned in, not just covered.',
+    ),
+  ],
+  'who_is_who': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.people_outline,
+      title: 'Who is who',
+      body: "Give each sender a real name and say which side they're on. The thread rebuilds with your choices.",
+    ),
+  ],
+  'certificate': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.workspace_premium_outlined,
+      title: 'Certificate of preparation',
+      body: 'A plain-language statement of how this record was received and kept, ready to attach to a filing.',
+    ),
+  ],
+  'verify_tool': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.verified_outlined,
+      title: 'Standalone verify tool',
+      body: "Lets anyone — opposing counsel or the court — check the record's fingerprints without using Verin.",
+    ),
+  ],
+  'integration_report': [
+    TourStep(target: 'drawer_body', icon: Icons.apartment_outlined, title: 'Integration report', body: 'Exactly what was sent to Clio, and when.'),
+  ],
+  'clio_link': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.link_rounded,
+      title: 'Match to a Clio matter',
+      body: 'Find the same matter in Clio so finished records are filed there automatically.',
+    ),
+  ],
+  'invite': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.group_add_outlined,
+      title: 'Invite a team member',
+      body: "Enter their work email and role. They get a link to join your firm's workspace.",
+    ),
+  ],
+  'api': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.key_outlined,
+      title: 'API access',
+      body: 'Keys and a webhook for connecting your own systems. Treat keys like passwords.',
+    ),
+  ],
+  'profile': [
+    TourStep(target: 'drawer_body', icon: Icons.person_outline_rounded, title: 'Your profile', body: 'Your details, your firm and your plan.'),
+    TourStep(
+      target: 'profile_replay',
+      icon: Icons.slideshow_outlined,
+      title: 'Replay the walkthrough',
+      body: "Shows the welcome slides and every page's tips again, whenever you like.",
+      optional: true,
+    ),
+  ],
+  'baseline_measure': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.timer_outlined,
+      title: 'Measure the manual baseline',
+      body: 'Time a typical task done by hand. Verin compares it with how long the same work takes now, to show real savings.',
+    ),
+  ],
+  'baseline_rates': [
+    TourStep(target: 'drawer_body', icon: Icons.payments_outlined, title: 'Baseline rates', body: 'The hourly rates used to turn time saved into dollars.'),
+  ],
+  'payment': [
+    TourStep(target: 'drawer_body', icon: Icons.credit_card, title: 'Payment method', body: 'Change the card or account your firm is billed to.'),
+  ],
+};
+
+const Map<String?, String> drawerTourForTitle = {
+  'New matter': 'new_matter',
+  'Receipt detail': 'receipt',
+  'Verify against the original': 'verify',
+  'Add manual entry': 'manual',
+  'Review redactions': 'redactions',
+  'Who is who': 'who_is_who',
+  'Certificate of preparation': 'certificate',
+  'Standalone verify tool': 'verify_tool',
+  'Integration report': 'integration_report',
+  'Match to a Clio matter': 'clio_link',
+  'Invite team member': 'invite',
+  'API access': 'api',
+  'Profile': 'profile',
+  'Measure the manual baseline': 'baseline_measure',
+  'Baseline rates': 'baseline_rates',
+  'Update payment method': 'payment',
 };
