@@ -10,6 +10,7 @@
 const { SPEAKERS } = require('../extraction/schema');
 const { validateExtraction, toThreadMessages, parseModelResponse } = require('../extraction/validate');
 const { isLegacySamplingModel, truncate } = require('../extraction/extractor');
+const { BOX_SCHEMA, STATEMENT_SCHEMA, messageSource, cleanStatements } = require('./source');
 
 const CONFIDENCE = ['high', 'medium', 'low', 'none'];
 const EVIDENCE_TYPES = ['conversation', 'photo', 'document', 'email', 'other'];
@@ -23,8 +24,11 @@ const MESSAGE_SCHEMA = {
     isGap: { type: 'boolean' },
     confidence: { type: 'number', description: 'How sure you are this text is read correctly, from 0.0 to 1.0.' },
     isHeader: { type: 'boolean' },
+    senderName: { type: 'string', description: 'The sender name or number shown with this message (bubble label, contact header, email From), copied as displayed; "" if none is shown.' },
+    page: { type: 'integer', description: '1-based PDF page the message is on; 0 otherwise.' },
+    box: BOX_SCHEMA,
   },
-  required: ['speaker', 'text', 'timestampLabel', 'isGap', 'confidence', 'isHeader'],
+  required: ['speaker', 'text', 'timestampLabel', 'isGap', 'confidence', 'isHeader', 'senderName', 'page', 'box'],
   additionalProperties: false,
 };
 
@@ -39,8 +43,9 @@ const ANALYSIS_SCHEMA = {
     containsConversation: { type: 'boolean' },
     platform: { type: 'string' },
     messages: { type: 'array', items: MESSAGE_SCHEMA },
+    statements: { type: 'array', items: STATEMENT_SCHEMA },
   },
-  required: ['evidenceType', 'summary', 'eventDate', 'eventDateSource', 'eventDateConfidence', 'containsConversation', 'platform', 'messages'],
+  required: ['evidenceType', 'summary', 'eventDate', 'eventDateSource', 'eventDateConfidence', 'containsConversation', 'platform', 'messages', 'statements'],
   additionalProperties: false,
 };
 
@@ -65,7 +70,16 @@ function systemPrompt() {
     '- timestampLabel: the time/date text shown for that message or the nearest divider above it, copied as displayed; "" if none.',
     '- isHeader: true only for date dividers and system lines. isGap: true on the first message after a visible break or cut-off text.',
     '- confidence: 0.0 to 1.0 per message; do not default everything to 1.0.',
+    '- senderName: the name or number displayed for that message\'s sender (a group-chat label, the contact name in the header, an email From) exactly as shown; "" when none is visible. Never invent or normalize a name.',
     '- If the item is not a conversation: containsConversation false, platform "", messages [].',
+    '',
+    'Location rules (so a reviewer can check each line against the original):',
+    '- box: for images, the rectangle around that message bubble or passage as fractions of the image (x, y = top-left corner; w, h = width and height; all between 0 and 1). Use all zeros when the item is not an image or you cannot place it.',
+    '- page: for PDFs, the 1-based page the text is on; 0 for anything else.',
+    '',
+    'Statements (documents, letters, emails, forms, photos with text — not message threads):',
+    '- statements: up to 25 passages that state a fact a lawyer would need to check: dates, amounts, names, places, and events. Copy each passage verbatim (a sentence or line, not a paraphrase), with kind, page and box.',
+    '- For a message thread, statements is [] (the messages already cover it).',
   ].join('\n');
 }
 
@@ -139,6 +153,9 @@ function validateAnalysis(parsed) {
       eventDateSource: eventDate && conf !== 'none' ? parsed.eventDateSource.trim() : '',
       eventDateConfidence: eventDate ? conf : 'none',
       conversation: conv.value,
+      // Where each message sits in the original, in the same order.
+      messageSources: (Array.isArray(parsed.messages) ? parsed.messages : []).map(messageSource),
+      ...cleanStatements(parsed.statements),
     },
   };
 }
@@ -164,7 +181,9 @@ async function analyzeWithClaude({ anthropic, model, maxTokens, content, clientS
   const checked = validateAnalysis(parsed.parsed);
   if (!checked.ok) return { ok: false, errors: checked.errors, audit };
   const v = checked.value;
-  const threadMessages = v.conversation.containsConversation ? toThreadMessages(v.conversation, { sourceThumbnailUrl: sourceUrl || '' }) : [];
+  const threadMessages = v.conversation.containsConversation
+    ? toThreadMessages(v.conversation, { sourceThumbnailUrl: sourceUrl || '' }).map((m, i) => ({ ...m, ...(v.messageSources[i] || {}) }))
+    : [];
   return { ok: true, value: v, threadMessages, audit };
 }
 

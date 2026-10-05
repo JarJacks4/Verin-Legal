@@ -150,6 +150,10 @@ class VerinApi {
   static Future<Map<String, dynamic>> exportFirmData() =>
       _call('exportFirmData', {}, timeout: const Duration(seconds: 540));
 
+  /// Rebuilds a matter's reconstructed thread now (normally automatic).
+  static Future<Map<String, dynamic>> refreshMatterRecord(String matterId) =>
+      _call('refreshMatterRecord', {'matterId': matterId}, timeout: const Duration(seconds: 300));
+
   // ---------------------------------------------------------------- account
 
   /// Attaches the signed-in account to a firm: joins the firm that invited

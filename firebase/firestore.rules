@@ -74,6 +74,17 @@ service cloud.firestore {
         allow read: if inMyFirm(matterFirm(matterId));
         allow write: if false;
       }
+
+      // Server-built views of the record: the reconstructed thread
+      // (derived/thread) and what each new item changed (updates/{receipt}).
+      match /derived/{docId} {
+        allow read: if inMyFirm(matterFirm(matterId));
+        allow write: if false;
+      }
+      match /updates/{updateId} {
+        allow read: if inMyFirm(matterFirm(matterId));
+        allow write: if false;
+      }
     }
 
     match /Receipts/{receiptId} {
@@ -111,6 +122,43 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'tag', 'updatedAt'])
         && validNote(request.resource.data);
       allow delete: if inMyFirm(resource.data.firmID) && isAuthorOrAdmin();
+    }
+
+    // Reviewer corrections to the AI's reading. Append-only: a newer
+    // correction supersedes an older one, and the history stays.
+    match /Corrections/{id} {
+      allow read: if inMyFirm(resource.data.firmID);
+      allow create: if inMyFirm(request.resource.data.get('firmID', ''))
+        && request.resource.data.byUid == request.auth.uid
+        && get(request.resource.data.matterId).data.get('firmID', '') == request.resource.data.firmID
+        && request.resource.data.field in ['text', 'date', 'sender']
+        && request.resource.data.corrected is string
+        && request.resource.data.corrected.size() > 0 && request.resource.data.corrected.size() <= 4000;
+      allow update, delete: if false;
+    }
+
+    // Missing-evidence requests: drafted from the record's gaps, edited and
+    // approved by staff, sent from their own email. Verin never sends them.
+    match /FollowUps/{id} {
+      allow read: if inMyFirm(resource.data.firmID);
+      allow create: if inMyFirm(request.resource.data.get('firmID', ''))
+        && request.resource.data.createdBy == request.auth.uid
+        && get(request.resource.data.matterId).data.get('firmID', '') == request.resource.data.firmID
+        && request.resource.data.status in ['draft', 'sent', 'dismissed'];
+      allow update: if inMyFirm(resource.data.firmID)
+        && untouched(['firmID', 'matterId', 'key', 'createdBy', 'createdAt'])
+        && request.resource.data.status in ['draft', 'sent', 'dismissed', 'resolved'];
+      allow delete: if false;
+    }
+
+    // Usage and review events for the value report. The server logs reading;
+    // staff sessions log their own review time and corrections.
+    match /Activity/{id} {
+      allow read: if inMyFirm(resource.data.firmID) && isAdmin();
+      allow create: if inMyFirm(request.resource.data.get('firmID', ''))
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.type in ['review', 'correction', 'follow_up_sent', 'export'];
+      allow update, delete: if false;
     }
 
     match /chainEntries/{entryId} {

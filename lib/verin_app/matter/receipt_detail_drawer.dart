@@ -17,6 +17,7 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../widgets/drawer.dart';
+import 'verification_view.dart';
 
 Future<void> showReceiptDrawer(BuildContext context, {required ReceiptsRecord receipt, required MattersRecord matter, VoidCallback? onOpenMatter}) =>
     showVDrawer<void>(
@@ -115,6 +116,8 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
     ].join(' · ');
     final ex = r.extractionState;
     final transcript = r.transcript;
+    final st = r.snapshotData['statements'];
+    final statementCount = st is List ? st.length : 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -215,7 +218,7 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
               ],
             ),
           ])
-        else if (r.aiSummary.isNotEmpty || transcript.isNotEmpty || ex == 'extraction_failed' || r.threadMessages.isNotEmpty)
+        else if (r.aiSummary.isNotEmpty || transcript.isNotEmpty || ex == 'extraction_failed' || r.threadMessages.isNotEmpty || statementCount > 0)
           _section(context, 'What the AI read', [
             if (r.aiSummary.isNotEmpty) Text(r.aiSummary, style: VT.body(context, size: 13.0, height: 1.6)),
             if (r.threadMessages.isNotEmpty) ...[
@@ -223,6 +226,20 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
               Text(
                 '${r.threadMessages.where((m) => !m.isHeader).length} messages read into the Thread tab${r.detectedPlatform.isNotEmpty ? ' · ${r.detectedPlatform}' : ''}.',
                 style: VT.muted(context, size: 12.0),
+              ),
+            ],
+            if (statementCount > 0) ...[
+              const SizedBox(height: 6.0),
+              Text('$statementCount key passage${statementCount == 1 ? '' : 's'} (dates, amounts, names, events) located in the original.', style: VT.muted(context, size: 12.0)),
+            ],
+            if (r.threadMessages.isNotEmpty || statementCount > 0) ...[
+              const SizedBox(height: 10.0),
+              VButton(
+                label: 'Verify against the original',
+                icon: Icons.compare_outlined,
+                kind: VButtonKind.tonal,
+                size: VButtonSize.sm,
+                onPressed: () => showVerificationView(context, receipt: r, matter: widget.matter),
               ),
             ],
             if (transcript.isNotEmpty) ...[

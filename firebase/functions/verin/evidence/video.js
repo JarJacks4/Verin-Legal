@@ -16,6 +16,7 @@ const { execFile } = require('child_process');
 const { promisify } = require('util');
 
 const { validateExtraction, toThreadMessages } = require('../extraction/validate');
+const { messageSource } = require('./source');
 
 const execFileP = promisify(execFile);
 
@@ -106,8 +107,10 @@ const VIDEO_SCHEMA = {
           isGap: { type: 'BOOLEAN' },
           confidence: { type: 'NUMBER' },
           isHeader: { type: 'BOOLEAN' },
+          senderName: { type: 'STRING', description: 'Sender name or number shown with the message, as displayed; "" if none.' },
+          atSeconds: { type: 'INTEGER', description: 'Seconds from the start of the video where the message is first fully visible.' },
         },
-        required: ['speaker', 'text', 'timestampLabel', 'isGap', 'confidence', 'isHeader'],
+        required: ['speaker', 'text', 'timestampLabel', 'isGap', 'confidence', 'isHeader', 'senderName', 'atSeconds'],
       },
     },
   },
@@ -123,7 +126,7 @@ function videoPrompt({ clientSide, hasAudio }) {
       ? '- transcript: every spoken line, speaker-separated ("Speaker 1", "Speaker 2"…), with startSeconds from the start of the file. Verbatim; mark unclear words [inaudible]. Empty if nobody speaks.'
       : '- The file has no audio track: transcript must be empty and hasSpeech false.',
     '- isScreenRecording: true if this is a recording of a phone or computer screen.',
-    `- If it is a screen recording of a message thread: list each distinct message once, top to bottom in conversation order, even if it appears in many frames. Messages on the ${side} side were sent by the client ("client"); the other side is "other". Copy text verbatim, timestampLabel as displayed or "", isHeader for date dividers, isGap where the scroll skipped part of the conversation, confidence 0..1. Otherwise messages is empty and platform "".`,
+    `- If it is a screen recording of a message thread: list each distinct message once, top to bottom in conversation order, even if it appears in many frames. Messages on the ${side} side were sent by the client ("client"); the other side is "other". Copy text verbatim, timestampLabel as displayed or "", isHeader for date dividers, isGap where the scroll skipped part of the conversation, confidence 0..1, senderName as displayed (or ""), and atSeconds where the message is first fully on screen. Otherwise messages is empty and platform "".`,
     '- onScreenDate: only a full date clearly visible on screen, as YYYY-MM-DD; otherwise "".',
   ].join('\n');
 }
@@ -159,7 +162,10 @@ function validateVideoResult(parsed, { sourceUrl }) {
   if (isScreen && Array.isArray(parsed.messages) && parsed.messages.length) {
     const conv = validateExtraction({ containsConversation: true, platform: String(parsed.platform || ''), messages: parsed.messages });
     if (conv.ok) {
-      threadMessages = toThreadMessages(conv.value, { sourceThumbnailUrl: sourceUrl || '' });
+      threadMessages = toThreadMessages(conv.value, { sourceThumbnailUrl: sourceUrl || '' }).map((m, i) => ({
+        ...m,
+        ...messageSource(parsed.messages[i]),
+      }));
       platform = conv.value.platform;
     } else {
       errors.push(...conv.errors.map((e) => `screen recording messages: ${e}`));
