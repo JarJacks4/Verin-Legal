@@ -12,6 +12,11 @@ const { detectKind, extractText } = require('./docs');
 const { analyzeWithClaude } = require('./analyze');
 const video = require('./video');
 const { kLowConfidence } = require('./constants');
+const { imageSize } = require('./source');
+
+// Text kept on the receipt so the verification view can show a passage in its
+// context (Firestore documents cap at 1 MB; the original file is always kept).
+const MAX_STORED_TEXT = 200000;
 
 const MAX_IMAGE_BYTES = 7 * 1024 * 1024; // Claude base64 image limit, with headroom
 const MAX_PDF_BYTES = 24 * 1024 * 1024; // keeps a single request under 32 MB
@@ -48,6 +53,7 @@ function fieldsFromAnalysis(value, threadMessages) {
     threadMessages,
     detectedPlatform: threadMessages.length ? value.conversation.platform : '',
     evidenceType: value.evidenceType,
+    statements: value.statements || [],
     classificationLabel: reasons.length ? 'Uncertain' : 'Processed',
     reviewReason: reasons.join(' '),
   };
@@ -251,10 +257,13 @@ async function processReceipt(deps, receiptRef, { force = false, uid = null } = 
   let content;
   let extra = '';
   let emailMeta = null;
+  let sourceFields = {};
   if (kind === 'image') {
     if (size > MAX_IMAGE_BYTES) return fail(`image is ${(size / 1048576).toFixed(1)} MB; the AI reading limit is 7 MB`, 'Image too large to read automatically (7 MB limit) — stored and hashed; review it by hand.');
     const [bytes] = await file.download();
     content = [{ type: 'image', source: { type: 'base64', media_type: imageMediaType(bytes) || 'image/jpeg', data: bytes.toString('base64') } }];
+    const dims = imageSize(bytes);
+    if (dims && dims.width > 0 && dims.height > 0) sourceFields = { imageWidth: dims.width, imageHeight: dims.height };
   } else if (kind === 'pdf') {
     if (size > MAX_PDF_BYTES) return fail(`PDF is ${(size / 1048576).toFixed(1)} MB; the AI reading limit is 24 MB`, 'PDF too large to read automatically — stored and hashed; review it by hand.');
     const [bytes] = await file.download();
@@ -265,6 +274,7 @@ async function processReceipt(deps, receiptRef, { force = false, uid = null } = 
     if (!t.ok) return fail(t.error, `${t.error} The file is stored and hashed.`);
     if (!t.text.trim()) return fail('no readable text', 'No readable text was found in this file — review it by hand.');
     emailMeta = t.meta && t.meta.emailDate !== undefined ? t.meta : null;
+    sourceFields = { documentText: t.text.length > MAX_STORED_TEXT ? t.text.slice(0, MAX_STORED_TEXT) : t.text, documentTextTruncated: t.text.length > MAX_STORED_TEXT || !!t.truncated };
     content = [{ type: 'text', text: `<document name="${fileName.replace(/"/g, "'")}">\n${t.text}\n</document>` }];
     if (t.truncated) extra = 'The document text was truncated for length; describe only what is included.';
   }
@@ -283,7 +293,7 @@ async function processReceipt(deps, receiptRef, { force = false, uid = null } = 
   audit = res.audit || {};
   if (!res.ok) return fail(res.errors);
 
-  fields = fieldsFromAnalysis(res.value, res.threadMessages);
+  fields = { ...fieldsFromAnalysis(res.value, res.threadMessages), ...sourceFields };
   if (emailMeta) {
     if (emailMeta.emailDate && !fields.resolvedDate) {
       fields.resolvedDate = emailMeta.emailDate;

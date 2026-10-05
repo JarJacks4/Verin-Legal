@@ -19,6 +19,11 @@ const verinAccount = require("./verin/account/setup");
 exports.setupAccount = verinAccount.setupAccount;
 exports.deleteAccount = require("./verin/account/delete").deleteAccount;
 
+const verinThread = require("./verin/thread/rebuild");
+exports.onReceiptWritten = verinThread.onReceiptWritten;
+exports.onMatterNamesChanged = verinThread.onMatterNamesChanged;
+exports.refreshMatterRecord = verinThread.refreshMatterRecord;
+
 const verinClio = require("./verin/clio/functions");
 exports.clioAuthStart = verinClio.clioAuthStart;
 exports.clioOAuthCallback = verinClio.clioOAuthCallback;

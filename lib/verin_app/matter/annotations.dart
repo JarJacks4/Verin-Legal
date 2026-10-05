@@ -9,11 +9,11 @@ import 'package:flutter/services.dart';
 
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
-import '/verin/thread_merge.dart';
 import '/verin/verin_config.dart';
 
 import '../data/format.dart';
 import '../data/model.dart';
+import '../data/record_view.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 
@@ -63,8 +63,9 @@ class Annotation {
 
 final _col = FirebaseFirestore.instance.collection('Annotations');
 
-/// Stable id for a reconstructed message: its receipt and position in it.
-String messageKeyOf(ThreadEntry e) => '${e.receipt.reference.id}#${e.indexInReceipt}';
+/// Stable id for a reconstructed message: its receipt and position in it
+/// (the record keeps the first copy's id, so notes stay attached).
+String messageKeyOf(TEntry e) => e.key;
 
 /// The matter's annotations grouped by message key, oldest first.
 Stream<Map<String, List<Annotation>>> matterAnnotationsStream(DocumentReference matterRef) => _col
@@ -85,16 +86,16 @@ Stream<Map<String, List<Annotation>>> matterAnnotationsStream(DocumentReference 
 
 Future<void> addAnnotation({
   required DocumentReference matterRef,
-  required ThreadEntry entry,
+  required TEntry entry,
   required String text,
   required AnnTag tag,
 }) =>
     _col.add({
       'firmID': currentFirmId(),
       'matterId': matterRef,
-      'receiptId': entry.receipt.reference,
+      'receiptId': FirebaseFirestore.instance.collection('Receipts').doc(entry.rid),
       'messageKey': messageKeyOf(entry),
-      'messageIndex': entry.indexInReceipt,
+      'messageIndex': entry.index,
       // A copy of the message text, so a note still reads sensibly if the
       // screenshot is ever read again and messages shift.
       'messageText': entry.text.length > 500 ? entry.text.substring(0, 500) : entry.text,
