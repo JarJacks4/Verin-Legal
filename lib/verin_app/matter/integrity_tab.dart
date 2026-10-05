@@ -21,7 +21,14 @@ String anchorLabel(DateTime? d) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   final day = DateTime(d.year, d.month, d.day);
-  final hm = '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  // 12-hour clock with the UTC offset: a timestamp in a legal record should
+  // never leave the reader guessing which time zone it is in.
+  final h12 = d.hour % 12 == 0 ? 12 : d.hour % 12;
+  final off = d.timeZoneOffset;
+  final offH = off.inHours.abs();
+  final offM = off.inMinutes.abs() % 60;
+  final tz = off == Duration.zero ? 'UTC' : 'UTC${off.isNegative ? '−' : '+'}$offH${offM == 0 ? '' : ':${offM.toString().padLeft(2, '0')}'}';
+  final hm = '$h12:${d.minute.toString().padLeft(2, '0')} ${d.hour < 12 ? 'AM' : 'PM'} ($tz)';
   if (day == today) return 'Today, $hm';
   if (today.difference(day).inDays == 1) return 'Yesterday, $hm';
   return '${fmtDay(d)}, $hm';
