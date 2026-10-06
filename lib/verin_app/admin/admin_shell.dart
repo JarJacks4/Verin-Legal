@@ -64,6 +64,7 @@ class _AdminShellState extends State<AdminShell> {
           stream: _firm,
           builder: (context, fs) {
             final firm = fs.data;
+            if (fs.connectionState != ConnectionState.waiting) DemoMode.update(firm);
             final waiting = rec == null && us.connectionState == ConnectionState.waiting;
             final Widget body;
             if (waiting) {

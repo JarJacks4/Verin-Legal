@@ -50,6 +50,7 @@ class _AppShellState extends State<AppShell> {
         return StreamBuilder<FirmAccountRecord?>(
           stream: _firm,
           builder: (context, firmSnap) {
+            if (firmSnap.connectionState != ConnectionState.waiting) DemoMode.update(firmSnap.data);
             final sidebar = ConsoleSidebar(nav: widget.nav, user: user, firm: firmSnap.data);
             return LayoutBuilder(
               builder: (context, box) {
