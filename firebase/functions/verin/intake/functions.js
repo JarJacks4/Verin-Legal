@@ -30,6 +30,7 @@ const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https')
 const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 
 const P = require('../common/params');
+const S = require('./secrets');
 const { requireAuth, loadMatterForUser, assertDocId, firmIdForUser } = require('../common/access');
 const { processReceipt } = require('../evidence/process');
 const ingest = require('../evidence/ingest');
@@ -139,10 +140,10 @@ async function queueRaw({ kind, provider, body, contentType, fields }) {
 }
 
 exports.inboundEmail = onRequest(
-  { secrets: [P.INBOUND_WEBHOOK_KEY], memory: '1GiB', timeoutSeconds: 120, cors: false },
+  { secrets: [S.INBOUND_WEBHOOK_KEY], memory: '1GiB', timeoutSeconds: 120, cors: false },
   async (req, res) => {
     if (req.method !== 'POST') return res.status(405).send('POST only');
-    if (!N.safeEqual(req.query.key, P.INBOUND_WEBHOOK_KEY.value())) return res.status(403).send('forbidden');
+    if (!N.safeEqual(req.query.key, S.INBOUND_WEBHOOK_KEY.value())) return res.status(403).send('forbidden');
     const body = req.rawBody;
     if (!body || !body.length) return res.status(400).send('empty');
     const ct = String(req.headers['content-type'] || '');
@@ -158,12 +159,12 @@ exports.inboundEmail = onRequest(
 );
 
 exports.inboundSms = onRequest(
-  { secrets: [P.TWILIO_AUTH_TOKEN], memory: '512MiB', timeoutSeconds: 60, cors: false },
+  { secrets: [S.TWILIO_AUTH_TOKEN], memory: '512MiB', timeoutSeconds: 60, cors: false },
   async (req, res) => {
     if (req.method !== 'POST') return res.status(405).send('POST only');
     const params = req.body && typeof req.body === 'object' ? req.body : {};
     const url = P.TWILIO_WEBHOOK_URL.value() || `https://${req.headers.host}${req.originalUrl}`;
-    const expected = N.twilioSignature(P.TWILIO_AUTH_TOKEN.value(), url, params);
+    const expected = N.twilioSignature(S.TWILIO_AUTH_TOKEN.value(), url, params);
     if (!N.safeEqual(req.headers['x-twilio-signature'], expected)) {
       console.warn('inboundSms: bad signature for', url);
       return res.status(403).send('forbidden');
@@ -404,7 +405,7 @@ async function mattersForPhone(db, phone, toNumber) {
 
 async function fetchTwilioMedia(url) {
   const sid = P.TWILIO_ACCOUNT_SID.value();
-  const headers = sid ? { Authorization: `Basic ${Buffer.from(`${sid}:${P.TWILIO_AUTH_TOKEN.value()}`).toString('base64')}` } : {};
+  const headers = sid ? { Authorization: `Basic ${Buffer.from(`${sid}:${S.TWILIO_AUTH_TOKEN.value()}`).toString('base64')}` } : {};
   const r = await fetch(url, { headers, redirect: 'follow' });
   if (!r.ok) throw new Error(`media ${r.status}`);
   return { content: Buffer.from(await r.arrayBuffer()), contentType: r.headers.get('content-type') || '' };
@@ -534,7 +535,7 @@ async function soleFirmFor(db, to) {
 }
 
 exports.onInboundEvent = onDocumentCreated(
-  { document: 'InboundEvents/{eventId}', secrets: [P.TWILIO_AUTH_TOKEN], memory: '2GiB', timeoutSeconds: 540 },
+  { document: 'InboundEvents/{eventId}', secrets: [S.TWILIO_AUTH_TOKEN], memory: '2GiB', timeoutSeconds: 540 },
   async (ev) => {
     const snap = ev.data;
     if (!snap) return;
