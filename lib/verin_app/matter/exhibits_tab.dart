@@ -510,7 +510,16 @@ class _ProductionEditorState extends State<ProductionEditor> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_error != null) ...[VErrorBox(message: _error!), const SizedBox(height: 14.0)],
-        VTextField(controller: _name, label: 'Production name', hint: 'Respondent\'s first production', onChanged: (_) => _dirty = true),
+        TourTarget(
+          id: 'prod_name',
+          onDemoTour: () async {
+            if (RegExp(r'^(production|untitled)?\s*\d*$', caseSensitive: false).hasMatch(_name.text.trim())) _name.clear();
+            if (_name.text.isNotEmpty) return;
+            await demoType(_name, "Petitioner's first production");
+            if (mounted) setState(() => _dirty = true);
+          },
+          child: VTextField(controller: _name, label: 'Production name', hint: 'Respondent\'s first production', onChanged: (_) => _dirty = true),
+        ),
         const SizedBox(height: 16.0),
         Text(
           'Tick what to produce and set the order. Exhibit numbers and Bates labels follow this order, starting at ${widget.template.bates(widget.nextBates)}.',

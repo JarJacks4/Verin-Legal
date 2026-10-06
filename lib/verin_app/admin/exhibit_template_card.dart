@@ -9,6 +9,7 @@ import '/backend/backend.dart';
 import '../matter/exhibits_tab.dart' show ExhibitTemplate;
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
+import '../onboarding/tour.dart' show TourTarget, demoType;
 
 class ExhibitTemplateCard extends StatefulWidget {
   const ExhibitTemplateCard({super.key, required this.firm});
@@ -78,7 +79,15 @@ class _ExhibitTemplateCardState extends State<ExhibitTemplateCard> {
   Widget build(BuildContext context) {
     final c = VC.of(context);
     final p = _preview;
-    return VCard(
+    return TourTarget(
+      id: 'settings_exhibits',
+      onDemoTour: () async {
+        await demoType(_prefix, 'DOE');
+        await demoType(_legend, 'CONFIDENTIAL — SUBJECT TO PROTECTIVE ORDER', step: const Duration(milliseconds: 14));
+        await demoType(_title, 'Exhibit Index');
+        if (mounted) setState(() {});
+      },
+      child: VCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -135,6 +144,7 @@ class _ExhibitTemplateCardState extends State<ExhibitTemplateCard> {
           Align(alignment: Alignment.centerRight, child: VButton(label: 'Save template', size: VButtonSize.sm, loading: _saving, onPressed: _save)),
         ],
       ),
+    ),
     );
   }
 }
