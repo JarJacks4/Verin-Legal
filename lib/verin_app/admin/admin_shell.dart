@@ -332,7 +332,7 @@ class AdminPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(40.0, 32.0, 40.0, 48.0),
+      padding: vPagePadding(context, top: 32.0),
       child: Align(
         alignment: Alignment.topLeft,
         child: ConstrainedBox(constraints: BoxConstraints(maxWidth: maxWidth), child: child),

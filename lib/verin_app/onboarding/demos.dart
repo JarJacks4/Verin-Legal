@@ -230,7 +230,7 @@ class ArriveDemo extends StatelessWidget {
                         icon: items[i].$1,
                         title: items[i].$2,
                         sub: items[i].$3,
-                        badge: pop(seg(t, 0.32 + i * 0.2, 0.4 + i * 0.2), const _Pill('Sealed')),
+                        badge: pop(seg(t, 0.32 + i * 0.2, 0.4 + i * 0.2), const _Pill('Hashed')),
                       ),
                     ),
                   ],
@@ -559,7 +559,7 @@ class ThreadDemo extends StatelessWidget {
       period: const Duration(milliseconds: 7000),
       builder: (context, t) => DemoWindow(
         width: 360.0,
-        title: 'Thread · reconstructed',
+        title: 'Thread · assembled',
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

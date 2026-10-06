@@ -13,6 +13,7 @@ import '../data/model.dart' show firmMattersStream;
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
+import '../onboarding/tour.dart' show TourTarget;
 
 class UnroutedText {
   UnroutedText(this.id, Map<String, dynamic> d)
@@ -118,7 +119,7 @@ class _UnroutedTextsState extends State<UnroutedTexts> {
     setState(() => _busy.add(t.id));
     try {
       await VerinApi.assignUnrouted(t.id, matterId: pick.reference.id, remember: remember);
-      if (mounted) showVToast(context, 'Filed to ${pick.title.isEmpty ? 'the matter' : pick.title}');
+      if (mounted) celebrate(context, title: 'Filed to ${pick.title.isEmpty ? 'the matter' : pick.title}', subtitle: 'Fingerprinted and added to the record.');
     } catch (e) {
       if (mounted) showVToast(context, 'Could not file it', error: true, description: e is VerinApiException ? e.message : '$e');
     } finally {
@@ -145,7 +146,9 @@ class _UnroutedTextsState extends State<UnroutedTexts> {
       builder: (context, snap) {
         final items = snap.data ?? const <UnroutedText>[];
         if (items.isEmpty) return const SizedBox.shrink();
-        return Padding(
+        return TourTarget(
+          id: 'review_unrouted',
+          child: Padding(
           padding: const EdgeInsets.only(bottom: 28.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -208,6 +211,7 @@ class _UnroutedTextsState extends State<UnroutedTexts> {
               ),
             ],
           ),
+        ),
         );
       },
     );

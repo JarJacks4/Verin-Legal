@@ -144,7 +144,7 @@ class _CorrectionFormState extends State<_CorrectionForm> {
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = 'Could not save the correction: $e';
+          _error = 'Could not save the reviewer note: $e';
         });
       }
     }
@@ -159,7 +159,7 @@ class _CorrectionFormState extends State<_CorrectionForm> {
       children: [
         Text(widget.title, style: VT.body(context, size: 16.0, weight: FontWeight.w600)),
         const SizedBox(height: 8.0),
-        Text('The AI reading and the original file stay as they are. Your correction is shown beside them, with your name.',
+        Text('The original file and the AI reading are never changed. Your reading is recorded beside them, with your name and the time.',
             style: VT.muted(context, size: 13.0)),
         const SizedBox(height: 16.0),
         Text('AI READ', style: VT.eyebrow(context, size: 10.0)),
@@ -177,7 +177,7 @@ class _CorrectionFormState extends State<_CorrectionForm> {
           children: [
             Expanded(child: VButton(label: 'Cancel', kind: VButtonKind.secondary, fullWidth: true, onPressed: _busy ? null : () => Navigator.of(context).pop(false))),
             const SizedBox(width: 12.0),
-            Expanded(child: VButton(label: 'Save correction', fullWidth: true, loading: _busy, onPressed: _save)),
+            Expanded(child: VButton(label: 'Save reviewer note', fullWidth: true, loading: _busy, onPressed: _save)),
           ],
         ),
       ],

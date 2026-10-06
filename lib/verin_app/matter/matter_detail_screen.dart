@@ -107,7 +107,7 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                     children: [
                       Container(
                         decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.border))),
-                        padding: const EdgeInsets.fromLTRB(40.0, 32.0, 40.0, 0.0),
+                        padding: vPagePadding(context, top: 32.0, bottom: 0.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -177,7 +177,7 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(40.0, 32.0, 40.0, 48.0),
+                        padding: vPagePadding(context, top: 32.0),
                         child: Align(
                           alignment: Alignment.topLeft,
                           child: ConstrainedBox(
@@ -185,8 +185,8 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                             child: TourLauncher(
                               key: ValueKey<String>('tip-${_tab.name}'),
                               tourId: 'tab_${_tab.name}',
-                              enabled: _tab != MatterTab.intake && tabTips.containsKey(_tab.name),
-                              steps: [if (tabTips[_tab.name] != null) tabTips[_tab.name]!],
+                              enabled: _tab == MatterTab.intake || tabTips.containsKey(_tab.name),
+                              steps: _tab == MatterTab.intake ? intakeTour : [if (tabTips[_tab.name] != null) tabTips[_tab.name]!],
                               delay: const Duration(milliseconds: 450),
                               child: TourTarget(
                               id: 'matter_body',
@@ -304,7 +304,7 @@ class VideoSummaryStrip extends StatelessWidget {
             VBadge(label: '$transcoded transcoded in transit', icon: Icons.warning_amber_rounded, bg: c.pending.withValues(alpha: 0.1), fg: c.pending),
           if (screen > 0)
             VBadge(
-              label: '$screen screen recording${screen == 1 ? '' : 's'} → thread reconstruction',
+              label: '$screen screen recording${screen == 1 ? '' : 's'} → assembled thread',
               icon: Icons.layers_outlined,
               bg: c.secondary,
               fg: c.secondaryFg,

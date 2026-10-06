@@ -108,7 +108,7 @@ class _ThreadTabState extends State<ThreadTab> {
     final header = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: Text('Thread reconstruction', style: VT.h2(context, size: 20.0))),
+        Expanded(child: Text('Assembled thread', style: VT.h2(context, size: 20.0))),
         if (thread != null && thread.entries.isNotEmpty) ...[
           const SizedBox(width: 16.0),
           Opacity(
@@ -149,7 +149,7 @@ class _ThreadTabState extends State<ThreadTab> {
           Icon(Icons.lock_outline, size: 11.0, color: c.mutedFg),
           const SizedBox(width: 6.0),
           Expanded(
-            child: Text('Annotations and corrections are your work product. They sit beside the evidence and never alter the hashed record.',
+            child: Text('Annotations and reviewer notes are your firm\'s notes. They sit beside the evidence and never change the hashed record.',
                 style: VT.muted(context, size: 12.0)),
           ),
         ],
@@ -279,7 +279,7 @@ class _ThreadTabState extends State<ThreadTab> {
           onTap: _rebuilding ? null : _rebuild,
           builder: (context, h) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: Text(_rebuilding ? 'Rebuilding…' : 'Rebuild', style: VT.body(context, size: 11.0, color: h ? c.teal : c.tealDeep)),
+            child: Text(_rebuilding ? 'Re-assembling…' : 'Re-assemble', style: VT.body(context, size: 11.0, color: h ? c.teal : c.tealDeep)),
           ),
         ),
       ],
@@ -327,7 +327,7 @@ class _ThreadTabState extends State<ThreadTab> {
       width: 520.0,
       builder: (_) => _NamesForm(matter: widget.matter, thread: t),
     );
-    if (saved == true && mounted) showVToast(context, 'Names saved', description: 'The thread is being rebuilt with them.');
+    if (saved == true && mounted) showVToast(context, 'Names saved', description: 'The thread is being re-assembled with them.');
   }
 
   Widget _gapRow(BuildContext context, ThreadDoc t, TEntry g) {
@@ -336,7 +336,7 @@ class _ThreadTabState extends State<ThreadTab> {
     for (final s in t.suggestions) {
       if (s.key == g.key) ask = s;
     }
-    final what = g.reason == 'cut_off' ? 'Cut off in the screenshot' : 'Continuity not proved';
+    final what = g.reason == 'cut_off' ? 'Cut off in the screenshot' : 'Continuity not shown';
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, bottom: 16.0),
       child: Column(
@@ -458,7 +458,7 @@ class _ThreadTabState extends State<ThreadTab> {
       if (e.has('out_of_order')) ('dated before the line above', c.broken),
       if (e.has('name_unconfirmed')) ('name not confirmed', c.pending),
       if (e.has('hard_to_read')) ('hard to read', c.broken),
-      if (fix != null) ('corrected', c.verified),
+      if (fix != null) ('reviewer note', c.verified),
     ];
 
     return Padding(

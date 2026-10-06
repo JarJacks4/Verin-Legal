@@ -32,7 +32,7 @@ List<_Slide> _slides(bool admin) => [
       _Slide(
         eyebrow: 'WELCOME',
         title: 'Welcome to Verin',
-        body: 'Verin turns what your clients send you — emails, texts, photos and videos — into an organized record you can rely on in court. Here is how it works, in about a minute.',
+        body: 'Verin turns what your clients send you — emails, texts, photos and videos — into one organized record, ready for your review. Here is how it works, in about a minute.',
         demo: () => const ArriveDemo(),
       ),
       _Slide(
@@ -43,23 +43,23 @@ List<_Slide> _slides(bool admin) => [
         demo: () => const IntakeDemo(),
       ),
       _Slide(
-        eyebrow: 'STEP 2 · SEAL',
-        title: 'Sealed the moment it arrives',
-        body: 'Before anyone opens a file, Verin fingerprints it and has an independent authority time-stamp it. You can always prove it has not changed since.',
+        eyebrow: 'STEP 2 · FINGERPRINT',
+        title: 'Fingerprinted the moment it arrives',
+        body: 'Before anyone opens a file, Verin fingerprints it and has an independent authority time-stamp it. You can always show it is exactly what was received.',
         points: const ['SHA-256 fingerprint for every item', 'Each item linked to the one before'],
         demo: () => const SealDemo(),
       ),
       _Slide(
         eyebrow: 'STEP 3 · READ',
         title: 'Read and put in order for you',
-        body: 'Verin reads screenshots, documents and video, then rebuilds the conversation in date order — your client on one side, the other party on the other — and points out any gaps.',
+        body: 'Verin reads screenshots, documents and video, then assembles the conversation in date order — your client on one side, the other party on the other — and points out any gaps.',
         points: const ['Duplicates are recognized, not repeated', 'Anything uncertain goes to the Review queue'],
         demo: () => const ThreadDemo(),
       ),
       _Slide(
         eyebrow: 'STEP 4 · CHECK',
         title: 'Check any line against the original',
-        body: 'Click a message to see exactly where it came from in the original file. Fix a word, add a note, or mark it reviewed — every change is kept.',
+        body: 'Click a message to see exactly where it came from in the original file. Note a transcription discrepancy, add a note, or mark it reviewed — the original is never changed and every note is kept.',
         demo: () => const VerifyDemo(),
       ),
       _Slide(

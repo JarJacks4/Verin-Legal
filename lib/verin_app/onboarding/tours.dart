@@ -42,7 +42,7 @@ List<TourStep> mattersTour({required bool admin}) => [
       ),
       const TourStep(
         target: 'nav_annotations',
-        icon: Icons.sticky_note_2_outlined,
+        icon: Icons.comment_outlined,
         title: 'Annotations',
         body: 'Every note your firm adds to thread messages, in one place — filter by tag or matter and jump back to the message.',
       ),
@@ -74,11 +74,27 @@ const matterTour = [
     title: 'Work from left to right',
     body: 'Intake → Receipts → Thread → Follow-ups → Exhibits. Integrity and Practice mgmt are there when you need them.',
   ),
+];
+
+const intakeTour = [
   TourStep(
-    target: 'matter_body',
+    target: 'intake_channels',
     icon: Icons.inbox_outlined,
-    title: 'First, share the intake address',
-    body: 'Copy the address below and send it to your client. Anything they forward shows up in Receipts within moments.',
+    title: 'This case\'s own address and number',
+    body: 'Anything the client sends here is filed to this matter only. The switches turn email or text intake off for this case.',
+  ),
+  TourStep(
+    target: 'intake_card',
+    icon: Icons.assignment_outlined,
+    title: 'Give the client one card',
+    body: 'Copy instructions for the client puts the address, number and a short how-to on your clipboard — paste it into an email or text to them.',
+    optional: true,
+  ),
+  TourStep(
+    target: 'intake_who',
+    icon: Icons.person_search_outlined,
+    title: 'Tell Verin who the client is',
+    body: 'Add their mobile so texts land in this case, and their email so messages are read straight away. Anyone else is held for one-click approval.',
   ),
 ];
 
@@ -94,7 +110,7 @@ const Map<String, TourStep> tabTips = {
     target: 'matter_body',
     icon: Icons.forum_outlined,
     title: 'Thread',
-    body: 'The conversation rebuilt in date order — your client on the right, the other side on the left. Click the file name on a bubble to see the original. Fix who is who in the names card.',
+    body: 'The conversation assembled in date order — your client on the right, the other side on the left. Click the file name on a bubble to see the original. Set who is who in the names card, and use Annotate on any bubble to add a note — every note also collects on the Annotations page.',
   ),
   'followups': TourStep(
     target: 'matter_body',
@@ -112,7 +128,7 @@ const Map<String, TourStep> tabTips = {
     target: 'matter_body',
     icon: Icons.verified_user_outlined,
     title: 'Integrity',
-    body: "Proof the record hasn't changed: each item's fingerprint, the chain linking them, and the independent time-stamp.",
+    body: "Shows each item is exactly what was received: its fingerprint, the chain linking them, and the independent time-stamp.",
   ),
   'practice': TourStep(
     target: 'matter_body',
@@ -124,10 +140,17 @@ const Map<String, TourStep> tabTips = {
 
 const reviewTour = [
   TourStep(
+    target: 'review_unrouted',
+    icon: Icons.sms_outlined,
+    title: 'Texts from numbers no case knows',
+    body: 'They are already stored and fingerprinted. Choose File to matter, and leave "File future texts here" on so the next one goes straight in.',
+    optional: true,
+  ),
+  TourStep(
     target: 'review_list',
     icon: Icons.checklist_rounded,
     title: 'Items waiting for a person',
-    body: 'Unreadable files, or readings Verin is unsure about. Open one, compare it with the original, then confirm or correct it.',
+    body: 'Unreadable files, or readings Verin is unsure about. Open one, compare it with the original, then confirm the reading or note a discrepancy.',
   ),
 ];
 
@@ -183,13 +206,20 @@ const Map<String, List<TourStep>> adminTours = {
       title: 'Settings',
       body: 'Connections like Clio, your exhibit template, API access and retention. Changes apply to the whole firm.',
     ),
+    TourStep(
+      target: 'settings_demo',
+      icon: Icons.slideshow_outlined,
+      title: 'Demo workspace',
+      body: 'For showing Verin to other firms: use a separate account, make it a demo here, and reset it between demos.',
+      optional: true,
+    ),
   ],
 };
 
 const annotationsTour = [
   TourStep(
     target: 'ann_tags',
-    icon: Icons.sell_outlined,
+    icon: Icons.label_outline,
     title: 'Your notes by tag',
     body: 'Key evidence, Follow up, Question and Note. Click a tile to show only that tag; click it again to clear.',
   ),
@@ -201,7 +231,7 @@ const annotationsTour = [
   ),
   TourStep(
     target: 'ann_list',
-    icon: Icons.sticky_note_2_outlined,
+    icon: Icons.comment_outlined,
     title: 'Edit, remove or jump back',
     body: 'Edit or delete your own notes here. "Open in thread" takes you to the conversation the note belongs to.',
     optional: true,
@@ -266,7 +296,7 @@ const Map<String, List<TourStep>> drawerTours = {
       target: 'drawer_body',
       icon: Icons.compare,
       title: 'Original on one side, record on the other',
-      body: 'Click a line to see where it sits in the original. If a word is wrong, correct it — the original never changes and every correction is kept.',
+      body: 'Click a line to see where it sits in the original. If a word was misread, note the discrepancy — the original is never changed and every reviewer note is kept.',
     ),
   ],
   'manual': [
@@ -306,13 +336,13 @@ const Map<String, List<TourStep>> drawerTours = {
       target: 'drawer_body',
       icon: Icons.people_outline,
       title: 'Who is who',
-      body: "Give each sender a real name and say which side they're on. The thread rebuilds with your choices.",
+      body: "Give each sender a real name and say which side they're on. The thread is re-assembled with your choices.",
     ),
   ],
   'certificate': [
     TourStep(
       target: 'drawer_body',
-      icon: Icons.workspace_premium_outlined,
+      icon: Icons.verified_outlined,
       title: 'Certificate of preparation',
       body: 'A plain-language statement of how this record was received and kept, ready to attach to a filing.',
     ),
@@ -347,7 +377,7 @@ const Map<String, List<TourStep>> drawerTours = {
   'api': [
     TourStep(
       target: 'drawer_body',
-      icon: Icons.key_outlined,
+      icon: Icons.vpn_key_outlined,
       title: 'API access',
       body: 'Keys and a webhook for connecting your own systems. Treat keys like passwords.',
     ),
@@ -427,7 +457,7 @@ const Map<String, List<TourStep>> demoTours = {
     ),
     TourStep(
       target: 'nav_annotations',
-      icon: Icons.sticky_note_2_outlined,
+      icon: Icons.comment_outlined,
       title: 'Case notes where the evidence is',
       body: 'Attorney and paralegal notes sit on the exact message they\'re about — then collect here, ready to paste into a brief or a prep memo.',
     ),
@@ -438,32 +468,61 @@ const Map<String, List<TourStep>> demoTours = {
       body: 'The value report shows hours saved against doing this by hand — the number a managing partner wants before renewal.',
       optional: true,
     ),
+    TourStep(
+      target: 'demo_strip',
+      icon: Icons.restart_alt,
+      title: 'Sample data, reset any time',
+      body: 'Everything here is fictional. Reset demo puts it all back for the next firm; Replay tips starts this walkthrough again.',
+      optional: true,
+    ),
   ],
   'matter': [
     TourStep(
       target: 'matter_header',
       icon: Icons.gavel_rounded,
       title: 'A typical custody file',
-      body: 'Usually this is a folder of screenshots on someone\'s phone and an afternoon of retyping. Here, every item is already received, sealed and read.',
+      body: 'Usually this is a folder of screenshots on someone\'s phone and an afternoon of retyping. Here, every item is already received, fingerprinted and read.',
     ),
     TourStep(
       target: 'matter_tabs',
       icon: Icons.east_rounded,
       title: 'The whole case, left to right',
-      body: 'Intake → Receipts → Thread → Follow-ups → Exhibits. Open Thread next — that\'s where four screenshots become one conversation.',
+      body: 'Intake → Receipts → Thread → Follow-ups → Exhibits. Start with Intake below, then open Thread — that\'s where four screenshots become one conversation.',
+    ),
+  ],
+  'tab_intake': [
+    TourStep(
+      target: 'intake_channels',
+      icon: Icons.inbox_outlined,
+      title: 'One address and one number per case',
+      body: 'Dana forwards texts, photos and emails here from her own phone. Nothing to install, no login — and nothing lands on your cell.',
     ),
     TourStep(
-      target: 'matter_body',
-      icon: Icons.inbox_outlined,
-      title: 'Nothing for your client to install',
-      body: 'Clients forward texts, photos and emails from the phone they already have, to this case\'s own address and number. You hand them one card, once.',
+      target: 'intake_demo',
+      icon: Icons.send_rounded,
+      title: 'Watch one arrive',
+      body: 'Press Simulate a client message. In a few seconds it\'s stored, fingerprinted, time-stamped and read — then open Receipts or Thread to see it.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'intake_card',
+      icon: Icons.assignment_outlined,
+      title: 'The only thing you send the client',
+      body: 'Copy instructions for the client gives them the address, number and a two-line how-to.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'intake_who',
+      icon: Icons.person_search_outlined,
+      title: 'Grandma forwards photos too',
+      body: 'Dana\'s mobile and email are known, so her messages are read right away. Anyone else is stored and held for your one-click approval.',
     ),
   ],
   'tab_receipts': [
     TourStep(
       target: 'matter_body',
       icon: Icons.verified_outlined,
-      title: 'Sealed the moment it arrived',
+      title: 'Fingerprinted the moment it arrived',
       body: 'Every item was fingerprinted and independently time-stamped before anyone opened it. Open one to see who sent it, when, and what Verin read.',
     ),
   ],
@@ -472,7 +531,13 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'matter_body',
       icon: Icons.forum_outlined,
       title: 'Four screenshots, one conversation',
-      body: 'In date order, the repeated message removed, and the days with nothing flagged — the questions opposing counsel will ask. Click a file name on any bubble to see it on the original screenshot.',
+      body: 'In date order, the repeated message shown once (both copies kept), and the days with nothing flagged — the questions opposing counsel will ask. Click a file name on any bubble to see it on the original screenshot.',
+    ),
+    TourStep(
+      target: 'matter_body',
+      icon: Icons.comment_outlined,
+      title: 'Annotate the moments that matter',
+      body: 'Use Annotate on any bubble to tag it Key evidence, Follow up or Question. The notes from this case are already here — and every note also collects on the Annotations page.',
     ),
   ],
   'tab_followups': [
@@ -501,13 +566,32 @@ const Map<String, List<TourStep>> demoTours = {
   ],
   'tab_practice': [
     TourStep(
-      target: 'matter_body',
+      target: 'practice_cards',
       icon: Icons.apartment_outlined,
-      title: 'It ends up in Clio',
-      body: 'Finished records file into the same matter in Clio, so nothing lives in two places.',
+      title: 'Clio, MyCase or Smokeball',
+      body: 'Connected once by an admin, then each case is matched to its matter there. These use sample accounts in the demo.',
+    ),
+    TourStep(
+      target: 'practice_cards',
+      icon: Icons.upload_rounded,
+      title: 'Send the finished record',
+      body: 'Press Send record to Clio and watch it build, upload and file into the matter\'s Documents — no downloading and re-uploading.',
+    ),
+    TourStep(
+      target: 'practice_log',
+      icon: Icons.history_rounded,
+      title: 'Every filing, accounted for',
+      body: 'Each version sent, where it went and when. Earlier versions stay in Clio; nothing is overwritten.',
     ),
   ],
   'review': [
+    TourStep(
+      target: 'review_unrouted',
+      icon: Icons.sms_outlined,
+      title: 'A text from a number no case knows',
+      body: 'Dana\'s mom texted the firm\'s number. It\'s already stored and fingerprinted — File to matter puts it in Reyes, and future texts from her go straight there.',
+      optional: true,
+    ),
     TourStep(
       target: 'review_list',
       icon: Icons.checklist_rounded,
@@ -518,13 +602,13 @@ const Map<String, List<TourStep>> demoTours = {
   'annotations': [
     TourStep(
       target: 'ann_tags',
-      icon: Icons.sell_outlined,
+      icon: Icons.label_outline,
       title: 'Your team\'s case notes',
       body: 'Key evidence, follow-ups and open questions from every case. Click a tile to focus — "Follow up" is your to-do list before the hearing.',
     ),
     TourStep(
       target: 'ann_list',
-      icon: Icons.sticky_note_2_outlined,
+      icon: Icons.comment_outlined,
       title: 'Back to the exact message',
       body: '"Open in thread" jumps to the message the note is about, beside the original screenshot.',
       optional: true,
@@ -561,7 +645,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'receipt_quarantine',
       icon: Icons.shield_outlined,
       title: 'Grandma forwarded photos',
-      body: 'Unknown senders aren\'t rejected — they wait here, stored and sealed, until you approve them. Try it.',
+      body: 'Unknown senders aren\'t rejected — they wait here, stored and fingerprinted, until you approve them. Try it.',
       optional: true,
     ),
     TourStep(
@@ -577,7 +661,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'drawer_body',
       icon: Icons.compare,
       title: 'Check the reading in seconds',
-      body: 'Click a line and it lights up on the original. Fix a word if you need to — the original never changes, and every correction is kept.',
+      body: 'Click a line and it lights up on the original. If a word was misread, note it — the original is never changed, and every reviewer note is kept with your name.',
     ),
   ],
 };

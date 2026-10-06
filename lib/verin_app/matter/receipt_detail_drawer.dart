@@ -179,7 +179,7 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
                 'Hashed at receipt and independently timestamped. The record shows what arrived and when. It does not describe what happened to the file before it arrived.',
                 style: VT.muted(context, size: 12.0, height: 1.6),
               ),
-              if (r.isScreenRecordingItem) _rule(context, 'Classified as a screen recording — routed to thread reconstruction. Individual messages extracted as separate dated items.', c.secondaryFg),
+              if (r.isScreenRecordingItem) _rule(context, 'Classified as a screen recording — added to the assembled thread. Individual messages are listed as separate dated items.', c.secondaryFg),
               if (r.transcriptionState == 'complete') _rule(context, 'Transcription complete — speaker-separated, timestamped to the second. A reading aid; the exhibit is the video file.', c.verified),
               if (r.transcriptionState == 'deferred') _rule(context, 'Transcription deferred — item exceeds the automatic threshold. Request transcription to generate a reading aid.', c.pending),
               if (r.transcriptionState == 'no_audio') _rule(context, 'No audio track — there is no transcript. An empty transcript is not silence in the room.', c.mutedFg),
@@ -433,7 +433,7 @@ class _QuarantineActionsState extends State<QuarantineActions> {
       final r = await VerinApi.approveQuarantined(widget.receipt.reference.id, remember: _remember);
       if (mounted) {
         final n = (r['approved'] as num?)?.toInt() ?? 1;
-        showVToast(context, n == 1 ? 'Approved — reading now' : 'Approved $n items from this sender — reading now');
+        celebrate(context, title: n == 1 ? 'Approved' : 'Approved $n items', subtitle: 'Reading now — the record updates in a moment.');
       }
     } catch (e) {
       if (mounted) showVToast(context, 'Could not approve', error: true, description: e is VerinApiException ? e.message : '$e');

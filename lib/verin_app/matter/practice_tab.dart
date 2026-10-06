@@ -16,6 +16,8 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../widgets/drawer.dart';
+import '../onboarding/tour.dart' show DemoMode;
+import 'demo_practice.dart';
 
 /// Revokes Verin's current Clio grant, then starts a fresh sign-in so Clio
 /// issues a token with the app's current permissions.
@@ -123,6 +125,7 @@ class _PracticeTabState extends State<PracticeTab> {
 
   @override
   Widget build(BuildContext context) {
+    if (DemoMode.active) return DemoPracticeTab(matter: widget.matter);
     final c = VC.of(context);
     final m = widget.matter;
     final clio = clioStateOf(m, firmConnected: widget.firmConnected);

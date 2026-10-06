@@ -16,6 +16,7 @@ import '../widgets/drawer.dart';
 import 'admin_shell.dart';
 import 'exhibit_template_card.dart';
 import '../shell/demo_banner.dart';
+import '../onboarding/tour.dart' show TourTarget;
 
 class AdminSettings extends StatefulWidget {
   const AdminSettings({super.key, required this.firm, required this.user});
@@ -201,7 +202,7 @@ class _AdminSettingsState extends State<AdminSettings> {
             ),
           ),
           _section('Exhibit template', ExhibitTemplateCard(key: ValueKey(widget.firm?.reference.path ?? 'none'), firm: widget.firm)),
-          _section('Demo workspace', DemoWorkspaceCard(firm: widget.firm)),
+          _section('Demo workspace', TourTarget(id: 'settings_demo', child: DemoWorkspaceCard(firm: widget.firm))),
           _section(
             'API access',
             VHover(

@@ -97,6 +97,25 @@ function screenshot({ contact, theme, items, sender }) {
 // Wiping a demo firm
 // ---------------------------------------------------------------------------
 
+const DEMO_SMS_NUMBER = '+13175550000'; // 555-01xx/0000 numbers are reserved for fiction
+
+/// "<lastname>-<4 digits>@<domain>", reserved like a real one so mail to it
+/// would route here once intake is switched on.
+async function demoAddress(db, matterRef, firmId, name) {
+  const domain = String(process.env.INBOUND_EMAIL_DOMAIN || 'in.verinlegal.com').toLowerCase();
+  const stem = String(name || 'matter').toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 1).pop() || 'matter';
+  for (let i = 0; i < 8; i++) {
+    const local = `${stem.slice(0, 14)}-${1000 + Math.floor(Math.random() * 9000)}`;
+    try {
+      await db.collection('intakeAddresses').doc(local).create({ matterRef, firmID: firmId, demo: true, createdAt: FieldValue.serverTimestamp() });
+      return `${local}@${domain}`;
+    } catch (e) {
+      if (e.code !== 6 && !/already exists/i.test(e.message || '')) throw e;
+    }
+  }
+  return `${stem}-demo@${domain}`;
+}
+
 async function wipeFirm(db, bucket, firmId) {
   const writer = db.bulkWriter();
   const matters = await db.collection('Matters').where('firmID', '==', firmId).get();
@@ -128,6 +147,11 @@ async function seedFirm(db, bucket, firmId, user) {
   const made = { matters: 0, items: 0 };
   const newMatter = async (data) => {
     const ref = db.collection('Matters').doc();
+    // A working-looking intake address and texting number, and a Clio match,
+    // so the Intake and Practice mgmt tabs show the finished state.
+    const emailAddress = await demoAddress(db, ref, firmId, data.clientName || data.matterName);
+    const tail = String(data.caseNumber || '').replace(/\D/g, '').slice(-5) || '00001';
+    const last = String(data.clientName || data.matterName || 'Matter').trim().split(/\s+/).pop();
     await ref.set({
       firmID: firmId,
       demo: true,
@@ -135,6 +159,14 @@ async function seedFirm(db, bucket, firmId, user) {
       isArchiveBuild: false,
       hasChronologyShift: false,
       intakeEnabled: { email: true, sms: true },
+      emailAddress,
+      smsNumber: DEMO_SMS_NUMBER,
+      intakeProvisionedAt: data.openedAt || Timestamp.now(),
+      clioMatterID: `9${tail}`,
+      clioMatterDisplayNumber: `${tail}-${last}`,
+      clioMatterUrl: '',
+      clioSyncedAt: Timestamp.fromDate(at(1, 16, 40)),
+      clioLastPushStatus: 'ok',
       ...data,
     });
     made.matters++;
@@ -671,6 +703,10 @@ exports.seedDemoWorkspace = onCall({ timeoutSeconds: 540, memory: '2GiB' }, asyn
   try {
     await wipeFirm(db, bucket, firmId);
     const made = await seedFirm(db, bucket, firmId, { uid, name });
+    await db.collection('integrationStatus').doc(firmId).set(
+      { firmID: firmId, clioConnected: true, clioUserName: 'Doe Family Law', clioRegion: 'us', clioConnectedAt: Timestamp.fromDate(at(40, 10)), demo: true },
+      { merge: true },
+    );
     await acctRef.set({ demoResetting: false, demoSeededAt: FieldValue.serverTimestamp(), demoSeededBy: uid }, { merge: true });
     return { ok: true, ...made };
   } catch (e) {
@@ -680,4 +716,150 @@ exports.seedDemoWorkspace = onCall({ timeoutSeconds: 540, memory: '2GiB' }, asyn
   }
 });
 
-exports._internal = { screenshot, dayLabel, at };
+// ---------------------------------------------------------------------------
+// Live arrivals during a demo
+// ---------------------------------------------------------------------------
+
+/// The next thing a client "sends" to this demo matter.
+function nextArrival(matter, n) {
+  const client = String(matter.clientName || 'Client');
+  const other = client.includes('Reyes') ? 'Marcus' : client.includes('Carter') ? 'Jordan' : 'Unknown';
+  const yest = at(1, 18, 42);
+  const today = at(0, 8, 5);
+  const scripts = client.includes('Reyes')
+    ? [
+        {
+          kind: 'text',
+          contact: 'Marcus',
+          file: 'IMG_4210.PNG',
+          when: yest,
+          items: [
+            { header: dayLabel(yest) },
+            { side: 'other', text: "Running late. I'll drop her at 7:30 instead of 6." },
+            { side: 'client', text: 'The order says 6. She has school tomorrow.' },
+            { side: 'other', text: 'Not my problem.' },
+          ],
+          summary: 'Marcus says he will return Lily at 7:30 instead of 6; Dana refers to the order and a school night.',
+        },
+        {
+          kind: 'text',
+          contact: 'Coach Ramirez',
+          file: 'IMG_4214.PNG',
+          when: today,
+          items: [
+            { header: dayLabel(today) },
+            { side: 'other', text: 'Lily was picked up by her dad at 6:20 last night. We close at 6.' },
+            { side: 'client', text: 'Thank you for letting me know.' },
+          ],
+          summary: 'The club coach tells Dana that Lily was collected by her father at 6:20, after the 6:00 closing time.',
+        },
+        {
+          kind: 'email',
+          from: 'Marcus Reyes <marcus.reyes@example.com>',
+          subject: 'Re: this weekend',
+          when: today,
+          body: "Dana,\n\nI'm taking Lily to the lake house Saturday and Sunday. We'll be back Sunday night, probably late.\n\nMarcus",
+          summary: 'Email from Marcus saying he will take Lily to the lake house for the weekend and return late Sunday night.',
+        },
+      ]
+    : [
+        {
+          kind: 'text',
+          contact: other,
+          file: `IMG_${5000 + n}.PNG`,
+          when: yest,
+          items: [
+            { header: dayLabel(yest) },
+            { side: 'other', text: 'Can we talk about this without the lawyers?' },
+            { side: 'client', text: 'Please send everything through my attorney.' },
+          ],
+          summary: `${other} asks to talk without the attorneys; ${client.split(' ')[0]} asks that everything go through counsel.`,
+        },
+      ];
+  return scripts[n % scripts.length];
+}
+
+exports.demoSimulateArrival = onCall({ timeoutSeconds: 120, memory: '1GiB' }, async (request) => {
+  const uid = requireAuth(request);
+  const db = getFirestore();
+  const bucket = getStorage().bucket();
+  const { firmId } = await requireAdmin(db, uid).catch(async () => {
+    // Any member of a demo firm may run the demo.
+    const u = await db.collection('users').doc(uid).get();
+    return { firmId: String(u.get('firmID') || '') };
+  });
+  const matterId = String((request.data || {}).matterId || '');
+  if (!matterId || matterId.includes('/')) throw new HttpsError('invalid-argument', 'matterId is required');
+  const mRef = db.collection('Matters').doc(matterId);
+  const m = await mRef.get();
+  if (!m.exists || m.get('firmID') !== firmId) throw new HttpsError('not-found', 'Matter not found');
+  const acct = await db.collection('firmAccount').where('firmID', '==', firmId).limit(1).get();
+  if (acct.empty || acct.docs[0].get('isDemo') !== true) throw new HttpsError('failed-precondition', 'Only available in a demo workspace.');
+
+  const n = Number(m.get('demoSimIndex') || 0);
+  const sc = nextArrival(m.data(), n);
+  const phone = (m.get('clientPhones') || [])[0] || DEMO_SMS_NUMBER;
+  const email = (m.get('clientEmails') || [])[0] || 'client@example.com';
+  let buffer;
+  let fileName;
+  let contentType;
+  let kind;
+  let channelKey;
+  let fromLabel;
+  let senderKey;
+  let read;
+  if (sc.kind === 'text') {
+    const shot = screenshot({ contact: sc.contact, items: sc.items });
+    buffer = shot.buffer;
+    fileName = sc.file;
+    contentType = 'image/png';
+    kind = 'photo';
+    channelKey = 'sms';
+    fromLabel = `Text from ${phone}`;
+    senderKey = `tel:${phone}`;
+    read = readFields({ when: sc.when, summary: sc.summary, platform: shot.platform, messages: shot.messages, evidenceType: 'screenshot', width: shot.width, height: shot.height, itemKind: 'screenshot' });
+  } else {
+    buffer = Buffer.from(
+      [`From: ${sc.from}`, `To: ${m.get('emailAddress') || 'intake@in.verinlegal.com'}`, `Subject: ${sc.subject}`, `Date: ${sc.when.toUTCString()}`, 'MIME-Version: 1.0', 'Content-Type: text/plain; charset=utf-8', '', sc.body.replace(/\n/g, '\r\n')].join('\r\n'),
+      'utf8',
+    );
+    fileName = `${sc.subject}.eml`;
+    contentType = 'message/rfc822';
+    kind = 'email';
+    channelKey = 'email';
+    fromLabel = `${m.get('clientName') || 'Client'} <${email}>`;
+    senderKey = `mail:${email}`;
+    read = readFields({
+      when: sc.when,
+      summary: sc.summary,
+      platform: 'Email',
+      messages: [{ speaker: 'other', text: sc.body, timestampLabel: dayLabel(sc.when), isGap: false, confidence: 0.99, sourceThumbnailUrl: '', platform: 'Email', isHeader: false, senderName: sc.from.split(' <')[0] }],
+      evidenceType: 'email',
+      extra: { emailSubject: sc.subject, emailFrom: sc.from },
+    });
+  }
+
+  // Arrives now, shows "Reading…", then the reading lands a few seconds later.
+  const r = await fileInboundItem({
+    db,
+    bucket,
+    matterRef: mRef,
+    buffer,
+    fileName,
+    contentType,
+    kind,
+    channelKey,
+    fromLabel,
+    senderKey,
+    description: sc.kind === 'text' ? `Screenshot of texts with ${sc.contact}` : sc.subject,
+    source: `demo|live|${n}`,
+    receivedAt: new Date(),
+    extra: { demo: true, extractionState: 'running', classificationLabel: 'Processing' },
+  });
+  await mRef.set({ demoSimIndex: n + 1, lastReceiptAt: FieldValue.serverTimestamp() }, { merge: true });
+  await new Promise((res) => setTimeout(res, 5000));
+  await db.collection('Receipts').doc(r.receiptId).set({ ...read, extractedAt: Timestamp.now() }, { merge: true });
+  return { ok: true, receiptId: r.receiptId, kind: sc.kind };
+});
+
+exports._internal = { screenshot, dayLabel, at, nextArrival };

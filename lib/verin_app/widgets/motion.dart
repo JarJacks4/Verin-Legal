@@ -119,3 +119,9 @@ class StillHero extends StatelessWidget {
         child: child,
       );
 }
+
+/// Page padding: roomy on desktop, tight on phones.
+EdgeInsets vPagePadding(BuildContext context, {double top = 36.0, double bottom = 48.0}) {
+  final narrow = MediaQuery.sizeOf(context).width < 600.0;
+  return EdgeInsets.fromLTRB(narrow ? 16.0 : 40.0, narrow ? 20.0 : top, narrow ? 16.0 : 40.0, bottom);
+}
