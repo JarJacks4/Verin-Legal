@@ -25,6 +25,7 @@ class IntakeTab extends StatefulWidget {
 
 class _IntakeTabState extends State<IntakeTab> {
   static final Set<String> _asked = {};
+  final _arrivalKey = GlobalKey<_DemoArrivalState>();
   bool _assigning = false;
 
   MattersRecord get matter => widget.matter;
@@ -257,7 +258,16 @@ class _IntakeTabState extends State<IntakeTab> {
         ),
         if (DemoMode.active) ...[
           const SizedBox(height: 20.0),
-          TourTarget(id: 'intake_demo', child: _DemoArrival(matter: matter)),
+          TourTarget(
+            id: 'intake_demo',
+            onDemoTour: () {
+              // The walkthrough sends one for them the first time.
+              if (_DemoArrivalState._autoSent) return;
+              _DemoArrivalState._autoSent = true;
+              Future.delayed(const Duration(milliseconds: 900), () => _arrivalKey.currentState?._send());
+            },
+            child: _DemoArrival(key: _arrivalKey, matter: matter),
+          ),
         ],
         const SizedBox(height: 24.0),
         Text('WHO THE CLIENT IS', style: VT.eyebrow(context)),
@@ -390,7 +400,7 @@ class _SenderList extends StatelessWidget {
 /// Demo workspaces only: the client "sends" the next sample message, so a
 /// prospect can watch it arrive, get fingerprinted and read.
 class _DemoArrival extends StatefulWidget {
-  const _DemoArrival({required this.matter});
+  const _DemoArrival({super.key, required this.matter});
 
   final MattersRecord matter;
 
@@ -399,9 +409,11 @@ class _DemoArrival extends StatefulWidget {
 }
 
 class _DemoArrivalState extends State<_DemoArrival> {
+  static bool _autoSent = false;
   bool _busy = false;
 
   Future<void> _send() async {
+    if (_busy) return;
     setState(() => _busy = true);
     try {
       final r = await VerinApi.demoSimulateArrival(widget.matter.reference.id);

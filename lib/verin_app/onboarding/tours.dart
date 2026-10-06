@@ -501,7 +501,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'intake_demo',
       icon: Icons.send_rounded,
       title: 'Watch one arrive',
-      body: 'Press Simulate a client message. In a few seconds it\'s stored, fingerprinted, time-stamped and read — then open Receipts or Thread to see it.',
+      body: 'Watch one come in now: in a few seconds it\'s stored, fingerprinted, time-stamped and read. Open Receipts or Thread afterwards to see it.',
       optional: true,
     ),
     TourStep(
@@ -572,10 +572,10 @@ const Map<String, List<TourStep>> demoTours = {
       body: 'Connected once by an admin, then each case is matched to its matter there. These use sample accounts in the demo.',
     ),
     TourStep(
-      target: 'practice_cards',
+      target: 'practice_send',
       icon: Icons.upload_rounded,
       title: 'Send the finished record',
-      body: 'Press Send record to Clio and watch it build, upload and file into the matter\'s Documents — no downloading and re-uploading.',
+      body: 'Watch: the record builds, uploads and files into the matter\'s Documents in Clio — no downloading and re-uploading.'
     ),
     TourStep(
       target: 'practice_log',
@@ -604,7 +604,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'ann_tags',
       icon: Icons.label_outline,
       title: 'Your team\'s case notes',
-      body: 'Key evidence, follow-ups and open questions from every case. Click a tile to focus — "Follow up" is your to-do list before the hearing.',
+      body: 'Key evidence, follow-ups and open questions from every case. Clicking a tile focuses the list — here, Key evidence. "Follow up" is your to-do list before the hearing.',
     ),
     TourStep(
       target: 'ann_list',
@@ -632,6 +632,87 @@ const Map<String, List<TourStep>> demoTours = {
       icon: Icons.group_add_outlined,
       title: 'Bring in the paralegals',
       body: 'Invite your team; everyone works from the same record, with their own login.',
+    ),
+  ],
+  'sheet_new_matter': [
+    TourStep(
+      target: 'nm_fields',
+      icon: Icons.create_new_folder_outlined,
+      title: 'Opening a new case',
+      body: 'Matter name, client and cause number — we\'ve filled in a sample custody case so you can see it.',
+    ),
+    TourStep(
+      target: 'nm_phone',
+      icon: Icons.smartphone,
+      title: 'The client\'s phone and email',
+      body: 'Her texts will land in this case automatically, and her emails are read right away.',
+    ),
+    TourStep(
+      target: 'nm_create',
+      icon: Icons.check_rounded,
+      title: 'One click and it\'s receiving',
+      body: 'Create matter gives the case its own address and number straight away. Try it — Reset demo clears it later.',
+      optional: true,
+    ),
+  ],
+  'sheet_manual': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.edit_outlined,
+      title: 'Evidence that arrives another way',
+      body: 'A printout at the front desk, a USB drive, a file on your laptop — it gets the same fingerprint and time-stamp as a forwarded text.',
+    ),
+    TourStep(
+      target: 'me_fields',
+      icon: Icons.inventory_2_outlined,
+      title: 'Who gave it to you, and how',
+      body: 'Source and custody notes, filled in here for a sample pickup log. They stay with the item in the record.',
+    ),
+  ],
+  'sheet_invite': [
+    TourStep(
+      target: 'invite_fields',
+      icon: Icons.group_add_outlined,
+      title: 'Bring in a paralegal',
+      body: 'Name and work email, filled in with a sample. They get a link and join your firm\'s workspace with their own login.',
+    ),
+  ],
+  'sheet_baseline_measure': [
+    TourStep(
+      target: 'measure_fields',
+      icon: Icons.timer_outlined,
+      title: 'Measure the old way once',
+      body: 'Time a paralegal transcribing a sample by hand — here, 40 messages in 18 minutes. Verin compares every case against it.',
+    ),
+  ],
+  'sheet_api': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.vpn_key_outlined,
+      title: 'For firms with their own systems',
+      body: 'Keys and a webhook for connecting a document system or data warehouse. Most firms never need this.',
+    ),
+    TourStep(
+      target: 'api_webhook',
+      icon: Icons.link_rounded,
+      title: 'Where Verin sends updates',
+      body: 'A sample address is filled in — Verin would notify it whenever evidence arrives or a record changes.',
+      optional: true,
+    ),
+  ],
+  'sheet_redactions': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.format_strikethrough,
+      title: 'Redactions you review, not guess',
+      body: 'Verin suggests a child\'s name, account numbers and addresses. Drag on the page to add a box; click one to remove it.',
+    ),
+    TourStep(
+      target: 'redact_add',
+      icon: Icons.text_fields_rounded,
+      title: 'Or redact a phrase everywhere',
+      body: 'Type the exact text — here, a student ID — and it\'s blacked out wherever it appears in the exhibit.',
+      optional: true,
     ),
   ],
   'sheet_receipt': [

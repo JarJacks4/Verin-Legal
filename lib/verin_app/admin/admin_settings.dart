@@ -16,7 +16,7 @@ import '../widgets/drawer.dart';
 import 'admin_shell.dart';
 import 'exhibit_template_card.dart';
 import '../shell/demo_banner.dart';
-import '../onboarding/tour.dart' show TourTarget;
+import '../onboarding/tour.dart' show TourTarget, demoType;
 
 class AdminSettings extends StatefulWidget {
   const AdminSettings({super.key, required this.firm, required this.user});
@@ -466,10 +466,14 @@ class _ApiSheetState extends State<_ApiSheet> {
               Row(
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: TourTarget(
+                      id: 'api_webhook',
+                      onDemoTour: () => demoType(_webhook, 'https://example.com/verin-webhook'),
+                      child: TextField(
                       controller: _webhook,
                       style: VT.body(context, size: 13.0),
                       decoration: vInputDecoration(context, hint: 'https://your-server.com/verin-webhook'),
+                    ),
                     ),
                   ),
                   const SizedBox(width: 8.0),

@@ -31,8 +31,8 @@ const kPracticeAreas = [
   'Guardianship',
   'Estate & probate',
   'Personal injury',
-  'Employment',
-  'Criminal defense',
+  'Civil',
+  'Criminal',
   'Immigration',
   'Other',
 ];
@@ -168,14 +168,32 @@ class _NewMatterFormState extends State<NewMatterForm> {
         ),
         const SizedBox(height: 24.0),
         if (_error != null) ...[VErrorBox(message: _error!), const SizedBox(height: 16.0)],
-        VTextField(controller: _name, label: 'Matter name', hint: 'Smith v. Jones'),
-        const SizedBox(height: 16.0),
-        VTextField(controller: _client, label: 'Client name', hint: 'Jane Smith'),
-        const SizedBox(height: 16.0),
-        VTextField(controller: _cause, label: 'Cause number', hint: '49D08-2026-DR-XXXXXX'),
+        TourTarget(
+          id: 'nm_fields',
+          onDemoTour: () async {
+            await demoType(_name, 'Alvarez v. Alvarez');
+            await demoType(_client, 'Sofia Alvarez');
+            await demoType(_cause, '49D08-2026-DR-005120');
+            if (mounted) setState(() => _practiceArea = kPracticeAreas.contains('Child custody') ? 'Child custody' : _practiceArea);
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              VTextField(controller: _name, label: 'Matter name', hint: 'Smith v. Jones'),
+              const SizedBox(height: 16.0),
+              VTextField(controller: _client, label: 'Client name', hint: 'Jane Smith'),
+              const SizedBox(height: 16.0),
+              VTextField(controller: _cause, label: 'Cause number', hint: '49D08-2026-DR-XXXXXX'),
+            ],
+          ),
+        ),
         const SizedBox(height: 16.0),
         TourTarget(
           id: 'nm_phone',
+          onDemoTour: () async {
+            await demoType(_phone, '(317) 555-0168');
+            await demoType(_email, 'sofia.alvarez@example.com');
+          },
           child: VTextField(controller: _phone, label: 'Client mobile', optional: 'for texts', hint: '(317) 555-0142', keyboardType: TextInputType.phone),
         ),
         const SizedBox(height: 16.0),

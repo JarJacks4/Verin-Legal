@@ -116,10 +116,15 @@ class DemoMode {
 // ---------------------------------------------------------------------------
 
 class TourTarget extends StatefulWidget {
-  const TourTarget({super.key, required this.id, required this.child});
+  const TourTarget({super.key, required this.id, required this.child, this.onDemoTour});
 
   final String id;
   final Widget child;
+
+  /// Demo workspaces only: runs when the walkthrough reaches this target, so
+  /// the tour can fill in sample values as it explains them (a user journey,
+  /// rather than empty fields).
+  final VoidCallback? onDemoTour;
 
   static final Map<String, Set<_TourTargetState>> _live = {};
 
@@ -145,6 +150,12 @@ class TourTarget extends StatefulWidget {
   }
 
   static BuildContext? contextOf(String id) => _visible(id)?._key.currentContext;
+
+  static void _demoTour(String id) {
+    if (!DemoMode.active) return;
+    final cb = _visible(id)?.widget.onDemoTour;
+    if (cb != null) cb();
+  }
 
   @override
   State<TourTarget> createState() => _TourTargetState();
@@ -434,6 +445,7 @@ class _TourOverlayState extends State<_TourOverlay> with TickerProviderStateMixi
     }
     if (!mounted) return;
     final target = id == null ? null : TourTarget.rectOf(id);
+    if (id != null) TourTarget._demoTour(id);
     _from = start ?? (target == null ? null : target.inflate(60.0));
     _to = target;
     await _move.forward(from: 0.0);
@@ -690,4 +702,14 @@ class _CardLayout extends SingleChildLayoutDelegate {
 
   @override
   bool shouldRelayout(_CardLayout old) => old.spot != spot || old.padding != padding;
+}
+
+/// Types [text] into [c] a few characters at a time (demo walkthroughs), if
+/// the field is still empty. Returns when done.
+Future<void> demoType(TextEditingController c, String text, {Duration step = const Duration(milliseconds: 28)}) async {
+  if (c.text.trim().isNotEmpty) return;
+  for (var i = 1; i <= text.length; i++) {
+    c.value = TextEditingValue(text: text.substring(0, i), selection: TextSelection.collapsed(offset: i));
+    await Future.delayed(step);
+  }
 }

@@ -12,6 +12,7 @@ import '/verin/verin_config.dart';
 import '../data/model.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
+import '../onboarding/tour.dart' show TourTarget, demoType;
 import '../widgets/drawer.dart';
 import 'admin_shell.dart';
 
@@ -315,9 +316,21 @@ class _InviteFormState extends State<InviteForm> {
         Text('Add them to your team, then send them the sign-up link. The invitation expires in 72 hours.', style: VT.muted(context)),
         const SizedBox(height: 24.0),
         if (_error != null) ...[VErrorBox(message: _error!), const SizedBox(height: 16.0)],
-        VTextField(controller: _name, label: 'Full name', hint: 'Jane Smith'),
-        const SizedBox(height: 16.0),
-        VTextField(controller: _email, label: 'Work email', hint: 'j.smith@yourfirm.com', keyboardType: TextInputType.emailAddress),
+        TourTarget(
+          id: 'invite_fields',
+          onDemoTour: () async {
+            await demoType(_name, 'Jordan Lee');
+            await demoType(_email, 'jordan.lee@example.com');
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              VTextField(controller: _name, label: 'Full name', hint: 'Jane Smith'),
+              const SizedBox(height: 16.0),
+              VTextField(controller: _email, label: 'Work email', hint: 'j.smith@yourfirm.com', keyboardType: TextInputType.emailAddress),
+            ],
+          ),
+        ),
         const SizedBox(height: 16.0),
         VSegmented<String>(
           label: 'Role',
