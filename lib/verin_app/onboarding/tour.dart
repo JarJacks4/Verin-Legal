@@ -20,6 +20,7 @@ import '/backend/backend.dart';
 
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
+import 'tours.dart' show demoTours;
 
 // ---------------------------------------------------------------------------
 // What has been seen
@@ -57,9 +58,13 @@ class TourProgress {
     }
   }
 
-  static bool seen(String id) => _seen.contains(id) || _shownThisSession.contains(id);
+  static bool seen(String id) {
+    final k = DemoMode.key(id);
+    return _seen.contains(k) || _shownThisSession.contains(k);
+  }
 
   static Future<void> mark(String id) async {
+    id = DemoMode.key(id);
     _shownThisSession.add(id);
     _seen.add(id);
     final ref = currentUserReference;
@@ -81,6 +86,29 @@ class TourProgress {
       await ref.update({'onboarding': FieldValue.delete()});
     } catch (_) {}
   }
+}
+
+// ---------------------------------------------------------------------------
+// NFR demo workspaces
+// ---------------------------------------------------------------------------
+
+/// In a demo workspace the tips speak to a prospective customer (tours.dart,
+/// [demoTours]) and come back after every reset, so each demo starts fresh.
+class DemoMode {
+  static bool known = false;
+  static bool active = false;
+  static String _stamp = '';
+
+  /// Called by the app and admin shells whenever the firm record loads.
+  static void update(FirmAccountRecord? firm) {
+    known = true;
+    active = firm?.snapshotData['isDemo'] == true;
+    final at = firm?.snapshotData['demoSeededAt'];
+    _stamp = at is Timestamp ? '${at.millisecondsSinceEpoch}' : '0';
+  }
+
+  /// Progress key for a tour: per demo reset in a demo workspace.
+  static String key(String id) => active ? 'demo_${_stamp}_$id' : id;
 }
 
 // ---------------------------------------------------------------------------
@@ -226,6 +254,8 @@ class _TourLauncherState extends State<TourLauncher> {
   Future<void> _run(int attempt) async {
     if (!widget.enabled || currentUserUid.isEmpty) return;
     await TourProgress.load();
+    // Demo workspaces have their own tips; wait until we know which this is.
+    await _until(() => DemoMode.known, tries: 20);
     if (!mounted || attempt != _attempt) return;
     if (TourProgress.seen(widget.tourId)) return;
     if (widget.beforeStart != null && !await widget.beforeStart!(context)) return;
@@ -240,7 +270,8 @@ class _TourLauncherState extends State<TourLauncher> {
     await _until(() => ModalRoute.of(context)?.isCurrent ?? true, tries: 120);
     if (!mounted || attempt != _attempt || TourProgress.seen(widget.tourId)) return;
     if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
-    VTour.show(context, tourId: widget.tourId, steps: widget.steps);
+    final steps = DemoMode.active ? (demoTours[widget.tourId] ?? widget.steps) : widget.steps;
+    VTour.show(context, tourId: widget.tourId, steps: steps);
   }
 
   Future<void> _until(bool Function() ok, {int tries = 40}) async {
@@ -268,7 +299,7 @@ class VTour {
     if (active || steps.isEmpty) return;
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return;
-    TourProgress._shownThisSession.add(tourId);
+    TourProgress._shownThisSession.add(DemoMode.key(tourId));
     final route = ModalRoute.of(context);
     final covered = ValueNotifier<bool>(false);
     late final OverlayEntry entry;

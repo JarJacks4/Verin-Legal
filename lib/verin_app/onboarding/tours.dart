@@ -396,3 +396,188 @@ const Map<String?, String> drawerTourForTitle = {
   'Baseline rates': 'baseline_rates',
   'Update payment method': 'payment',
 };
+
+// ---------------------------------------------------------------------------
+// NFR demo workspace: the same tips, told to the person we're selling to —
+// a family-law attorney or paralegal at a small or mid-size firm whose
+// clients send evidence as screenshots, and who has to turn it into a
+// record they can stand behind in a hearing. Each one names the sample data
+// on screen and says what it saves them. (Keys = TourLauncher ids.)
+// ---------------------------------------------------------------------------
+
+const Map<String, List<TourStep>> demoTours = {
+  'matters': [
+    TourStep(
+      target: 'matters_list',
+      icon: Icons.folder_open_outlined,
+      title: 'Three cases, already in motion',
+      body: 'Reyes v. Reyes is a custody modification where the client has forwarded texts, an email and a school record over a month. Open it to see what Verin built from them — without anyone retyping a word.',
+    ),
+    TourStep(
+      target: 'matters_new',
+      icon: Icons.add_rounded,
+      title: 'Open a case, start receiving',
+      body: 'Each new matter gets its own intake address the day you open it. Clients forward evidence there — not to your cell phone or a shared inbox.',
+    ),
+    TourStep(
+      target: 'nav_review',
+      icon: Icons.checklist_rounded,
+      title: 'Only what needs a person',
+      body: 'Nobody reads every screenshot. Verin flags only the items that need a human: a hard-to-read line, an unknown sender, a text it can\'t match to a case.',
+    ),
+    TourStep(
+      target: 'nav_annotations',
+      icon: Icons.sticky_note_2_outlined,
+      title: 'Case notes where the evidence is',
+      body: 'Attorney and paralegal notes sit on the exact message they\'re about — then collect here, ready to paste into a brief or a prep memo.',
+    ),
+    TourStep(
+      target: 'nav_admin',
+      icon: Icons.insights_rounded,
+      title: 'What it\'s worth to the firm',
+      body: 'The value report shows hours saved against doing this by hand — the number a managing partner wants before renewal.',
+      optional: true,
+    ),
+  ],
+  'matter': [
+    TourStep(
+      target: 'matter_header',
+      icon: Icons.gavel_rounded,
+      title: 'A typical custody file',
+      body: 'Usually this is a folder of screenshots on someone\'s phone and an afternoon of retyping. Here, every item is already received, sealed and read.',
+    ),
+    TourStep(
+      target: 'matter_tabs',
+      icon: Icons.east_rounded,
+      title: 'The whole case, left to right',
+      body: 'Intake → Receipts → Thread → Follow-ups → Exhibits. Open Thread next — that\'s where four screenshots become one conversation.',
+    ),
+    TourStep(
+      target: 'matter_body',
+      icon: Icons.inbox_outlined,
+      title: 'Nothing for your client to install',
+      body: 'Clients forward texts, photos and emails from the phone they already have, to this case\'s own address and number. You hand them one card, once.',
+    ),
+  ],
+  'tab_receipts': [
+    TourStep(
+      target: 'matter_body',
+      icon: Icons.verified_outlined,
+      title: 'Sealed the moment it arrived',
+      body: 'Every item was fingerprinted and independently time-stamped before anyone opened it. Open one to see who sent it, when, and what Verin read.',
+    ),
+  ],
+  'tab_thread': [
+    TourStep(
+      target: 'matter_body',
+      icon: Icons.forum_outlined,
+      title: 'Four screenshots, one conversation',
+      body: 'In date order, the repeated message removed, and the days with nothing flagged — the questions opposing counsel will ask. Click a file name on any bubble to see it on the original screenshot.',
+    ),
+  ],
+  'tab_followups': [
+    TourStep(
+      target: 'matter_body',
+      icon: Icons.mark_email_unread_outlined,
+      title: 'Ask before the hearing, not at it',
+      body: 'That gap became a ready-to-send request to the client. It opens in your own email, and closes itself when the missing texts arrive.',
+    ),
+  ],
+  'tab_exhibits': [
+    TourStep(
+      target: 'matter_body',
+      icon: Icons.folder_copy_outlined,
+      title: 'Exhibits without the afternoon',
+      body: 'Pick items, check the suggested redactions — a child\'s name, account numbers — and produce Bates-stamped PDFs with an index. Try it on the Carter bank statement.',
+    ),
+  ],
+  'tab_integrity': [
+    TourStep(
+      target: 'matter_body',
+      icon: Icons.verified_user_outlined,
+      title: '"How do we know it wasn\'t changed?"',
+      body: 'Each item\'s fingerprint and time-stamp, linked in order. Give opposing counsel the verify tool and they can check the record themselves.',
+    ),
+  ],
+  'tab_practice': [
+    TourStep(
+      target: 'matter_body',
+      icon: Icons.apartment_outlined,
+      title: 'It ends up in Clio',
+      body: 'Finished records file into the same matter in Clio, so nothing lives in two places.',
+    ),
+  ],
+  'review': [
+    TourStep(
+      target: 'review_list',
+      icon: Icons.checklist_rounded,
+      title: 'A few minutes, not a few hours',
+      body: 'Here: a line Verin couldn\'t read with confidence, an email from the client\'s sister held until you approve it, and a text from a number no case knows. Each is one click.',
+    ),
+  ],
+  'annotations': [
+    TourStep(
+      target: 'ann_tags',
+      icon: Icons.sell_outlined,
+      title: 'Your team\'s case notes',
+      body: 'Key evidence, follow-ups and open questions from every case. Click a tile to focus — "Follow up" is your to-do list before the hearing.',
+    ),
+    TourStep(
+      target: 'ann_list',
+      icon: Icons.sticky_note_2_outlined,
+      title: 'Back to the exact message',
+      body: '"Open in thread" jumps to the message the note is about, beside the original screenshot.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'ann_copy',
+      icon: Icons.content_copy,
+      title: 'Straight into your brief',
+      body: 'Copy the notes you\'re looking at, grouped by case, and paste them into a brief or prep memo.',
+    ),
+  ],
+  'admin_dashboard': [
+    TourStep(
+      target: 'admin_body',
+      icon: Icons.insights_rounded,
+      title: 'The number for the partners',
+      body: 'Measured value: hours Verin saved this firm over the last quarter, against reading, retyping and organizing the same evidence by hand.',
+    ),
+    TourStep(
+      target: 'admin_nav_team',
+      icon: Icons.group_add_outlined,
+      title: 'Bring in the paralegals',
+      body: 'Invite your team; everyone works from the same record, with their own login.',
+    ),
+  ],
+  'sheet_receipt': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.description_outlined,
+      title: 'One item, fully accounted for',
+      body: 'Who sent it, when it arrived, its fingerprint, and what Verin read — the questions you\'d be asked about it on the stand.',
+    ),
+    TourStep(
+      target: 'receipt_quarantine',
+      icon: Icons.shield_outlined,
+      title: 'Grandma forwarded photos',
+      body: 'Unknown senders aren\'t rejected — they wait here, stored and sealed, until you approve them. Try it.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'receipt_verify',
+      icon: Icons.compare,
+      title: 'See it on the original',
+      body: 'Every line traced back to where it sits on the screenshot.',
+      optional: true,
+    ),
+  ],
+  'sheet_verify': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.compare,
+      title: 'Check the reading in seconds',
+      body: 'Click a line and it lights up on the original. Fix a word if you need to — the original never changes, and every correction is kept.',
+    ),
+  ],
+};

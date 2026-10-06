@@ -10,6 +10,8 @@ import '../data/model.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
+import '../onboarding/tour.dart';
+import '/flutter_flow/flutter_flow_util.dart';
 
 bool isDemoFirm(FirmAccountRecord? f) => f?.snapshotData['isDemo'] == true;
 bool demoResetting(FirmAccountRecord? f) => f?.snapshotData['demoResetting'] == true;
@@ -101,6 +103,17 @@ class _DemoBannerState extends State<DemoBanner> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (!resetting)
+                    TextButton.icon(
+                      style: TextButton.styleFrom(foregroundColor: fg, padding: const EdgeInsets.symmetric(horizontal: 8.0), minimumSize: const Size(0, 28.0)),
+                      onPressed: () {
+                        // Every tip shows again, starting from the welcome slides.
+                        TourProgress.reset();
+                        context.goNamed('GettingStarted');
+                      },
+                      icon: const Icon(Icons.slideshow_outlined, size: 15.0),
+                      label: Text('Replay tips', style: VT.body(context, size: 12.0, weight: FontWeight.w600, color: fg)),
+                    ),
                   if (widget.user.isAdmin)
                     resetting
                         ? const SizedBox(width: 14.0, height: 14.0, child: CircularProgressIndicator(strokeWidth: 2.0, color: fg))
