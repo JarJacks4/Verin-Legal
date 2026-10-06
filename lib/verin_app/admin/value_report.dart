@@ -20,6 +20,7 @@ import '/verin/verin_config.dart';
 import '../data/format.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
+import '../onboarding/tour.dart' show TourTarget, demoType;
 import '../widgets/drawer.dart';
 
 /// Minutes of manual work per unit, and the billing rate used for value.
@@ -451,9 +452,22 @@ class _MeasureFormState extends State<_MeasureForm> {
           }),
         ),
         const SizedBox(height: 16.0),
-        VTextField(controller: _count, label: 'Messages transcribed in the sample', hint: '40', keyboardType: TextInputType.number),
-        const SizedBox(height: 12.0),
-        VTextField(controller: _note, label: 'Note (optional)', hint: 'Paralegal, 6 screenshots of a WhatsApp thread'),
+        TourTarget(
+          id: 'measure_fields',
+          onDemoTour: () async {
+            if (mounted && _elapsed == null) setState(() => _elapsed = const Duration(minutes: 18, seconds: 40));
+            await demoType(_count, '40');
+            await demoType(_note, 'Paralegal, 6 screenshots of a text thread');
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              VTextField(controller: _count, label: 'Messages transcribed in the sample', hint: '40', keyboardType: TextInputType.number),
+              const SizedBox(height: 12.0),
+              VTextField(controller: _note, label: 'Note (optional)', hint: 'Paralegal, 6 screenshots of a WhatsApp thread'),
+            ],
+          ),
+        ),
         const SizedBox(height: 8.0),
         Text('Current baseline: ${widget.baseline.perMessage.toStringAsFixed(2)} min per message (${widget.baseline.measured ? 'measured' : 'estimate'}).', style: VT.muted(context, size: 11.0)),
         const SizedBox(height: 20.0),

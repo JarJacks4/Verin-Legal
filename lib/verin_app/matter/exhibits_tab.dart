@@ -19,6 +19,7 @@ import '../data/model.dart';
 import '../data/record_view.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
+import '../onboarding/tour.dart' show TourTarget, demoType;
 import '../widgets/drawer.dart';
 
 // ---------------------------------------------------------------- template
@@ -688,7 +689,13 @@ class _RedactionReviewState extends State<RedactionReview> {
               VIconButton(icon: Icons.close, size: 14.0, tooltip: 'Remove', onPressed: () => setState(() => it.textRedactions.remove(t))),
             ]),
           Row(children: [
-            Expanded(child: VTextField(controller: _add, hint: 'Exact text to redact, e.g. 4417 1234 5678 9113')),
+            Expanded(
+              child: TourTarget(
+                id: 'redact_add',
+                onDemoTour: () => demoType(_add, '2209-4417'),
+                child: VTextField(controller: _add, hint: 'Exact text to redact, e.g. 4417 1234 5678 9113'),
+              ),
+            ),
             const SizedBox(width: 8.0),
             VButton(
               label: 'Add',

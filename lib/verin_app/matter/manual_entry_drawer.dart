@@ -11,6 +11,7 @@ import '../data/evidence_upload.dart';
 import '../data/format.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
+import '../onboarding/tour.dart' show TourTarget, demoType;
 import '../widgets/drawer.dart';
 import '../widgets/upload_zone.dart';
 
@@ -300,7 +301,15 @@ class _ManualEntryFormState extends State<ManualEntryForm> {
           ],
           const SizedBox(height: 20.0),
         ],
-        VTextField(controller: _source, label: 'Source / from', hint: 'Client name, opposing counsel, etc.'),
+        TourTarget(
+          id: 'me_fields',
+          onDemoTour: () async {
+            await demoType(_source, 'Dana Reyes (client)');
+            await demoType(_description, 'Printed school pickup log handed over at the office');
+            await demoType(_notes, 'Received by front desk, scanned the same day; original in the matter file cabinet.');
+          },
+          child: VTextField(controller: _source, label: 'Source / from', hint: 'Client name, opposing counsel, etc.'),
+        ),
         const SizedBox(height: 16.0),
         VSelect<String>(
           label: 'How was it received?',

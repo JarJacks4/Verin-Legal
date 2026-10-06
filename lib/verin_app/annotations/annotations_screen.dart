@@ -194,6 +194,12 @@ class _AnnotationsScreenState extends State<AnnotationsScreen> {
                       // Tag tiles double as filters.
                       TourTarget(
                         id: 'ann_tags',
+                        onDemoTour: () => Future.delayed(const Duration(milliseconds: 900), () {
+                          if (mounted) setState(() {
+                            _who = _Who.everyone;
+                            _tag = AnnTag.key;
+                          });
+                        }),
                         child: LayoutBuilder(
                           builder: (context, box) {
                             final cols = box.maxWidth >= 720.0 ? 4 : 2;

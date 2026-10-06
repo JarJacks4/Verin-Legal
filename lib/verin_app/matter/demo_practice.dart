@@ -119,7 +119,16 @@ class _DemoPracticeTabState extends State<DemoPracticeTab> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (final p in _providers) ...[
-                _card(context, p),
+                if (p == _providers.first)
+                  TourTarget(
+                    id: 'practice_send',
+                    onDemoTour: () => Future.delayed(const Duration(milliseconds: 900), () {
+                      if (mounted) _send(p);
+                    }),
+                    child: _card(context, p),
+                  )
+                else
+                  _card(context, p),
                 const SizedBox(height: 12.0),
               ],
             ],
