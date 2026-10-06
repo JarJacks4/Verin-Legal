@@ -124,6 +124,10 @@ class _MattersScreenState extends State<MattersScreen> {
                 const SizedBox(height: 28.0),
                 TourTarget(
                   id: 'matters_search',
+                  onDemoTour: () async {
+                    await demoType(_q, 'Reyes', step: const Duration(milliseconds: 90));
+                    if (mounted) setState(() {});
+                  },
                   child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 360.0),
                   child: TextField(

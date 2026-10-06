@@ -444,6 +444,13 @@ const Map<String, List<TourStep>> demoTours = {
       body: 'Reyes v. Reyes is a custody modification where the client has forwarded texts, an email and a school record over a month. Open it to see what Verin built from them — without anyone retyping a word.',
     ),
     TourStep(
+      target: 'matters_search',
+      icon: Icons.search,
+      title: 'Find a case by name',
+      body: 'Type a client or case name — here, Reyes. Clear the search to see every case again.',
+      optional: true,
+    ),
+    TourStep(
       target: 'matters_new',
       icon: Icons.add_rounded,
       title: 'Open a case, start receiving',
@@ -632,6 +639,41 @@ const Map<String, List<TourStep>> demoTours = {
       icon: Icons.group_add_outlined,
       title: 'Bring in the paralegals',
       body: 'Invite your team; everyone works from the same record, with their own login.',
+    ),
+  ],
+  'admin_settings': [
+    TourStep(
+      target: 'settings_profile',
+      icon: Icons.business_outlined,
+      title: 'Your firm, set up once',
+      body: 'Primary contact, billing email and bar jurisdiction — filled in here for the sample firm. They appear on every record Verin produces.',
+    ),
+    TourStep(
+      target: 'settings_exhibits',
+      icon: Icons.folder_copy_outlined,
+      title: 'Exhibits in your house style',
+      body: 'Bates prefix, confidentiality legend and index title, filled in with samples. Every production uses them, so nobody re-stamps a page by hand.',
+    ),
+    TourStep(
+      target: 'settings_demo',
+      icon: Icons.slideshow_outlined,
+      title: 'Start each demo fresh',
+      body: 'Reset sample data puts the three sample cases back the way they started.',
+      optional: true,
+    ),
+  ],
+  'sheet_production_editor': [
+    TourStep(
+      target: 'prod_name',
+      icon: Icons.folder_copy_outlined,
+      title: 'Name the production',
+      body: 'A sample name is filled in. Next, tick the items to produce and set their order — exhibit numbers and Bates labels follow it.',
+    ),
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.gavel_outlined,
+      title: 'One click to a court-ready set',
+      body: 'Produce gives you Bates-stamped PDFs, an index and a ZIP. The originals are never changed.',
     ),
   ],
   'sheet_new_matter': [

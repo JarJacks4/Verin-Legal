@@ -166,7 +166,14 @@ class _AdminSettingsState extends State<AdminSettings> {
           const SizedBox(height: 32.0),
           _section(
             'Firm profile',
-            VCard(
+            TourTarget(
+              id: 'settings_profile',
+              onDemoTour: () {
+                demoType(_contact, 'Margaret Doe');
+                demoType(_billing, 'billing@doefamilylaw.com');
+                demoType(_jurisdiction, 'Indiana · IN Bar');
+              },
+              child: VCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -179,6 +186,7 @@ class _AdminSettingsState extends State<AdminSettings> {
                   VTextField(controller: _jurisdiction, label: 'State bar jurisdiction', hint: 'Indiana · IN Bar'),
                 ],
               ),
+            ),
             ),
           ),
           _section(
