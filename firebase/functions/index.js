@@ -48,14 +48,18 @@ exports.exportFirmData = verinArchive.exportFirmData;
 exports.exportIntegrationReport = verinArchive.exportIntegrationReport;
 
 // ---- Verin: client email and text intake (SendGrid / Postmark, Twilio) ----
-const verinIntake = require("./verin/intake/functions");
-exports.inboundEmail = verinIntake.inboundEmail;
-exports.inboundSms = verinIntake.inboundSms;
-exports.onInboundEvent = verinIntake.onInboundEvent;
-exports.onMatterIntake = verinIntake.onMatterIntake;
-exports.provisionIntake = verinIntake.provisionIntake;
-exports.approveQuarantined = verinIntake.approveQuarantined;
-exports.assignUnrouted = verinIntake.assignUnrouted;
+// Off until the intake secrets exist (INBOUND_WEBHOOK_KEY, TWILIO_AUTH_TOKEN):
+// set INTAKE_ENABLED=true in .env, then deploy. See DEPLOYMENT.md.
+if (process.env.INTAKE_ENABLED === "true") {
+  const verinIntake = require("./verin/intake/functions");
+  exports.inboundEmail = verinIntake.inboundEmail;
+  exports.inboundSms = verinIntake.inboundSms;
+  exports.onInboundEvent = verinIntake.onInboundEvent;
+  exports.onMatterIntake = verinIntake.onMatterIntake;
+  exports.provisionIntake = verinIntake.provisionIntake;
+  exports.approveQuarantined = verinIntake.approveQuarantined;
+  exports.assignUnrouted = verinIntake.assignUnrouted;
+}
 
 // ---- Verin: NFR demo workspace ----
 exports.seedDemoWorkspace = require("./verin/demo/seed").seedDemoWorkspace;
