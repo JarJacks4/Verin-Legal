@@ -181,7 +181,7 @@ class _ValueReportState extends State<ValueReport> {
                     SizedBox(width: w, child: _tile(context, 'Hours saved', savedH.toStringAsFixed(savedH < 10 ? 1 : 0), '≈ \$${(savedH * b.hourlyRate).round()} of time at \$${b.hourlyRate.round()}/hr')),
                     SizedBox(width: w, child: _tile(context, 'Items processed', '${t.items}', '${t.messages} messages · ${t.statements} passages${t.recordingMinutes >= 1 ? ' · ${t.recordingMinutes.round()} min recorded' : ''}')),
                     SizedBox(width: w, child: _tile(context, 'Review time', '${t.reviewMin.toStringAsFixed(t.reviewMin < 10 ? 1 : 0)} min', t.reviewedItems.isEmpty ? 'no reviews yet' : '${perItemReview.toStringAsFixed(1)} min per item reviewed')),
-                    SizedBox(width: w, child: _tile(context, 'Correction rate', '${(t.correctionRate * 100).toStringAsFixed(1)}%', '${t.corrections} correction${t.corrections == 1 ? '' : 's'} to the AI\'s reading')),
+                    SizedBox(width: w, child: _tile(context, 'Reading discrepancy rate', '${(t.correctionRate * 100).toStringAsFixed(1)}%', '${t.corrections} reviewer note${t.corrections == 1 ? '' : 's'} on the AI\'s reading')),
                   ]);
                 }),
                 const SizedBox(height: 12.0),

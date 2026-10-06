@@ -211,7 +211,7 @@ class _VerificationViewState extends State<VerificationView> {
               children: [
                 Expanded(flex: 11, child: _paneFrame(context, 'ORIGINAL AS RECEIVED', original)),
                 Container(width: 1.0, color: c.border),
-                Expanded(flex: 9, child: _paneFrame(context, 'RECONSTRUCTED RECORD', record)),
+                Expanded(flex: 9, child: _paneFrame(context, 'ASSEMBLED RECORD', record)),
               ],
             )
           : Column(
@@ -219,7 +219,7 @@ class _VerificationViewState extends State<VerificationView> {
               children: [
                 SizedBox(height: box.maxHeight * 0.45, child: _paneFrame(context, 'ORIGINAL AS RECEIVED', original)),
                 Container(height: 1.0, color: c.border),
-                Expanded(child: _paneFrame(context, 'RECONSTRUCTED RECORD', record)),
+                Expanded(child: _paneFrame(context, 'ASSEMBLED RECORD', record)),
               ],
             );
       return Column(
@@ -539,12 +539,12 @@ class _VerificationViewState extends State<VerificationView> {
                   ),
                   if (on)
                     Tooltip(
-                      message: 'Correct this reading',
+                      message: 'Note a transcription discrepancy',
                       child: VHover(
                         onTap: () => _correct(it, textFix),
                         builder: (context, h) => Padding(
                           padding: const EdgeInsets.only(left: 6.0),
-                          child: Text('Correct', style: VT.body(context, size: 11.0, weight: FontWeight.w600, color: h ? c.teal : c.tealDeep)),
+                          child: Text('Note discrepancy', style: VT.body(context, size: 11.0, weight: FontWeight.w600, color: h ? c.teal : c.tealDeep)),
                         ),
                       ),
                     ),
@@ -555,7 +555,7 @@ class _VerificationViewState extends State<VerificationView> {
                 Text(textFix.corrected, style: VT.body(context, size: 13.5, height: 1.4)),
                 const SizedBox(height: 4.0),
                 Text('AI read: "${it.text}"', style: VT.muted(context, size: 11.0).copyWith(decoration: TextDecoration.lineThrough)),
-                Text('Corrected by ${textFix.byName.isEmpty ? 'a reviewer' : textFix.byName}${textFix.at != null ? ' · ${fmtWhen(textFix.at)}' : ''}',
+                Text('Reviewer reading by ${textFix.byName.isEmpty ? 'a reviewer' : textFix.byName}${textFix.at != null ? ' · ${fmtWhen(textFix.at)}' : ''}',
                     style: VT.body(context, size: 10.5, color: c.verified)),
               ] else
                 Text(it.text, style: VT.body(context, size: 13.5, height: 1.4)),
@@ -585,7 +585,7 @@ class _VerificationViewState extends State<VerificationView> {
   Future<void> _correct(_Item it, Correction? existing) async {
     final ok = await showCorrectionDialog(
       context,
-      title: it.type == 'm' ? 'Correct this message' : 'Correct this passage',
+      title: it.type == 'm' ? 'Note a discrepancy in this message' : 'Note a discrepancy in this passage',
       fieldLabel: 'What the original says',
       aiValue: it.text,
       current: existing?.corrected,
@@ -598,7 +598,7 @@ class _VerificationViewState extends State<VerificationView> {
         corrected: v,
       ),
     );
-    if (ok && mounted) showVToast(context, 'Correction saved');
+    if (ok && mounted) showVToast(context, 'Reviewer note saved');
   }
 
   static String _kindLabel(String k) => switch (k) {

@@ -88,7 +88,7 @@ class _MattersScreenState extends State<MattersScreen> {
       builder: (context, snap) {
         final matters = snap.data ?? const <MattersRecord>[];
         return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(40.0, 36.0, 40.0, 48.0),
+          padding: vPagePadding(context, top: 36.0),
           child: Align(
   alignment: Alignment.topLeft,
   child: ConstrainedBox(

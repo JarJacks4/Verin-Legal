@@ -76,14 +76,18 @@ class _DemoBannerState extends State<DemoBanner> {
   Widget build(BuildContext context) {
     final resetting = _busy || demoResetting(widget.firm);
     const fg = Color(0xFF3A2A00);
+    // Phones: short text and icon-only buttons.
+    final narrow = MediaQuery.sizeOf(context).width < 640.0;
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),
       child: !isDemoFirm(widget.firm)
           ? const SizedBox(width: double.infinity)
-          : Container(
+          : TourTarget(
+              id: 'demo_strip',
+              child: Container(
               width: double.infinity,
               color: const Color(0xFFF4C842),
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+              padding: EdgeInsets.symmetric(horizontal: narrow ? 8.0 : 16.0, vertical: 6.0),
               child: Row(
                 children: [
                   const Icon(Icons.slideshow_outlined, size: 15.0, color: fg),
@@ -94,7 +98,9 @@ class _DemoBannerState extends State<DemoBanner> {
                         children: [
                           TextSpan(text: 'NFR DEMO  ', style: VT.body(context, size: 12.0, weight: FontWeight.w700, color: fg)),
                           TextSpan(
-                            text: resetting ? 'Resetting the sample matters…' : 'Fictional sample data · not for resale or client work',
+                            text: resetting
+                                ? (narrow ? 'Resetting…' : 'Resetting the sample matters…')
+                                : (narrow ? 'Sample data' : 'Fictional sample data · not for resale or client work'),
                             style: VT.body(context, size: 12.0, color: fg),
                           ),
                         ],
@@ -112,7 +118,7 @@ class _DemoBannerState extends State<DemoBanner> {
                         context.goNamed('GettingStarted');
                       },
                       icon: const Icon(Icons.slideshow_outlined, size: 15.0),
-                      label: Text('Replay tips', style: VT.body(context, size: 12.0, weight: FontWeight.w600, color: fg)),
+                      label: Text(narrow ? 'Tips' : 'Replay tips', style: VT.body(context, size: 12.0, weight: FontWeight.w600, color: fg)),
                     ),
                   if (widget.user.isAdmin)
                     resetting
@@ -125,10 +131,11 @@ class _DemoBannerState extends State<DemoBanner> {
                               if (mounted) setState(() => _busy = false);
                             },
                             icon: const Icon(Icons.restart_alt, size: 15.0),
-                            label: Text('Reset demo', style: VT.body(context, size: 12.0, weight: FontWeight.w600, color: fg)),
+                            label: Text(narrow ? 'Reset' : 'Reset demo', style: VT.body(context, size: 12.0, weight: FontWeight.w600, color: fg)),
                           ),
                 ],
               ),
+            ),
             ),
     );
   }

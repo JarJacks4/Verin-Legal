@@ -12,6 +12,7 @@ import '../widgets/badges.dart';
 import 'manual_entry_drawer.dart';
 import '/verin/verin_api.dart';
 import '../widgets/drawer.dart';
+import '../onboarding/tour.dart' show DemoMode, TourTarget;
 
 class IntakeTab extends StatefulWidget {
   const IntakeTab({super.key, required this.matter});
@@ -180,7 +181,9 @@ class _IntakeTabState extends State<IntakeTab> {
           style: VT.muted(context),
         ),
         const SizedBox(height: 24.0),
-        Container(
+        TourTarget(
+          id: 'intake_channels',
+          child: Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(border: Border.all(color: c.border), borderRadius: BorderRadius.circular(VR.card)),
           child: Column(
@@ -224,8 +227,11 @@ class _IntakeTabState extends State<IntakeTab> {
             ],
           ),
         ),
+        ),
         const SizedBox(height: 12.0),
-        Wrap(
+        TourTarget(
+          id: 'intake_card',
+          child: Wrap(
           spacing: 8.0,
           runSpacing: 8.0,
           children: [
@@ -248,6 +254,11 @@ class _IntakeTabState extends State<IntakeTab> {
               ),
           ],
         ),
+        ),
+        if (DemoMode.active) ...[
+          const SizedBox(height: 20.0),
+          TourTarget(id: 'intake_demo', child: _DemoArrival(matter: matter)),
+        ],
         const SizedBox(height: 24.0),
         Text('WHO THE CLIENT IS', style: VT.eyebrow(context)),
         const SizedBox(height: 4.0),
@@ -256,6 +267,11 @@ class _IntakeTabState extends State<IntakeTab> {
           style: VT.muted(context, size: 13.0),
         ),
         const SizedBox(height: 12.0),
+        TourTarget(
+          id: 'intake_who',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
         _SenderList(
           icon: Icons.smartphone,
           label: 'Client mobile numbers',
@@ -274,6 +290,9 @@ class _IntakeTabState extends State<IntakeTab> {
           raw: emails,
           onAdd: () => _addSender('clientEmails', 'an email address', 'client@example.com', TextInputType.emailAddress),
           onRemove: (v) => _removeSender('clientEmails', v),
+        ),
+            ],
+          ),
         ),
         const SizedBox(height: 24.0),
         const VInfoPanel(
@@ -362,6 +381,79 @@ class _SenderList extends StatelessWidget {
             ),
           ),
           VButton(label: 'Add', icon: Icons.add, kind: VButtonKind.tonal, size: VButtonSize.sm, onPressed: onAdd),
+        ],
+      ),
+    );
+  }
+}
+
+/// Demo workspaces only: the client "sends" the next sample message, so a
+/// prospect can watch it arrive, get fingerprinted and read.
+class _DemoArrival extends StatefulWidget {
+  const _DemoArrival({required this.matter});
+
+  final MattersRecord matter;
+
+  @override
+  State<_DemoArrival> createState() => _DemoArrivalState();
+}
+
+class _DemoArrivalState extends State<_DemoArrival> {
+  bool _busy = false;
+
+  Future<void> _send() async {
+    setState(() => _busy = true);
+    try {
+      final r = await VerinApi.demoSimulateArrival(widget.matter.reference.id);
+      if (mounted) {
+        celebrate(context,
+            title: r['kind'] == 'email' ? 'An email just arrived' : 'A text just arrived',
+            subtitle: 'Fingerprinted, time-stamped and read. Open Receipts or Thread to see it.');
+      }
+    } catch (e) {
+      if (mounted) showVToast(context, 'Could not send the sample', error: true, description: e is VerinApiException ? e.message : '$e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: c.teal.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(VR.card),
+        border: Border.all(color: c.teal.withValues(alpha: 0.35)),
+      ),
+      child: Wrap(
+        spacing: 16.0,
+        runSpacing: 12.0,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        alignment: WrapAlignment.spaceBetween,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('TRY IT LIVE', style: VT.eyebrow(context, size: 11.0)),
+                const SizedBox(height: 4.0),
+                Text(
+                  'Have the client send the next message to this case. It arrives through the same steps as a real one — stored, fingerprinted, time-stamped and read — in a few seconds.',
+                  style: VT.body(context, size: 13.0),
+                ),
+              ],
+            ),
+          ),
+          VButton(
+            label: 'Simulate a client message',
+            icon: Icons.send_rounded,
+            loading: _busy,
+            loadingLabel: 'Arriving…',
+            onPressed: _busy ? null : _send,
+          ),
         ],
       ),
     );

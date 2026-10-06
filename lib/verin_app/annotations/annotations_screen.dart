@@ -147,7 +147,7 @@ class _AnnotationsScreenState extends State<AnnotationsScreen> {
             final usedMatters = matters.where((m) => all.any((n) => n.matterRef?.path == m.reference.path)).toList();
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(40.0, 36.0, 40.0, 48.0),
+              padding: vPagePadding(context, top: 36.0),
               child: Align(
                 alignment: Alignment.topLeft,
                 child: ConstrainedBox(
@@ -168,7 +168,7 @@ class _AnnotationsScreenState extends State<AnnotationsScreen> {
                               children: [
                                 Text('Annotations', style: VT.h1(context, size: 30.0)),
                                 const SizedBox(height: 4.0),
-                                Text('Notes added to messages in reconstructed threads. They are the firm\'s work product and never change the record.',
+                                Text('Notes added to messages in assembled threads. They are the firm\'s work product and never change the record.',
                                     style: VT.muted(context)),
                               ],
                             ),
@@ -269,7 +269,7 @@ class _AnnotationsScreenState extends State<AnnotationsScreen> {
                         const VLoading()
                       else if (list.isEmpty)
                         VEmptyState(
-                          icon: Icons.sticky_note_2_outlined,
+                          icon: Icons.comment_outlined,
                           title: all.isEmpty ? 'No annotations yet' : 'Nothing matches',
                           message: all.isEmpty
                               ? 'Open a matter, go to Thread, and use “Annotate” on any message to add a note. It will show up here.'

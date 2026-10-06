@@ -63,3 +63,4 @@ if (process.env.INTAKE_ENABLED === "true") {
 
 // ---- Verin: NFR demo workspace ----
 exports.seedDemoWorkspace = require("./verin/demo/seed").seedDemoWorkspace;
+exports.demoSimulateArrival = require("./verin/demo/seed").demoSimulateArrival;

@@ -155,7 +155,7 @@ class ConsoleSidebar extends StatelessWidget {
                 children: [
                   item(ConsoleNav.matters, Icons.folder_open_outlined, 'Matters', kMattersRoute),
                   item(ConsoleNav.review, Icons.checklist, 'Review queue', kReviewRoute),
-                  item(ConsoleNav.annotations, Icons.sticky_note_2_outlined, 'Annotations', kAnnotationsRoute),
+                  item(ConsoleNav.annotations, Icons.comment_outlined, 'Annotations', kAnnotationsRoute),
                   if (user.isAdmin) ...[
                     const SizedBox(height: 20.0),
                     const VHairline(),

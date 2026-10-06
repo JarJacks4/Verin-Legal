@@ -11,6 +11,7 @@ import '../data/model.dart';
 import '../matters/matters_screen.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
+import '../widgets/motion.dart';
 import '../widgets/badges.dart';
 import '../matter/receipt_detail_drawer.dart';
 import '../onboarding/tour.dart';
@@ -34,7 +35,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
   Widget _page(BuildContext context) {
     final c = VC.of(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(40.0, 36.0, 40.0, 48.0),
+      padding: vPagePadding(context, top: 36.0),
       child: Align(
   alignment: Alignment.topLeft,
   child: ConstrainedBox(

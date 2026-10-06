@@ -658,7 +658,7 @@ class _RedactionReviewState extends State<RedactionReview> {
         Text(
           image
               ? 'Black boxes are burned into the exhibit\'s pixels — nothing under them survives. Tap a suggestion to apply or remove it; drag on the image to add your own.'
-              : 'Each selected text is removed from the exhibit wherever it appears (PDF pages with redactions are rebuilt as images so nothing survives underneath).',
+              : 'Each selected text is removed from the exhibit wherever it appears (PDF pages with redactions are re-rendered as images so nothing survives underneath).',
           style: VT.muted(context, size: 13.0),
         ),
         const SizedBox(height: 16.0),

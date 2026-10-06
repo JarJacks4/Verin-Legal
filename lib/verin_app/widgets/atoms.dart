@@ -7,6 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/tokens.dart';
+import 'celebrate.dart';
+
+export 'celebrate.dart' show celebrate, VSuccessBurst;
 
 // ---------------------------------------------------------------------------
 // Brand
@@ -1048,17 +1051,11 @@ class VSuccessState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = VC.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 48.0),
       child: Column(
         children: [
-          Container(
-            width: 56.0,
-            height: 56.0,
-            decoration: BoxDecoration(color: c.verifiedBg, shape: BoxShape.circle),
-            child: Icon(Icons.check_circle_outline, size: 28.0, color: c.verified),
-          ),
+          const VSuccessBurst(size: 64.0),
           const SizedBox(height: 16.0),
           Text(title, textAlign: TextAlign.center, style: VT.h3(context, size: 20.0)),
           const SizedBox(height: 16.0),
@@ -1194,7 +1191,7 @@ void showVToast(BuildContext context, String message, {bool error = false, Strin
       content: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(error ? Icons.error_outline : Icons.check_circle_outline, size: 16.0, color: error ? c.broken : c.verified),
+          if (error) Icon(Icons.error_outline, size: 16.0, color: c.broken) else const VSuccessBurst(size: 18.0),
           const SizedBox(width: 10.0),
           Expanded(
             child: Column(

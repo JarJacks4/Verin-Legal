@@ -162,6 +162,10 @@ class VerinApi {
 
   /// Makes this firm an NFR demo workspace, or resets one to the sample data.
   /// Returns { ok, matters, items }.
+  /// Demo only: the client "sends" the next sample text or email to [matterId].
+  static Future<Map<String, dynamic>> demoSimulateArrival(String matterId) =>
+      _call('demoSimulateArrival', {'matterId': matterId}, timeout: const Duration(seconds: 90));
+
   static Future<Map<String, dynamic>> seedDemoWorkspace() =>
       _call('seedDemoWorkspace', {}, timeout: const Duration(seconds: 540));
 
