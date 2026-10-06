@@ -39,11 +39,9 @@ module.exports = {
   // Where the "Return to Verin" link on the Clio result page goes.
   APP_URL: defineString('APP_URL', { default: '' }),
 
-  // Client email and text intake (verin/intake). Secrets:
-  //   INBOUND_WEBHOOK_KEY  long random string; part of the inbound-email URL
-  //   TWILIO_AUTH_TOKEN    verifies Twilio's signature and fetches photos
-  INBOUND_WEBHOOK_KEY: defineSecret('INBOUND_WEBHOOK_KEY'),
-  TWILIO_AUTH_TOKEN: defineSecret('TWILIO_AUTH_TOKEN'),
+  // Client email and text intake (verin/intake). Its two secrets
+  // (INBOUND_WEBHOOK_KEY, TWILIO_AUTH_TOKEN) are defined in verin/intake/secrets.js
+  // so the rest of Verin deploys before they exist.
   // Matters get <name>-<4 digits>@INBOUND_EMAIL_DOMAIN. Empty = no addresses.
   INBOUND_EMAIL_DOMAIN: defineString('INBOUND_EMAIL_DOMAIN', { default: '' }),
   TWILIO_ACCOUNT_SID: defineString('TWILIO_ACCOUNT_SID', { default: '' }),
