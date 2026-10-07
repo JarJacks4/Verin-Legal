@@ -59,6 +59,12 @@ class _AdminSettingsState extends State<AdminSettings> {
     return d;
   }
 
+  /// The NFR demo workspace is Verin's own sales tool: shown in a workspace
+  /// that already is a demo, or to a Verin Legal sign-in setting one up.
+  /// Law firms never see it.
+  bool get _showDemoWorkspace =>
+      isDemoFirm(widget.firm) || widget.user.email.trim().toLowerCase().endsWith('@verinlegal.com');
+
   @override
   void dispose() {
     _firmName.dispose();
@@ -211,7 +217,7 @@ class _AdminSettingsState extends State<AdminSettings> {
             ),
           ),
           _section('Exhibit template', ExhibitTemplateCard(key: ValueKey(widget.firm?.reference.path ?? 'none'), firm: widget.firm)),
-          _section('Demo workspace', TourTarget(id: 'settings_demo', child: DemoWorkspaceCard(firm: widget.firm))),
+          if (_showDemoWorkspace) _section('Demo workspace', TourTarget(id: 'settings_demo', child: DemoWorkspaceCard(firm: widget.firm))),
           if (isDemoFirm(widget.firm)) _section('Demo runs', const DemoRunsLog()),
           _section(
             'API access',
