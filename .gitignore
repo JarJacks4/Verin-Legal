@@ -20,3 +20,8 @@ firebase/firebase-debug.log
 firebase-debug.log
 firebase/.firebase/
 *-log.txt
+
+# Unpacked backups and emulator logs
+verin-batch*/
+verin-fix*/
+*-debug.log

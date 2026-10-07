@@ -10,7 +10,16 @@ rem   deploy.bat hosting      web app only
 
 setlocal
 cd /d "%~dp0"
-set LOG=%~dp0deploy-all-log.txt
+rem Not inside the project? Find it in Downloads: the folder that has
+rem pubspec.yaml, firebase\firebase.json and .git (the GitHub Desktop copy).
+if not exist pubspec.yaml (
+  echo Looking for the Verin Legal project in Downloads...
+  for /f "delims=" %%p in ('dir /s /b "%USERPROFILE%\Downloads\pubspec.yaml" 2^>nul') do (
+    if exist "%%~dpp.git" if exist "%%~dppfirebase\firebase.json" if exist "%%~dpplib\verin_app" set "PROJ=%%~dpp"
+  )
+)
+if defined PROJ cd /d "%PROJ%"
+set "LOG=%cd%\deploy-all-log.txt"
 set FUNCTIONS_DISCOVERY_TIMEOUT=60
 set TARGETS=functions:functions:summarizeThread,functions:functions:seedDemoWorkspace,firestore:rules,hosting
 if /i "%~1"=="hosting" set TARGETS=hosting
@@ -20,7 +29,7 @@ echo Folder: %cd% >> "%LOG%"
 where git >nul 2>&1 && (git rev-parse --abbrev-ref HEAD >> "%LOG%" 2>&1 & git log -1 --oneline >> "%LOG%" 2>&1)
 
 if not exist pubspec.yaml (
-  echo pubspec.yaml is not in this folder - put deploy.bat in the project folder. >> "%LOG%"
+  echo Could not find the project: no folder in Downloads has pubspec.yaml, firebase\firebase.json and .git. >> "%LOG%"
   goto :failed
 )
 
