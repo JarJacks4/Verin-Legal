@@ -66,7 +66,7 @@ const matterTour = [
     target: 'matter_header',
     icon: Icons.gavel_rounded,
     title: 'This is the matter',
-    body: 'Name, client and case details. Everything on this page belongs to this matter only.',
+    body: 'Name, client and case details, and the next hearing date — click it to add or change dates. Everything on this page belongs to this matter only.',
   ),
   TourStep(
     target: 'matter_tabs',
@@ -87,7 +87,7 @@ const intakeTour = [
     target: 'intake_card',
     icon: Icons.assignment_outlined,
     title: 'Give the client one card',
-    body: 'Copy instructions for the client puts the address, number and a short how-to on your clipboard — paste it into an email or text to them.',
+    body: 'Copy instructions for the client puts the address, number, what to send for this kind of case and a short how-to on your clipboard — in English, or in Spanish with Copiar en español. Paste it into an email or text to them.',
     optional: true,
   ),
   TourStep(
@@ -110,7 +110,7 @@ const Map<String, TourStep> tabTips = {
     target: 'matter_body',
     icon: Icons.forum_outlined,
     title: 'Thread',
-    body: 'The conversation assembled in date order — your client on the right, the other side on the left. Click the file name on a bubble to see the original. Set who is who in the names card, and use Annotate on any bubble to add a note — every note also collects on the Annotations page.',
+    body: 'The conversation assembled in date order — your client on the right, the other side on the left. Click the file name on a bubble to see the original. Set who is who in the names card, ask for a cited summary where every line links to its messages, and use Annotate on any bubble to add a note — every note also collects on the Annotations page.',
   ),
   'followups': TourStep(
     target: 'matter_body',
@@ -406,6 +406,38 @@ const Map<String, List<TourStep>> drawerTours = {
   'payment': [
     TourStep(target: 'drawer_body', icon: Icons.credit_card, title: 'Payment method', body: 'Change the card or account your firm is billed to.'),
   ],
+  'demo_run': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.timer_outlined,
+      title: 'Log this demo',
+      body: 'Items in, items processed and pipeline time are measured for you. Add the firm, the review and write-back times, and their estimate of hours by hand — the log gives you real numbers to quote.',
+    ),
+  ],
+  'data_handling': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.privacy_tip_outlined,
+      title: 'What happens to their files',
+      body: 'Show this when a firm asks before sending a closed matter. Copy it into an email so they have it in writing.',
+    ),
+  ],
+  'declaration': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.history_edu_outlined,
+      title: 'A starting draft',
+      body: 'Filled in from this production: each exhibit, when it arrived, its fingerprint and time-stamp. It covers the receipt records only. Complete the bracketed fields and review it before signing.',
+    ),
+  ],
+  'hearings': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.event_outlined,
+      title: 'Hearing and filing dates',
+      body: 'Add each date once. The next one shows under the matter name, and the Matters list shows everything in the next 30 days.',
+    ),
+  ],
 };
 
 const Map<String?, String> drawerTourForTitle = {
@@ -425,6 +457,10 @@ const Map<String?, String> drawerTourForTitle = {
   'Measure the manual baseline': 'baseline_measure',
   'Baseline rates': 'baseline_rates',
   'Update payment method': 'payment',
+  'End demo and log it': 'demo_run',
+  'How we handle demo material': 'data_handling',
+  'Draft declaration': 'declaration',
+  'Hearing and filing dates': 'hearings',
 };
 
 // ---------------------------------------------------------------------------
@@ -515,7 +551,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'intake_card',
       icon: Icons.assignment_outlined,
       title: 'The only thing you send the client',
-      body: 'Copy instructions for the client gives them the address, number and a two-line how-to.',
+      body: 'Copy instructions for the client gives them the address, number and what to send for this kind of case — in English or Spanish.',
       optional: true,
     ),
     TourStep(

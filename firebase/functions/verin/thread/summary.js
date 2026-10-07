@@ -1,4 +1,4 @@
-// Verin Legal — cited summaries of a matter's reconstructed thread.
+// Verin Legal — cited summaries of a matter's assembled thread.
 //
 //   summarizeThread  (callable) { matterId, topic? } → { lines: [{ text,
 //                    cites: [entryKey] }], model, demo }

@@ -32,8 +32,8 @@ const _whatToSend = {
     'Fotos del lugar y de sus lesiones, facturas y notas médicas, mensajes de los ajustadores del seguro, y todo lo relacionado con el trabajo que perdió.',
   ),
   'immigration': (
-    'Letters and notices you receive, proof of where you live and work, photos and messages that show your relationships, and any receipts.',
-    'Cartas y avisos que reciba, comprobantes de dónde vive y trabaja, fotos y mensajes que muestren sus relaciones, y cualquier recibo.',
+    'Letters and notices you receive, documents that show where you live and work, photos and messages that show your relationships, and any receipts.',
+    'Cartas y avisos que reciba, documentos que muestren dónde vive y trabaja, fotos y mensajes que muestren sus relaciones, y cualquier recibo.',
   ),
   'civil': (
     'Contracts, invoices, change orders, and texts or emails about the agreement — including ones that seem minor.',

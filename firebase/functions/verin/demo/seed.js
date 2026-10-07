@@ -230,7 +230,7 @@ function practiceMatters() {
           file: 'Lease and joint account letter.pdf',
           when: im1,
           receivedAt: at(62, 18, 5),
-          description: 'Joint lease and bank letter (proof of shared residence)',
+          description: 'Joint lease and residence letter (shared address)',
           summary: 'Landlord letter confirming Mateo and Ana Ortiz have shared the apartment since March 2024, with a joint bank account opened the same month.',
           lines: [
             { text: 'Maple Court Apartments', bold: true, size: 16, gap: 6 },
