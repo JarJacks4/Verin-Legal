@@ -10,6 +10,7 @@ import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/verin/record_ext.dart';
 import '/verin/verin_api.dart';
+import '/verin/verin_config.dart';
 
 import '../data/format.dart';
 import '../data/model.dart';
@@ -44,6 +45,40 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
   bool _saving = false;
   bool _retrying = false;
   bool _showFullTranscript = false;
+  final bool _isAdmin = VUser.current().isAdmin;
+  late final Stream<List<Map<String, dynamic>>> _access = _accessLog();
+
+  @override
+  void initState() {
+    super.initState();
+    // Access log: who opened this item, and when.
+    if (currentUserUid.isNotEmpty) {
+      final u = VUser.current();
+      FirebaseFirestore.instance.collection('Activity').add({
+        'firmID': currentFirmId(),
+        'matterId': widget.matter.reference,
+        'receiptId': widget.receipt.reference,
+        'uid': currentUserUid,
+        'name': u.name.isNotEmpty ? u.name : u.email,
+        'type': 'view',
+        'at': FieldValue.serverTimestamp(),
+      }).then((_) {}, onError: (_) {});
+    }
+  }
+
+  Stream<List<Map<String, dynamic>>> _accessLog() {
+    if (!_isAdmin) return Stream.value(const []);
+    return FirebaseFirestore.instance
+        .collection('Activity')
+        .where('firmID', isEqualTo: currentFirmId())
+        .where('receiptId', isEqualTo: widget.receipt.reference)
+        .snapshots()
+        .map((s) {
+      final rows = [for (final d in s.docs) d.data()]..removeWhere((d) => d['type'] != 'view' && d['type'] != 'review');
+      rows.sort((a, b) => (rDate(b, 'at') ?? DateTime.now()).compareTo(rDate(a, 'at') ?? DateTime.now()));
+      return rows;
+    });
+  }
 
   Future<void> _setState(ReceiptsRecord r, VItemState s) async {
     setState(() => _saving = true);
@@ -338,6 +373,26 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
           ],
           card: true,
         ),
+
+        if (_isAdmin)
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: _access,
+            builder: (context, s) {
+              final rows = s.data ?? const <Map<String, dynamic>>[];
+              return _section(context, 'Access log', [
+                if (rows.isEmpty) Text('No one has opened this item yet.', style: VT.muted(context, size: 12.0)),
+                for (final a in rows.take(25))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4.0),
+                    child: Text(
+                      '${fmtWhen(rDate(a, 'at'))} · ${rStr(a, 'name').isEmpty ? 'Staff member' : rStr(a, 'name')} · ${a['type'] == 'review' ? 'verified against the original' : 'opened'}',
+                      style: VT.muted(context, size: 12.0),
+                    ),
+                  ),
+                if (rows.length > 25) Text('and ${rows.length - 25} earlier', style: VT.muted(context, size: 12.0)),
+              ]);
+            },
+          ),
 
         _section(context, 'Chain position', [
           Text(

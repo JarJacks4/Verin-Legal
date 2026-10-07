@@ -179,7 +179,7 @@ service cloud.firestore {
       allow read: if inMyFirm(resource.data.firmID) && isAdmin();
       allow create: if inMyFirm(request.resource.data.get('firmID', ''))
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.type in ['review', 'correction', 'follow_up_sent', 'export'];
+        && request.resource.data.type in ['review', 'correction', 'follow_up_sent', 'export', 'view'];
       allow update, delete: if false;
     }
 

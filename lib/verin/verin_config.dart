@@ -19,3 +19,12 @@ const double kLowConfidence = 0.75;
 
 /// Largest screenshot the extraction function accepts.
 const int kMaxScreenshotBytes = 7 * 1024 * 1024;
+
+/// Public legal pages on the marketing site, and the version a new account
+/// accepts at sign-up (users/{uid}.termsVersion). Bump when the terms change.
+const String kTermsUrl = 'https://www.verinlegal.com/terms';
+const String kPrivacyUrl = 'https://www.verinlegal.com/privacy';
+const String kTermsVersion = '2026-10';
+
+/// Where firm staff reach Verin Legal support.
+const String kSupportEmail = 'support@verinlegal.com';

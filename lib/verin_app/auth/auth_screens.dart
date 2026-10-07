@@ -8,6 +8,8 @@ import '/auth/firebase_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/verin/auth/auth_actions.dart';
 import '/verin/auth/auth_shell.dart' show SignupDraft, looksLikeEmail;
+import '/verin/verin_config.dart';
+import '/backend/backend.dart';
 
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
@@ -241,19 +243,7 @@ class _WelcomeViewState extends State<WelcomeView> with _RedirectIfSignedIn {
             onPressed: () => context.pushNamed(kSignInRoute),
           ),
           const SizedBox(height: 32.0),
-          Text.rich(
-            TextSpan(
-              style: VT.muted(context, size: 12.0),
-              children: [
-                const TextSpan(text: "By continuing, you agree to Verin's "),
-                TextSpan(text: 'Terms of Service', style: VT.body(context, size: 12.0, color: c.teal)),
-                const TextSpan(text: ' and '),
-                TextSpan(text: 'Privacy Policy', style: VT.body(context, size: 12.0, color: c.teal)),
-                const TextSpan(text: '.'),
-              ],
-            ),
-            textAlign: TextAlign.center,
-          ),
+          const TermsText(lead: "By continuing, you agree to Verin's ", center: true),
         ],
       ),
     );
@@ -447,6 +437,43 @@ class _StepIndicator extends StatelessWidget {
   }
 }
 
+/// "…Terms of Service and Privacy Policy." with both opening on verinlegal.com.
+class TermsText extends StatelessWidget {
+  const TermsText({super.key, required this.lead, this.center = false});
+
+  final String lead;
+  final bool center;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    WidgetSpan link(String label, String url) => WidgetSpan(
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => launchURL(url),
+              child: Text(label, style: VT.body(context, size: 12.0, color: c.teal)),
+            ),
+          ),
+        );
+    return Text.rich(
+      TextSpan(
+        style: VT.muted(context, size: 12.0),
+        children: [
+          TextSpan(text: lead),
+          link('Terms of Service', kTermsUrl),
+          const TextSpan(text: ' and '),
+          link('Privacy Policy', kPrivacyUrl),
+          const TextSpan(text: '.'),
+        ],
+      ),
+      textAlign: center ? TextAlign.center : TextAlign.start,
+    );
+  }
+}
+
 class SignUpView extends StatefulWidget {
   const SignUpView({super.key, required this.step, this.invite = ''});
 
@@ -468,6 +495,7 @@ class _SignUpViewState extends State<SignUpView> with _RedirectIfSignedIn {
   final _confirm = TextEditingController();
   String? _error;
   bool _busy = false;
+  bool _agreed = false;
 
   @override
   void initState() {
@@ -519,6 +547,8 @@ class _SignUpViewState extends State<SignUpView> with _RedirectIfSignedIn {
       err = 'Passwords do not match.';
     } else if (!SignupDraft.isComplete) {
       err = 'Your details are missing — go back to step 1.';
+    } else if (!_agreed) {
+      err = 'Please agree to the Terms of Service and Privacy Policy.';
     }
     if (err != null) {
       setState(() => _error = err);
@@ -546,6 +576,16 @@ class _SignUpViewState extends State<SignUpView> with _RedirectIfSignedIn {
       return;
     }
     if (result != null) showVToast(context, result, error: true);
+    // Record which terms this account accepted.
+    if (currentUserUid.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(currentUserUid).set(
+          {'termsAcceptedAt': FieldValue.serverTimestamp(), 'termsVersion': kTermsVersion},
+          SetOptions(merge: true),
+        );
+      } catch (_) {}
+    }
+    if (!mounted) return;
     context.goNamedAuth('GettingStarted', context.mounted);
   }
 
@@ -599,6 +639,23 @@ class _SignUpViewState extends State<SignUpView> with _RedirectIfSignedIn {
                 obscure: true,
                 autofillHints: const [AutofillHints.newPassword],
                 onSubmitted: (_) => _create(),
+              ),
+              const SizedBox(height: 16.0),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 24.0,
+                    height: 24.0,
+                    child: Checkbox(
+                      value: _agreed,
+                      activeColor: VC.of(context).primary,
+                      onChanged: (v) => setState(() => _agreed = v ?? false),
+                    ),
+                  ),
+                  const SizedBox(width: 10.0),
+                  const Expanded(child: Padding(padding: EdgeInsets.only(top: 3.0), child: TermsText(lead: 'I agree to the '))),
+                ],
               ),
             ],
             const SizedBox(height: 24.0),
