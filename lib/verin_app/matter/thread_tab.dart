@@ -12,6 +12,7 @@ import '/verin/record_ext.dart';
 import '/verin/verin_api.dart';
 
 import 'cited_summary.dart';
+import 'chronology_export.dart';
 import '../data/corrections.dart';
 import '../data/model.dart';
 import '../data/record_view.dart';
@@ -287,6 +288,7 @@ class _ThreadTabState extends State<ThreadTab> {
             child: Text(_rebuilding ? 'Re-assembling…' : 'Re-assemble', style: VT.body(context, size: 11.0, color: h ? c.teal : c.tealDeep)),
           ),
         ),
+        ChronologyExportButton(matter: widget.matter, thread: t, receipts: widget.receipts),
       ],
     );
   }
