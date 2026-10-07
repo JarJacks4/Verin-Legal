@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../matter/hearings.dart';
+
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/verin/record_ext.dart';
@@ -122,6 +124,7 @@ class _MattersScreenState extends State<MattersScreen> {
                 ),
 ),
                 const SizedBox(height: 28.0),
+                UpcomingHearingsCard(matters: matters, onOpen: (m) => openMatter(context, m, admin: widget.admin)),
                 TourTarget(
                   id: 'matters_search',
                   onDemoTour: () async {

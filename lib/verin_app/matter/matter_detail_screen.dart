@@ -3,6 +3,8 @@
 
 import 'package:flutter/material.dart';
 
+import 'hearings.dart';
+
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/verin/record_ext.dart';
@@ -152,6 +154,7 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                                         ].join(' · '),
                                         style: VT.muted(context, size: 13.0),
                                       ),
+                                      HearingLine(matter: m),
                                       VideoSummaryStrip(receipts: receipts),
                                     ],
                                   ),
