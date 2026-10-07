@@ -19,8 +19,10 @@ const REGION_HOSTS = {
 };
 
 // Clio sits behind a web firewall that rejects anonymous clients (Node's
-// default User-Agent is just "node"), so every call identifies itself.
-const USER_AGENT = 'VerinLegal/1.0 (+https://app.verinlegal.com)';
+// default User-Agent is just "node"), so every call identifies itself. Keep
+// it plain: a URL in the User-Agent ("VerinLegal/1.0 (+https://…)") makes the
+// same firewall answer every /api/v4 call with a bare HTML 403.
+const USER_AGENT = 'VerinLegal/1.0';
 
 // Refresh a little before the access token actually expires.
 const REFRESH_SKEW_MS = 5 * 60 * 1000;
