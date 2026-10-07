@@ -25,3 +25,4 @@ firebase/.firebase/
 verin-batch*/
 verin-fix*/
 *-debug.log
+firebase/functions/.env.local
