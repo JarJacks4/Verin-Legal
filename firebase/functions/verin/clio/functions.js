@@ -6,7 +6,9 @@
 //                                   tokens server-side, stores them encrypted
 //   clioDisconnect     callable  -> revokes + deletes the stored tokens
 //   clioSearchMatters  callable  -> search the firm's Clio matters (for linking)
-//   clioLinkMatter     callable  -> link a Verin matter to a Clio matter
+//   clioLinkMatter     callable  -> link a Verin matter to a Clio matter, and
+//                                   note the matter's intake email and text
+//                                   number on it for support staff
 //   clioPushDocument   callable  -> upload a file (e.g. the matter export PDF)
 //                                   into the linked Clio matter's Documents and
 //                                   write the clioSyncLog row from here, so a
@@ -112,6 +114,55 @@ function toHttpsError(e) {
 }
 
 const CLIO_SECRETS = [CLIO_CLIENT_SECRET, TOKEN_ENCRYPTION_KEY];
+
+// ---------------------------------------------------------------- intake note
+
+function prettyPhone(e164) {
+  const m = /^\+1(\d{3})(\d{3})(\d{4})$/.exec(String(e164 || ''));
+  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : String(e164 || '');
+}
+
+/// The note text for a matter's intake details, or null when it has none yet.
+function intakeNote(matter) {
+  const email = String(matter.emailAddress || '').trim();
+  const sms = String(matter.smsNumber || '').trim();
+  if (!email && !sms) return null;
+  const lines = ['Where this client sends evidence (Verin Legal intake). Give these to the client if they ask:'];
+  if (email) lines.push(`Email: ${email}`);
+  if (sms) lines.push(`Text: ${prettyPhone(sms)} (from the client's own mobile)`);
+  lines.push('Everything sent there is received, fingerprinted and filed to this matter in Verin.');
+  return { key: `${email}|${sms}`, subject: 'Verin Legal: client evidence intake', detail: lines.join('\n') };
+}
+
+/// Posts the intake note on the Clio matter unless the same details were
+/// already noted there. Never throws: linking and pushing must not fail
+/// because of the note.
+async function noteIntakeOnClio(session, matterRef, matter, clioMatterId) {
+  const note = intakeNote(matter);
+  if (!note) return false;
+  if (matter.clioIntakeNoteKey === note.key && String(matter.clioIntakeNoteMatter || '') === String(clioMatterId)) return false;
+  try {
+    const res = await session.request({
+      method: 'POST',
+      path: '/notes.json',
+      query: { fields: 'id' },
+      body: { data: { type: 'Matter', matter: { id: Number(clioMatterId) }, subject: note.subject, detail: note.detail } },
+    });
+    await matterRef.set(
+      {
+        clioIntakeNoteKey: note.key,
+        clioIntakeNoteMatter: String(clioMatterId),
+        clioIntakeNoteId: res && res.data && res.data.id ? String(res.data.id) : '',
+        clioIntakeNotedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+    return true;
+  } catch (e) {
+    console.warn('Clio intake note failed', String(clioMatterId), e.message);
+    return false;
+  }
+}
 
 // ---------------------------------------------------------------- connect
 
@@ -274,13 +325,14 @@ exports.clioSearchMatters = onCall({ secrets: CLIO_SECRETS }, async (request) =>
 exports.clioLinkMatter = onCall({ secrets: CLIO_SECRETS }, async (request) => {
   const uid = requireAuth(request);
   const { matterId, clioMatterId } = request.data || {};
-  const { ref, firmId } = await loadMatterForUser(uid, matterId);
+  const { ref, snap, firmId } = await loadMatterForUser(uid, matterId);
   if (!/^\d+$/.test(String(clioMatterId || ''))) {
     throw new HttpsError('invalid-argument', 'clioMatterId must be a Clio matter id');
   }
+  const session = sessionFor(firmId);
   let m;
   try {
-    m = await sessionFor(firmId).getMatter(String(clioMatterId)); // confirms it exists and we can see it
+    m = await session.getMatter(String(clioMatterId)); // confirms it exists and we can see it
   } catch (e) {
     throw toHttpsError(e);
   }
@@ -295,7 +347,8 @@ exports.clioLinkMatter = onCall({ secrets: CLIO_SECRETS }, async (request) => {
     },
     { merge: true },
   );
-  return { clioMatterId: String(m.id), displayNumber: m.display_number || '', url: clio.matterWebUrl(region, m.id) };
+  const intakeNoted = await noteIntakeOnClio(session, ref, snap.data() || {}, m.id);
+  return { clioMatterId: String(m.id), displayNumber: m.display_number || '', url: clio.matterWebUrl(region, m.id), intakeNoted };
 });
 
 // ---------------------------------------------------------------- push
@@ -330,7 +383,8 @@ exports.clioPushDocument = onCall({ secrets: CLIO_SECRETS, timeoutSeconds: 120, 
     const [[bytes], [meta]] = await Promise.all([file.download(), file.getMetadata()]);
     const sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
 
-    const uploaded = await sessionFor(firmId).uploadDocument({
+    const session = sessionFor(firmId);
+    const uploaded = await session.uploadDocument({
       clioMatterId,
       name,
       bytes,
@@ -341,6 +395,8 @@ exports.clioPushDocument = onCall({ secrets: CLIO_SECRETS, timeoutSeconds: 120, 
     batch.set(logRef, { ...baseLog, status: 'Synced', clioDocumentId: uploaded.id, sha256, error: '' });
     batch.set(ref, { clioSyncedAt: FieldValue.serverTimestamp(), providerSyncedAt: FieldValue.serverTimestamp() }, { merge: true });
     await batch.commit();
+    // Intake details added (or changed) since the matter was linked.
+    await noteIntakeOnClio(session, ref, snap.data() || {}, clioMatterId);
     return { status: 'Synced', clioDocumentId: uploaded.id, logId: logRef.id };
   } catch (e) {
     const err = toHttpsError(e);
@@ -349,3 +405,4 @@ exports.clioPushDocument = onCall({ secrets: CLIO_SECRETS, timeoutSeconds: 120, 
   }
 });
 
+exports._internal = { intakeNote, prettyPhone };
