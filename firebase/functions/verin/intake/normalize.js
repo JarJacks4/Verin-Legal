@@ -3,7 +3,8 @@
 /// "+1 (317) 555-0142", "317.555.0142", "13175550142" -> "+13175550142".
 /// Numbers without a country code are taken as US/Canada. '' if unusable.
 function normPhone(s) {
-  const raw = String(s || '').trim();
+  // Twilio prefixes WhatsApp senders and recipients: "whatsapp:+16155550123".
+  const raw = String(s || '').trim().replace(/^whatsapp:/i, '');
   if (!raw) return '';
   const digits = raw.replace(/\D/g, '');
   if (raw.startsWith('+')) return digits.length >= 8 && digits.length <= 15 ? `+${digits}` : '';
@@ -136,8 +137,14 @@ function smsAckTwiml(text = SMS_ACK_TEXT) {
   return `<Message>${esc}</Message>`;
 }
 
+/// 'whatsapp' when Twilio relayed the message from WhatsApp, else 'sms'.
+function messageChannel(from) {
+  return /^\s*whatsapp:/i.test(String(from || '')) ? 'whatsapp' : 'sms';
+}
+
 module.exports = {
   SMS_ACK_TEXT,
+  messageChannel,
   smsAckTwiml,
   normPhone,
   normEmail,

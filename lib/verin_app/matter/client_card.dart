@@ -58,6 +58,11 @@ String clientInstructions(MattersRecord matter, CardLang lang) {
     lines.add(es
         ? 'Texto: envíe fotos o capturas de pantalla al ${_pretty(matter.smsNumber)} desde su propio teléfono'
         : 'Text: send photos or screenshots to ${_pretty(matter.smsNumber)} from your own phone');
+    if (matter.snapshotData['whatsapp'] == true) {
+      lines.add(es
+          ? 'WhatsApp: también puede enviarlas por WhatsApp al mismo número'
+          : 'WhatsApp: you can also send them on WhatsApp to the same number');
+    }
   }
   lines.addAll([
     '',

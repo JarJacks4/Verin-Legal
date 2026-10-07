@@ -96,6 +96,7 @@ exports.assignUnrouted = onCall({ timeoutSeconds: 300, memory: '1GiB' }, async (
     at,
     media: u.get('media') || [],
     known: true, // a person chose the matter
+    channel: u.get('channel') === 'whatsapp' ? 'whatsapp' : 'sms',
   });
   await uref.set({ status: 'filed', matterId: matterRef, receipts: filed, handledBy: uid, handledAt: FieldValue.serverTimestamp() }, { merge: true });
   return { ok: true, receipts: filed.length };

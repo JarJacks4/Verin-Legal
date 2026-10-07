@@ -85,6 +85,8 @@ async function intakeUpdates(db, matterRef, m) {
   if (JSON.stringify(phones) !== JSON.stringify(m.clientPhones || [])) out.clientPhones = phones;
   const emails = [...new Set([m.clientEmail, ...(Array.isArray(m.clientEmails) ? m.clientEmails : [])].map(N.normEmail).filter(Boolean))];
   if (JSON.stringify(emails) !== JSON.stringify(m.clientEmails || [])) out.clientEmails = emails;
+  // Clients can also send to the firm's number from WhatsApp once Meta approves it as a sender.
+  if (P.WHATSAPP_ENABLED.value() === 'true' && (m.smsNumber || out.smsNumber) && m.whatsapp !== true) out.whatsapp = true;
   if ((out.emailAddress || out.smsNumber) && !m.intakeProvisionedAt) out.intakeProvisionedAt = FieldValue.serverTimestamp();
   return out;
 }
@@ -438,6 +440,7 @@ async function keepSmsMedia(bucket, event, f) {
 
 async function fileSms(db, bucket, event) {
   const f = event.data.fields || {};
+  const channel = N.messageChannel(f.From);
   const from = N.normPhone(f.From);
   const to = N.normPhone(f.To);
   const at = new Date();
@@ -450,7 +453,7 @@ async function fileSms(db, bucket, event) {
     const firmID = firmsForTo.length === 1 ? firmsForTo[0] : list.length ? list[0].get('firmID') : await soleFirmFor(db, to);
     await db.collection('UnroutedIntake').doc(event.id).set({
       firmID: firmID || '',
-      channel: 'sms',
+      channel,
       from,
       to,
       body: String(f.Body || '').slice(0, 5000),
@@ -471,6 +474,7 @@ async function fileSms(db, bucket, event) {
     at,
     media,
     known: true, // matched on the matter's own client phone
+    channel,
   });
   const notes = list.length > 1 ? [`${list.length} matters share this number; filed to the most recent`] : [];
   if (list.length > 1) {

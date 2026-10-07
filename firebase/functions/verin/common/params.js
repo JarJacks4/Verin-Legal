@@ -51,6 +51,9 @@ module.exports = {
   TWILIO_WEBHOOK_URL: defineString('TWILIO_WEBHOOK_URL', { default: '' }),
   // "true" sends a short "Received" reply (needs A2P / toll-free registration).
   SMS_AUTO_REPLY: defineString('SMS_AUTO_REPLY', { default: 'false' }),
+  // "true" once Meta has approved the firm's Twilio number as a WhatsApp sender
+  // (its webhook is the same inboundSms URL). Adds the WhatsApp line to client cards.
+  WHATSAPP_ENABLED: defineString('WHATSAPP_ENABLED', { default: 'false' }),
 
   // Single-tenant fallback: the firmID every matter is filed under today.
   DEFAULT_FIRM_ID: defineString('DEFAULT_FIRM_ID', { default: 'harbow-law' }),

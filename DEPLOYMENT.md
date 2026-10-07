@@ -262,6 +262,14 @@ No code change: the webhook recognises either provider.
 3. Optional per firm: set `smsNumber` on that firm's `firmAccount` document to
    give the firm its own number; otherwise `TWILIO_SMS_NUMBER` is used.
 
+### 4. WhatsApp — same Twilio number (optional)
+1. Twilio → Messaging → Senders → WhatsApp senders → self sign-up: connect the Meta
+   Business account, finish Meta business verification, register the firm's Twilio
+   number with display name "Verin Legal". The number must not be on the WhatsApp app.
+2. On the sender, "A message comes in" → the same `inboundSms` URL, HTTP POST.
+3. Once Meta approves it, set `WHATSAPP_ENABLED=true` in `.env` and deploy functions.
+   Messages are filed like texts but labelled WhatsApp; client cards gain a WhatsApp line.
+
 Existing matters get their address the first time someone opens their Intake tab.
 
 ## NFR demo workspace
