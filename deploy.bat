@@ -2,7 +2,8 @@
 rem Verin Legal - build and deploy from this folder.
 rem Double-click this file (or run deploy.bat in Command Prompt). It always
 rem works from the folder it sits in, so there is no "cd" to get wrong.
-rem Everything is written to deploy-all-log.txt next to this file.
+rem Everything is written to deploy-all-log.txt next to this file, and the
+rem log is pushed to the deploy-logs branch on GitHub so Claude can read it.
 rem
 rem   deploy.bat              web app, demo + summary functions, rules
 rem   deploy.bat hosting      web app only
@@ -52,6 +53,7 @@ echo. >> "%LOG%"
 echo ===== DONE ===== >> "%LOG%"
 echo.
 echo Done. Log: %LOG%
+call :pushlog
 pause
 exit /b 0
 
@@ -59,6 +61,26 @@ exit /b 0
 echo. >> "%LOG%"
 echo ===== FAILED ===== >> "%LOG%"
 echo.
-echo Something failed. Send deploy-all-log.txt to Claude: %LOG%
+echo Something failed. Log: %LOG%
+call :pushlog
 pause
 exit /b 1
+
+:pushlog
+rem Puts the log on the deploy-logs branch without touching your files or
+rem your current branch (uses a temporary git index).
+where git >nul 2>&1 || (echo Git is not on PATH - send deploy-all-log.txt to Claude instead. & exit /b 0)
+set GIT_INDEX_FILE=%TEMP%\verin-deploy-log.index
+if exist "%GIT_INDEX_FILE%" del "%GIT_INDEX_FILE%"
+set BLOB=
+set TREE=
+set COMMIT=
+for /f "delims=" %%h in ('git hash-object -w "%LOG%"') do set BLOB=%%h
+git update-index --add --cacheinfo 100644 %BLOB% deploy-all-log.txt
+for /f "delims=" %%t in ('git write-tree') do set TREE=%%t
+set GIT_INDEX_FILE=
+for /f "delims=" %%c in ('git commit-tree %TREE% -m "Deploy log %date% %time%"') do set COMMIT=%%c
+if "%COMMIT%"=="" (echo Could not save the log to git - send deploy-all-log.txt to Claude instead. & exit /b 0)
+git push -q -f origin %COMMIT%:refs/heads/deploy-logs >nul 2>&1
+if errorlevel 1 (echo Could not push the log - send deploy-all-log.txt to Claude instead.) else (echo Log sent to GitHub - tell Claude to check it.)
+exit /b 0
