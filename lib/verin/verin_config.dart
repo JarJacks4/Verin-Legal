@@ -28,3 +28,5 @@ const String kTermsVersion = '2026-10';
 
 /// Where firm staff reach Verin Legal support.
 const String kSupportEmail = 'support@verinlegal.com';
+const String kSupportHours = 'Monday to Friday, 9 AM – 6 PM Eastern';
+const String kSupportResponse = 'Reply within one business day; same business day for anything blocking a filing or hearing.';

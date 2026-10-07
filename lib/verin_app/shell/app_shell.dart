@@ -3,6 +3,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'help.dart';
+
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -78,6 +80,7 @@ class _AppShellState extends State<AppShell> {
                                   ],
                                 ),
                               ),
+                              const SystemStatusBanner(),
                               Expanded(child: widget.child),
                             ],
                           )
@@ -85,7 +88,7 @@ class _AppShellState extends State<AppShell> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               StillHero(tag: 'console-sidebar', child: sidebar),
-                              Expanded(child: widget.child),
+                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const SystemStatusBanner(), Expanded(child: widget.child)])),
                             ],
                           ),
                   ),
@@ -342,6 +345,17 @@ class _ProfileDrawerBodyState extends State<ProfileDrawerBody> {
           ),
         ),
         const SizedBox(height: 24.0),
+        VButton(
+          label: 'Help & support',
+          icon: Icons.support_agent_outlined,
+          kind: VButtonKind.secondary,
+          fullWidth: true,
+          onPressed: () {
+            Navigator.of(context).pop();
+            showHelpCenter(context);
+          },
+        ),
+        const SizedBox(height: 12.0),
         TourTarget(
           id: 'profile_replay',
           child: VButton(

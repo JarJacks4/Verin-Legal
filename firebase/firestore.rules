@@ -265,6 +265,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Service status strip shown on every screen during an incident. Set
+    // from the Firebase console only.
+    match /systemStatus/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
     match /firmScope/{id} {
       allow read, write: if false;
     }

@@ -430,6 +430,14 @@ const Map<String, List<TourStep>> drawerTours = {
       body: 'Filled in from this production: each exhibit, when it arrived, its fingerprint and time-stamp. It covers the receipt records only. Complete the bracketed fields and review it before signing.',
     ),
   ],
+  'help': [
+    TourStep(
+      target: 'drawer_body',
+      icon: Icons.support_agent_outlined,
+      title: 'Help when you need it',
+      body: 'How to reach us, when, and how fast we answer — plus short how-tos for the things you do most.',
+    ),
+  ],
   'hearings': [
     TourStep(
       target: 'drawer_body',
@@ -461,6 +469,7 @@ const Map<String?, String> drawerTourForTitle = {
   'How we handle demo material': 'data_handling',
   'Draft declaration': 'declaration',
   'Hearing and filing dates': 'hearings',
+  'Help & support': 'help',
 };
 
 // ---------------------------------------------------------------------------
