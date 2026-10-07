@@ -219,8 +219,8 @@ until someone approves them (receipt drawer → *Approve and read*). Texts from
 unknown numbers appear at the top of the **Review queue** to file by hand.
 
 Functions: `inboundEmail`, `inboundSms` (webhooks), `onInboundEvent` (files
-items), `onMatterIntake` / `provisionIntake` (addresses), `approveQuarantined`,
-`assignUnrouted`.
+items), `onMatterIntake` / `provisionIntake` (addresses). `approveQuarantined` and
+`assignUnrouted` (Review queue actions) are always deployed, intake on or off.
 
 ### 1. Secrets and settings
 ```

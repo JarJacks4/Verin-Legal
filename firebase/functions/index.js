@@ -58,9 +58,14 @@ if (process.env.INTAKE_ENABLED === "true") {
   exports.onInboundEvent = verinIntake.onInboundEvent;
   exports.onMatterIntake = verinIntake.onMatterIntake;
   exports.provisionIntake = verinIntake.provisionIntake;
-  exports.approveQuarantined = verinIntake.approveQuarantined;
-  exports.assignUnrouted = verinIntake.assignUnrouted;
 }
+
+// Review queue actions on held items (approve an unknown sender, file a text
+// from an unknown number). No intake secrets, so always deployed — the demo
+// workspace uses them even while live intake is off.
+const verinReview = require("./verin/intake/review");
+exports.approveQuarantined = verinReview.approveQuarantined;
+exports.assignUnrouted = verinReview.assignUnrouted;
 
 // ---- Verin: NFR demo workspace ----
 exports.seedDemoWorkspace = require("./verin/demo/seed").seedDemoWorkspace;
