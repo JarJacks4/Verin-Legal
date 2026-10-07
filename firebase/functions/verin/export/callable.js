@@ -80,6 +80,10 @@ exports.exportMatterRecord = onCall({ timeoutSeconds: 120, memory: '1GiB' }, asy
         assignedCounsel: md.assignedCounsel || '',
         practiceArea: md.practiceArea || '',
         openedAt: toDate(md.openedAt),
+        // Where the client sends evidence, so staff reading the record in
+        // Clio / MyCase / Smokeball can tell the client again.
+        intakeEmail: md.emailAddress || '',
+        intakeSms: md.smsNumber || '',
         redactionCount: md.redactionCount || 0,
         redactionCategories: md.redactionCategories || '',
         hashChainLastAnchoredAt: toDate(md.hashChainLastAnchoredAt),
