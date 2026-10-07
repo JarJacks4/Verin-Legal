@@ -25,7 +25,7 @@ class _Provider {
 
 const _providers = [
   _Provider('Clio Manage', Icons.apartment_outlined, 'Doe Family Law · Clio (US)', 'Documents'),
-  _Provider('MyCase', Icons.work_outline, 'Doe Family Law · MyCase', 'Case documents'),
+  _Provider('MyCase', Icons.work_outline, 'Doe Family Law · MyCase Advanced', 'Case documents'),
   _Provider('Smokeball', Icons.bolt_outlined, 'Doe Family Law · Smokeball', 'Matter files'),
 ];
 
