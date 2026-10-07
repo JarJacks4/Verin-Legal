@@ -253,6 +253,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Timed demo runs: a demo workspace logs and reads its own.
+    match /demoRuns/{id} {
+      allow read: if inMyFirm(resource.data.firmID);
+      allow create: if inMyFirm(request.resource.data.get('firmID', ''))
+        && request.resource.data.startedBy == request.auth.uid
+        && request.resource.data.status == 'running';
+      allow update: if inMyFirm(resource.data.firmID)
+        && untouched(['firmID', 'startedBy', 'startedAt'])
+        && request.resource.data.status in ['running', 'done', 'discarded'];
+      allow delete: if false;
+    }
+
     match /firmScope/{id} {
       allow read, write: if false;
     }

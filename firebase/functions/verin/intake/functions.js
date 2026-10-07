@@ -177,7 +177,7 @@ exports.inboundSms = onRequest(
       console.error('inboundSms: could not store', e);
       return res.status(500).send('retry');
     }
-    const reply = P.SMS_AUTO_REPLY.value() === 'true' ? '<Message>Received — your attorney\'s office has it.</Message>' : '';
+    const reply = P.SMS_AUTO_REPLY.value() === 'true' ? N.smsAckTwiml() : '';
     res.set('Content-Type', 'text/xml');
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?><Response>${reply}</Response>`);
   },

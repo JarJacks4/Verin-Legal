@@ -3,7 +3,8 @@
 //   seedDemoWorkspace  (admin callable) Turns the caller's firm into a demo
 //                      workspace, or resets one: everything in the firm's
 //                      matters is deleted and replaced with fictional sample
-//                      matters — real screenshots, an email, PDFs, a gap,
+//                      matters (all five practices: family, personal
+//                      injury, immigration, civil, criminal) — real screenshots, an email, PDFs, a gap,
 //                      a duplicate, an uncertain reading, a quarantined
 //                      sender, an unmatched text, annotations, and three
 //                      months of value-report history.
@@ -137,6 +138,222 @@ async function wipeFirm(db, bucket, firmId) {
   }
   for (const m of matters.docs) await db.recursiveDelete(m.ref, writer);
   await writer.close();
+}
+
+// ---------------------------------------------------------------------------
+// Sample matters for the other four practices (fictional; 555 numbers and
+// example.com addresses only)
+// ---------------------------------------------------------------------------
+
+function practiceMatters() {
+  const pi1 = at(52, 17, 40);
+  const pi2 = at(38, 10);
+  const im1 = at(64, 9, 15);
+  const im2 = at(21, 13, 2);
+  const cv1 = at(73, 8, 30);
+  const cv2 = at(70, 16, 55);
+  const cr1 = at(16, 22, 47);
+  const cr2 = at(15, 23, 31);
+  return [
+    {
+      contact: 'Kyle (adjuster)',
+      matter: {
+        matterName: 'Nguyen v. Halvorsen Freight',
+        caseTitle: 'Nguyen v. Halvorsen Freight',
+        clientName: 'Linh Nguyen',
+        caseNumber: '49D02-2026-CT-008814',
+        practiceArea: 'Personal injury',
+        matterType: 'Personal injury',
+        status: 'Open',
+        openedAt: Timestamp.fromDate(at(55, 9)),
+        clientPhone: '+13175550161',
+        clientPhones: ['+13175550161'],
+        clientEmail: 'linh.nguyen@example.com',
+        clientEmails: ['linh.nguyen@example.com'],
+        participantAliases: {},
+      },
+      items: [
+        {
+          kind: 'text',
+          file: 'IMG_7731.PNG',
+          when: pi1,
+          receivedAt: at(50, 12, 10),
+          description: 'Screenshot of texts with the insurance adjuster',
+          summary: 'The adjuster asks Linh for a recorded statement and offers to close the claim quickly; Linh says she is still in physical therapy and refers him to her attorney.',
+          lines: [
+            { side: 'other', text: 'Hi Linh, this is Kyle with Halvorsen\'s carrier. Can we get a quick recorded statement today?' },
+            { side: 'other', text: 'If we wrap this up this week we can close the claim fast.' },
+            { side: 'client', text: "I'm still in physical therapy twice a week. Please talk to my attorney." },
+          ],
+        },
+        {
+          kind: 'document',
+          file: 'PT progress note.pdf',
+          when: pi2,
+          receivedAt: at(37, 15, 20),
+          description: 'Physical therapy progress note',
+          summary: 'Physical therapy progress note: lumbar strain after the collision, 14 visits so far, return to full duty not yet cleared.',
+          lines: [
+            { text: 'Northside Physical Therapy', bold: true, size: 16, gap: 6 },
+            { text: 'Progress Note', size: 12, gap: 18 },
+            { text: 'Patient: Linh Nguyen', gap: 14 },
+            { text: `Visit date: ${dayLabel(pi2, false)}`, gap: 18 },
+            { text: 'Diagnosis: lumbar strain following motor vehicle collision', bold: true },
+            { text: 'Visits to date: 14', bold: true },
+            { text: 'Return to full duty: not yet cleared', bold: true, gap: 18 },
+            { text: 'Fictional sample record for demonstration only.' },
+          ],
+          statements: [['event', 4], ['amount', 5], ['event', 6]],
+        },
+      ],
+    },
+    {
+      contact: 'Tía Carmen',
+      matter: {
+        matterName: 'Ortiz — Adjustment of status',
+        caseTitle: 'Ortiz — Adjustment of status',
+        clientName: 'Mateo Ortiz',
+        caseNumber: 'A-000-000-000 (sample)',
+        practiceArea: 'Immigration',
+        matterType: 'Immigration',
+        status: 'Open',
+        openedAt: Timestamp.fromDate(at(70, 9)),
+        clientPhone: '+13175550172',
+        clientPhones: ['+13175550172'],
+        clientEmail: 'mateo.ortiz@example.com',
+        clientEmails: ['mateo.ortiz@example.com'],
+        participantAliases: {},
+      },
+      items: [
+        {
+          kind: 'document',
+          file: 'Lease and joint account letter.pdf',
+          when: im1,
+          receivedAt: at(62, 18, 5),
+          description: 'Joint lease and bank letter (proof of shared residence)',
+          summary: 'Landlord letter confirming Mateo and Ana Ortiz have shared the apartment since March 2024, with a joint bank account opened the same month.',
+          lines: [
+            { text: 'Maple Court Apartments', bold: true, size: 16, gap: 6 },
+            { text: 'Residence verification', size: 12, gap: 18 },
+            { text: 'Residents: Mateo Ortiz and Ana Ortiz', gap: 14 },
+            { text: `Letter date: ${dayLabel(im1, false)}`, gap: 18 },
+            { text: 'Joint lease in effect since March 1, 2024', bold: true },
+            { text: 'Both residents listed on the lease and the utility account', bold: true, gap: 18 },
+            { text: 'Fictional sample record for demonstration only.' },
+          ],
+          statements: [['date', 4], ['event', 5]],
+        },
+        {
+          kind: 'text',
+          file: 'IMG_2290.PNG',
+          when: im2,
+          receivedAt: at(20, 9, 40),
+          description: 'Screenshot of family texts about wedding photos',
+          summary: 'Mateo\'s aunt says she is sending the wedding photos and guest list; Mateo asks for them by Friday for the interview packet.',
+          lines: [
+            { side: 'other', text: 'Te mando las fotos de la boda y la lista de invitados esta noche.' },
+            { side: 'client', text: 'Gracias tía. Las necesito antes del viernes para la entrevista.' },
+          ],
+        },
+      ],
+    },
+    {
+      contact: 'Greg (Lakeside PM)',
+      matter: {
+        matterName: 'Brennan Builders v. Lakeside Commons',
+        caseTitle: 'Brennan Builders v. Lakeside Commons',
+        clientName: 'Brennan Builders LLC',
+        caseNumber: '49D11-2026-PL-005532',
+        practiceArea: 'Civil',
+        matterType: 'Civil',
+        status: 'Open',
+        openedAt: Timestamp.fromDate(at(80, 9)),
+        clientPhone: '+13175550184',
+        clientPhones: ['+13175550184'],
+        clientEmail: 'office@brennan-builders.example.com',
+        clientEmails: ['office@brennan-builders.example.com'],
+        participantAliases: {},
+      },
+      items: [
+        {
+          kind: 'text',
+          file: 'IMG_9012.PNG',
+          when: cv1,
+          receivedAt: at(68, 11, 0),
+          description: 'Screenshot of texts approving extra drainage work',
+          summary: 'Lakeside\'s project manager approves the added drainage work by text and says the change order will follow; the client asks for it in writing.',
+          lines: [
+            { side: 'client', text: 'Found standing water under slab C. Need to add a French drain, about $18,400.' },
+            { side: 'other', text: 'Go ahead, approved. Paperwork to follow.' },
+            { side: 'client', text: 'Please send the signed change order before we pour Thursday.' },
+          ],
+        },
+        {
+          kind: 'document',
+          file: 'Change order 7 (unsigned).pdf',
+          when: cv2,
+          receivedAt: at(66, 9, 30),
+          description: 'Change order 7, sent unsigned',
+          summary: 'Change order 7 for $18,400 of drainage work at slab C, sent by Lakeside without a signature.',
+          lines: [
+            { text: 'Lakeside Commons — Change Order 7', bold: true, size: 16, gap: 6 },
+            { text: 'Contractor: Brennan Builders LLC', size: 12, gap: 18 },
+            { text: 'Scope: French drain at slab C', gap: 14 },
+            { text: `Issued: ${dayLabel(cv2, false)}`, gap: 18 },
+            { text: 'Amount: $18,400.00', bold: true },
+            { text: 'Owner signature: (blank)', bold: true, gap: 18 },
+            { text: 'Fictional sample record for demonstration only.' },
+          ],
+          statements: [['amount', 4], ['event', 5]],
+        },
+      ],
+    },
+    {
+      contact: 'Jess',
+      matter: {
+        matterName: 'State v. Holloway',
+        caseTitle: 'State v. Holloway',
+        clientName: 'Devon Holloway',
+        caseNumber: '49G05-2026-F5-012207',
+        practiceArea: 'Criminal',
+        matterType: 'Criminal',
+        status: 'Open',
+        openedAt: Timestamp.fromDate(at(14, 9)),
+        clientPhone: '+13175550195',
+        clientPhones: ['+13175550195'],
+        clientEmail: 'devon.holloway@example.com',
+        clientEmails: ['devon.holloway@example.com'],
+        participantAliases: {},
+      },
+      items: [
+        {
+          kind: 'text',
+          file: 'Screenshot_20261021-2247.png',
+          when: cr1,
+          receivedAt: at(13, 10, 5),
+          description: 'Screenshot of texts placing Devon at work',
+          summary: 'Devon texts Jess at 10:47 PM that he is still closing at the restaurant; Jess replies she will pick him up at 11:30.',
+          lines: [
+            { side: 'client', text: 'Still closing, manager made us redo the walk-in.' },
+            { side: 'other', text: "Ok I'll get you at 11:30 out back" },
+          ],
+        },
+        {
+          kind: 'text',
+          file: 'Screenshot_20261021-2331.png',
+          when: cr2,
+          receivedAt: at(13, 10, 6),
+          description: 'Screenshot of texts at pickup',
+          summary: 'At 11:31 PM Jess says she is outside; Devon says he is walking out now. One line is hard to read.',
+          uncertain: '1 message was hard to read — check against the image.',
+          lines: [
+            { side: 'other', text: "I'm outside" },
+            { side: 'client', text: 'Walking out now, clocking out', confidence: 0.52 },
+          ],
+        },
+      ],
+    },
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -583,6 +800,64 @@ async function seedFirm(db, bucket, firmId, user) {
     }),
   });
 
+  // ---- Matters 4–7: one fictional sample per remaining practice -------------
+  // Personal injury, immigration, civil litigation and criminal defense, so a
+  // firm that won't send a closed matter still sees its own kind of case.
+  const practiceRefs = [];
+  for (const pm of practiceMatters()) {
+    const ref = await newMatter({ ...pm.matter, demoContact: pm.contact });
+    practiceRefs.push(ref);
+    for (const it of pm.items) {
+      if (it.kind === 'text') {
+        const s = screenshot({ contact: pm.contact, items: [{ header: dayLabel(it.when) }, ...it.lines] });
+        await file(ref, {
+          buffer: s.buffer,
+          fileName: it.file,
+          contentType: 'image/png',
+          kind: 'photo',
+          channelKey: 'sms',
+          fromLabel: `Text from ${pm.matter.clientPhones[0]}`,
+          senderKey: `tel:${pm.matter.clientPhones[0]}`,
+          description: it.description,
+          source: `demo|sms|${it.file}`,
+          receivedAt: it.receivedAt,
+          extra: readFields({
+            when: it.when,
+            summary: it.summary,
+            platform: s.platform,
+            messages: s.messages,
+            evidenceType: 'screenshot',
+            width: s.width,
+            height: s.height,
+            itemKind: 'screenshot',
+            ...(it.uncertain ? { label: 'Uncertain', reason: it.uncertain } : {}),
+          }),
+        });
+      } else {
+        const pdf = await simplePdf(it.lines);
+        await file(ref, {
+          buffer: pdf.pdf,
+          fileName: it.file,
+          contentType: 'application/pdf',
+          kind: 'document',
+          channelKey: 'email',
+          fromLabel: `${pm.matter.clientName} <${pm.matter.clientEmails[0]}>`,
+          senderKey: `mail:${pm.matter.clientEmails[0]}`,
+          description: it.description,
+          source: `demo|email|${it.file}`,
+          receivedAt: it.receivedAt,
+          extra: readFields({
+            when: it.when,
+            summary: it.summary,
+            evidenceType: 'document',
+            statements: (it.statements || []).map(([kind, line]) => ({ kind, text: it.lines[line].text, page: 1, box: pdf.boxes[line] })),
+            extra: { documentText: it.lines.map((l) => l.text).join('\n'), pageCount: 1 },
+          }),
+        });
+      }
+    }
+  }
+
   // ---- Annotations on the Reyes thread --------------------------------------
   const notes = [
     [r1, 4, 'key', "Matches the coach's release policy — request a copy from the club."],
@@ -638,7 +913,7 @@ async function seedFirm(db, bucket, firmId, user) {
       const [evidenceType, itemKind, messages] = kinds[(d + k) % kinds.length];
       hist.create(db.collection('Activity').doc(), {
         firmID: firmId,
-        matterId: [reyes, carter, patel][(d + k) % 3],
+        matterId: [reyes, carter, patel, ...practiceRefs][(d + k) % (3 + practiceRefs.length)],
         type: 'read',
         itemKind,
         evidenceType,
@@ -723,7 +998,7 @@ exports.seedDemoWorkspace = onCall({ timeoutSeconds: 540, memory: '2GiB' }, asyn
 /// The next thing a client "sends" to this demo matter.
 function nextArrival(matter, n) {
   const client = String(matter.clientName || 'Client');
-  const other = client.includes('Reyes') ? 'Marcus' : client.includes('Carter') ? 'Jordan' : 'Unknown';
+  const other = client.includes('Reyes') ? 'Marcus' : client.includes('Carter') ? 'Jordan' : String(matter.demoContact || 'Unknown');
   const yest = at(1, 18, 42);
   const today = at(0, 8, 5);
   const scripts = client.includes('Reyes')
@@ -862,4 +1137,4 @@ exports.demoSimulateArrival = onCall({ timeoutSeconds: 120, memory: '1GiB' }, as
   return { ok: true, receiptId: r.receiptId, kind: sc.kind };
 });
 
-exports._internal = { screenshot, dayLabel, at, nextArrival };
+exports._internal = { screenshot, dayLabel, at, nextArrival, practiceMatters };

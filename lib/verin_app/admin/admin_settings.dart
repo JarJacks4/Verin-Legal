@@ -16,6 +16,7 @@ import '../widgets/drawer.dart';
 import 'admin_shell.dart';
 import 'exhibit_template_card.dart';
 import '../shell/demo_banner.dart';
+import '../demo/demo_runs.dart' show DemoRunsLog;
 import '../onboarding/tour.dart' show TourTarget, demoType;
 
 class AdminSettings extends StatefulWidget {
@@ -211,6 +212,7 @@ class _AdminSettingsState extends State<AdminSettings> {
           ),
           _section('Exhibit template', ExhibitTemplateCard(key: ValueKey(widget.firm?.reference.path ?? 'none'), firm: widget.firm)),
           _section('Demo workspace', TourTarget(id: 'settings_demo', child: DemoWorkspaceCard(firm: widget.firm))),
+          if (isDemoFirm(widget.firm)) _section('Demo runs', const DemoRunsLog()),
           _section(
             'API access',
             VHover(

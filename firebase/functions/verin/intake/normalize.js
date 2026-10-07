@@ -124,7 +124,21 @@ function smsRecordText({ from, to, body, at, sid }) {
   return [`From: ${from}`, `To: ${to}`, `Received: ${at}`, `Message SID: ${sid || ''}`, '', String(body || '')].join('\n');
 }
 
+/// Reply to a client's text (launch checklist #29: the client never sees an
+/// error). Everything sent is accepted and kept; the reply says so and that
+/// the number is not watched for emergencies.
+const SMS_ACK_TEXT =
+  "Received — your attorney's office has it. This number isn't monitored around the clock. If this is an emergency, call 911.";
+
+/// Twilio TwiML for the reply, escaped for XML.
+function smsAckTwiml(text = SMS_ACK_TEXT) {
+  const esc = String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `<Message>${esc}</Message>`;
+}
+
 module.exports = {
+  SMS_ACK_TEXT,
+  smsAckTwiml,
   normPhone,
   normEmail,
   emailsIn,
