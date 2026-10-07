@@ -14,6 +14,7 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import '../widgets/motion.dart';
+import 'evidence_search.dart';
 import 'new_matter_drawer.dart';
 import '../onboarding/tour.dart';
 import '../onboarding/tours.dart';
@@ -140,7 +141,7 @@ class _MattersScreenState extends State<MattersScreen> {
                     cursorColor: c.teal,
                     decoration: vInputDecoration(
                       context,
-                      hint: 'Search matters or clients',
+                      hint: 'Search matters, clients or evidence',
                       prefix: Icon(Icons.search, size: 16.0, color: c.mutedFg),
                     ).copyWith(fillColor: c.card),
                   ),
@@ -158,13 +159,19 @@ class _MattersScreenState extends State<MattersScreen> {
                     stream: _receipts,
                     builder: (context, rs) => StreamBuilder<Map<String, dynamic>>(
                       stream: _intg,
-                      builder: (context, ig) => _MattersTable(
-                        matters: matters,
-                        query: _q.text,
-                        receipts: rs.data ?? const {},
-                        firmClio: ig.data?['clioConnected'] == true,
-                        onOpen: (m) => openMatter(context, m, admin: widget.admin),
-                        onNew: _newMatter,
+                      builder: (context, ig) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _MattersTable(
+                            matters: matters,
+                            query: _q.text,
+                            receipts: rs.data ?? const {},
+                            firmClio: ig.data?['clioConnected'] == true,
+                            onOpen: (m) => openMatter(context, m, admin: widget.admin),
+                            onNew: _newMatter,
+                          ),
+                          EvidenceMatches(query: _q.text, matters: matters, receipts: rs.data ?? const {}),
+                        ],
                       ),
                     ),
                   ),
