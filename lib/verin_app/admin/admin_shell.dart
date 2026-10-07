@@ -14,6 +14,7 @@ import '../widgets/atoms.dart';
 import '../widgets/motion.dart';
 import '../onboarding/tour.dart';
 import '../shell/demo_banner.dart';
+import '../shell/help.dart' show SystemStatusBanner;
 import '../onboarding/tours.dart';
 
 enum AdminNav { dashboard, matters, billing, team, program, settings }
@@ -108,12 +109,16 @@ class _AdminShellState extends State<AdminShell> {
                                 ],
                               ),
                             ),
+                            const SystemStatusBanner(),
                             Expanded(child: body),
                           ],
                         )
                       : Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [StillHero(tag: 'admin-sidebar', child: sidebar), Expanded(child: body)],
+                          children: [
+                            StillHero(tag: 'admin-sidebar', child: sidebar),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const SystemStatusBanner(), Expanded(child: body)])),
+                          ],
                         ),
                 ),
               );

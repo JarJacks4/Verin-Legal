@@ -184,3 +184,9 @@ class _CorrectionFormState extends State<_CorrectionForm> {
     );
   }
 }
+
+/// Every correction in the firm (Admin → Dashboard accuracy measure).
+Stream<List<Correction>> firmCorrectionsStream() => _col
+    .where('firmID', isEqualTo: currentFirmId())
+    .snapshots()
+    .map((s) => s.docs.map((d) => Correction(d.reference, d.data())).toList());

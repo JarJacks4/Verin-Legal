@@ -153,7 +153,7 @@ service cloud.firestore {
       allow create: if inMyFirm(request.resource.data.get('firmID', ''))
         && request.resource.data.byUid == request.auth.uid
         && get(request.resource.data.matterId).data.get('firmID', '') == request.resource.data.firmID
-        && request.resource.data.field in ['text', 'date', 'sender']
+        && request.resource.data.field in ['text', 'date', 'sender', 'thread']
         && request.resource.data.corrected is string
         && request.resource.data.corrected.size() > 0 && request.resource.data.corrected.size() <= 4000;
       allow update, delete: if false;
@@ -179,7 +179,7 @@ service cloud.firestore {
       allow read: if inMyFirm(resource.data.firmID) && isAdmin();
       allow create: if inMyFirm(request.resource.data.get('firmID', ''))
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.type in ['review', 'correction', 'follow_up_sent', 'export'];
+        && request.resource.data.type in ['review', 'correction', 'follow_up_sent', 'export', 'view'];
       allow update, delete: if false;
     }
 
@@ -250,6 +250,25 @@ service cloud.firestore {
     }
     match /UnroutedIntake/{id} {
       allow read: if inMyFirm(resource.data.firmID);
+      allow write: if false;
+    }
+
+    // Timed demo runs: a demo workspace logs and reads its own.
+    match /demoRuns/{id} {
+      allow read: if inMyFirm(resource.data.firmID);
+      allow create: if inMyFirm(request.resource.data.get('firmID', ''))
+        && request.resource.data.startedBy == request.auth.uid
+        && request.resource.data.status == 'running';
+      allow update: if inMyFirm(resource.data.firmID)
+        && untouched(['firmID', 'startedBy', 'startedAt'])
+        && request.resource.data.status in ['running', 'done', 'discarded'];
+      allow delete: if false;
+    }
+
+    // Service status strip shown on every screen during an incident. Set
+    // from the Firebase console only.
+    match /systemStatus/{id} {
+      allow read: if signedIn();
       allow write: if false;
     }
 

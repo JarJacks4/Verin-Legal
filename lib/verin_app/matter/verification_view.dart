@@ -563,6 +563,26 @@ class _VerificationViewState extends State<VerificationView> {
                 const SizedBox(height: 4.0),
                 Text('Date: ${e.dateBasisLabel}${e.dateConfidence.isNotEmpty ? ' · ${e.dateConfidence} confidence' : ''}', style: VT.muted(context, size: 11.0)),
               ],
+              // Wrong dates and wrong thread placement are counted for the
+              // accuracy measure on the Admin dashboard.
+              for (final (f, label) in const [('date', 'Date'), ('thread', 'Placement')])
+                if (fix[f] != null) ...[
+                  const SizedBox(height: 4.0),
+                  Text('$label noted by ${fix[f]!.byName.isEmpty ? 'a reviewer' : fix[f]!.byName}: ${fix[f]!.corrected}', style: VT.body(context, size: 10.5, color: c.pending)),
+                ],
+              if (on && it.type == 'm') ...[
+                const SizedBox(height: 6.0),
+                Wrap(
+                  spacing: 12.0,
+                  children: [
+                    for (final (f, label) in const [('date', 'Date is wrong'), ('thread', 'Wrong place in thread')])
+                      VHover(
+                        onTap: () => _noteOther(it, f, e?.whenLabel ?? when, fix[f]),
+                        builder: (context, h) => Text(label, style: VT.body(context, size: 11.0, weight: FontWeight.w600, color: h ? c.teal : c.tealDeep)),
+                      ),
+                  ],
+                ),
+              ],
               if (e != null && e.alsoIn.isNotEmpty) ...[
                 const SizedBox(height: 4.0),
                 Text('Also in ${e.alsoIn.length} other screenshot${e.alsoIn.length == 1 ? '' : 's'} — shown once in the thread', style: VT.muted(context, size: 11.0)),
@@ -595,6 +615,27 @@ class _VerificationViewState extends State<VerificationView> {
         target: correctionTarget(r.reference.id, it.type, it.index),
         field: 'text',
         original: it.text,
+        corrected: v,
+      ),
+    );
+    if (ok && mounted) showVToast(context, 'Reviewer note saved');
+  }
+
+  Future<void> _noteOther(_Item it, String field, String shown, Correction? existing) async {
+    final date = field == 'date';
+    final ok = await showCorrectionDialog(
+      context,
+      title: date ? 'Note a wrong date' : 'Note a wrong place in the thread',
+      fieldLabel: date ? 'The correct date and time' : 'Where it belongs (or what is wrong)',
+      aiValue: date ? shown : '',
+      current: existing?.corrected,
+      multiline: !date,
+      onSave: (v) => saveCorrection(
+        matter: widget.matter.reference,
+        receipt: r.reference,
+        target: correctionTarget(r.reference.id, it.type, it.index),
+        field: field,
+        original: date ? shown : it.text,
         corrected: v,
       ),
     );

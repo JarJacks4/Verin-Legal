@@ -290,7 +290,7 @@ class _PracticeTabState extends State<PracticeTab> {
           ),
         ),
         const SizedBox(height: 16.0),
-        const _ComingSoonCard(name: 'MyCase', icon: Icons.work_outline, note: 'MyCase write-back needs partner API approval from MyCase. It will appear here once approved.'),
+        const _ComingSoonCard(name: 'MyCase', icon: Icons.work_outline, note: 'MyCase write-back needs partner API approval from MyCase. It will appear here once approved. It needs the MyCase Advanced plan or above; firms on lower MyCase plans can still export records and upload them by hand.'),
         const SizedBox(height: 16.0),
         const _ComingSoonCard(name: 'Smokeball', icon: Icons.bolt_outlined, note: 'Smokeball write-back is planned after Clio.'),
         const SizedBox(height: 20.0),
@@ -686,7 +686,7 @@ class _IntegrationReportViewState extends State<IntegrationReportView> {
                     ? 'Matched — push the record to sync it.'
                     : 'Not connected. Use Connect Clio on this tab to link your account and push evidence records.',
               ),
-              integration('MyCase', Icons.work_outline, false, 'Coming soon', 'Coming soon — needs partner approval from MyCase.'),
+              integration('MyCase', Icons.work_outline, false, 'Coming soon', 'Coming soon — needs partner approval from MyCase, and the MyCase Advanced plan or above.'),
               integration('Smokeball', Icons.bolt_outlined, false, 'Coming soon', 'Coming soon.'),
               Container(
                 color: c.secondary,

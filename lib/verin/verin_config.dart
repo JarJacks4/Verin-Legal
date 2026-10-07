@@ -19,3 +19,20 @@ const double kLowConfidence = 0.75;
 
 /// Largest screenshot the extraction function accepts.
 const int kMaxScreenshotBytes = 7 * 1024 * 1024;
+
+/// Public legal pages on the marketing site, and the version a new account
+/// accepts at sign-up (users/{uid}.termsVersion). Bump when the terms change.
+const String kTermsUrl = 'https://www.verinlegal.com/terms';
+const String kPrivacyUrl = 'https://www.verinlegal.com/privacy';
+const String kTermsVersion = '2026-10';
+
+/// Where firm staff reach Verin Legal support.
+const String kSupportEmail = 'support@verinlegal.com';
+const String kSupportHours = 'Monday to Friday, 9 AM – 6 PM Eastern';
+const String kSupportResponse = 'Reply within one business day; same business day for anything blocking a filing or hearing.';
+
+/// Accuracy targets: reviewer-noted wrong dates and wrong thread placements
+/// per 100 items, and how many matters must be measured before launch.
+const double kTargetWrongDatesPer100 = 1.0;
+const double kTargetWrongJoinsPer100 = 1.0;
+const int kAccuracyMattersNeeded = 10;

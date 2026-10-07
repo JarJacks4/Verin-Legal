@@ -108,3 +108,9 @@ test('sendgrid multipart (parsed fields + files)', async () => {
   assert.strictEqual(e.attachments[0].content.toString(), 'PNGDATA');
   assert.strictEqual(e.from.name, 'Dana');
 });
+
+test('SMS acknowledgment confirms receipt and gives the emergency instruction', () => {
+  assert.match(N.SMS_ACK_TEXT, /Received/);
+  assert.match(N.SMS_ACK_TEXT, /911/);
+  assert.strictEqual(N.smsAckTwiml('a < b & c'), '<Message>a &lt; b &amp; c</Message>');
+});

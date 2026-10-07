@@ -11,6 +11,8 @@ import '/backend/backend.dart';
 import '/verin/record_ext.dart';
 import '/verin/verin_api.dart';
 
+import 'cited_summary.dart';
+import 'chronology_export.dart';
 import '../data/corrections.dart';
 import '../data/model.dart';
 import '../data/record_view.dart';
@@ -220,6 +222,10 @@ class _ThreadTabState extends State<ThreadTab> {
           const SizedBox(height: 12.0),
           _namesCard(context, thread),
         ],
+        if (!_onlyAnnotated && thread.stat('messages') > 0) ...[
+          const SizedBox(height: 12.0),
+          CitedSummaryCard(matter: widget.matter, receipts: widget.receipts, thread: thread),
+        ],
         if (thread.notes.isNotEmpty && !_onlyAnnotated) ...[
           const SizedBox(height: 12.0),
           VPanel(
@@ -282,6 +288,7 @@ class _ThreadTabState extends State<ThreadTab> {
             child: Text(_rebuilding ? 'Re-assembling…' : 'Re-assemble', style: VT.body(context, size: 11.0, color: h ? c.teal : c.tealDeep)),
           ),
         ),
+        ChronologyExportButton(matter: widget.matter, thread: t, receipts: widget.receipts),
       ],
     );
   }

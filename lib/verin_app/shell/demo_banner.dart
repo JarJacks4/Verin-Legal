@@ -11,6 +11,8 @@ import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
 import '../onboarding/tour.dart';
+import '../demo/data_handling.dart';
+import '../demo/demo_runs.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
 bool isDemoFirm(FirmAccountRecord? f) => f?.snapshotData['isDemo'] == true;
@@ -28,7 +30,7 @@ Future<bool> resetDemo(BuildContext context, {bool first = false}) async {
         const SizedBox(height: 8.0),
         Text(
           first
-              ? 'Adds three fictional matters with real screenshots, an email, PDFs, annotations and three months of value history. '
+              ? 'Adds seven fictional matters covering family law, personal injury, immigration, civil litigation and criminal defense, with real screenshots, an email, PDFs, annotations and three months of value history. '
                   'Use this account only for demonstrations — not for client work.'
               : 'Everything in this workspace — including anything added during a demo — is deleted and replaced with the original sample matters. '
                   'Takes about a minute.',
@@ -50,7 +52,7 @@ Future<bool> resetDemo(BuildContext context, {bool first = false}) async {
   showVToast(context, first ? 'Preparing the demo workspace…' : 'Resetting the demo…', description: 'This takes about a minute.');
   try {
     final r = await VerinApi.seedDemoWorkspace();
-    if (context.mounted) showVToast(context, 'Demo ready', description: '${r['matters'] ?? 3} matters · ${r['items'] ?? ''} items');
+    if (context.mounted) showVToast(context, 'Demo ready', description: '${r['matters'] ?? 7} matters · ${r['items'] ?? ''} items');
     return true;
   } catch (e) {
     if (context.mounted) showVToast(context, 'The demo could not be prepared', error: true, description: e is VerinApiException ? e.message : '$e');
@@ -109,6 +111,16 @@ class _DemoBannerState extends State<DemoBanner> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  // Checklist #8: time and log every demo.
+                  if (!resetting) DemoRunTimer(fg: fg, narrow: narrow),
+                  // Checklist #9: what happens to a firm's closed matter.
+                  if (!resetting && !narrow)
+                    TextButton.icon(
+                      style: TextButton.styleFrom(foregroundColor: fg, padding: const EdgeInsets.symmetric(horizontal: 8.0), minimumSize: const Size(0, 28.0)),
+                      onPressed: () => showDataHandling(context),
+                      icon: const Icon(Icons.privacy_tip_outlined, size: 15.0),
+                      label: Text('Data handling', style: VT.body(context, size: 12.0, weight: FontWeight.w600, color: fg)),
+                    ),
                   if (!resetting)
                     TextButton.icon(
                       style: TextButton.styleFrom(foregroundColor: fg, padding: const EdgeInsets.symmetric(horizontal: 8.0), minimumSize: const Size(0, 28.0)),
@@ -172,7 +184,7 @@ class _DemoWorkspaceCardState extends State<DemoWorkspaceCard> {
                     Text(demo ? 'This is an NFR demo workspace' : 'NFR demo workspace', style: VT.body(context, weight: FontWeight.w600)),
                     Text(
                       demo
-                          ? 'Three fictional matters for showing Verin to firms. Reset any time to start a demo fresh.'
+                          ? 'Seven fictional matters across all five practices, for showing Verin to firms. Reset any time to start a demo fresh.'
                           : 'For showing Verin to prospective clients. Use a separate account (e.g. demo@verinlegal.com) with no real matters.',
                       style: VT.muted(context, size: 12.5),
                     ),

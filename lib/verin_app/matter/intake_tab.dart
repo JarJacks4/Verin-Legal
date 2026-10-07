@@ -6,6 +6,7 @@ import '/backend/backend.dart';
 
 import '../data/format.dart';
 import '../data/model.dart';
+import 'client_card.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
@@ -129,18 +130,6 @@ class _IntakeTabState extends State<IntakeTab> {
     }
   }
 
-  String _clientCard() {
-    final lines = <String>['How to send evidence for your case', ''];
-    if (matter.emailAddress.isNotEmpty) {
-      lines.add('Email: forward messages, photos, screenshots or documents to ${matter.emailAddress}');
-    }
-    if (matter.smsNumber.isNotEmpty) {
-      lines.add('Text: send photos or screenshots to ${_pretty(matter.smsNumber)} from your own phone');
-    }
-    lines.addAll(['', 'Send things exactly as you have them — no need to rename or edit. Everything is received securely for your attorney.']);
-    return lines.join('\n');
-  }
-
   static String _pretty(String e164) {
     final m = RegExp(r'^\+1(\d{3})(\d{3})(\d{4})$').firstMatch(e164);
     return m == null ? e164 : '(${m[1]}) ${m[2]}-${m[3]}';
@@ -242,7 +231,15 @@ class _IntakeTabState extends State<IntakeTab> {
                 icon: Icons.assignment_outlined,
                 kind: VButtonKind.secondary,
                 size: VButtonSize.sm,
-                onPressed: () => copyToClipboard(context, _clientCard(), what: 'Client instructions copied'),
+                onPressed: () => copyToClipboard(context, clientInstructions(matter, CardLang.en), what: 'Client instructions copied'),
+              ),
+            if (anyAssigned)
+              VButton(
+                label: 'Copiar en español',
+                icon: Icons.translate,
+                kind: VButtonKind.secondary,
+                size: VButtonSize.sm,
+                onPressed: () => copyToClipboard(context, clientInstructions(matter, CardLang.es), what: 'Instrucciones copiadas'),
               ),
             if (rows.any((r) => r.$3.isEmpty))
               VButton(

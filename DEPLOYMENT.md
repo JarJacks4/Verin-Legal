@@ -272,3 +272,29 @@ A demo is its own account and firm, filled with fictional sample matters.
 3. Every screen shows a yellow "NFR DEMO" strip. **Reset demo** (strip or Settings) wipes everything in the
    workspace — including anything added during a demo — and restores the sample matters (about a minute).
 Function: `seedDemoWorkspace` (no AI calls; items are hashed, chained and time-stamped like real ones).
+
+## Launch-readiness release (Oct 7, 2026)
+
+Features from launch checklist v2 that live in the app:
+
+| Checklist | Where |
+|---|---|
+| #8 every demo timed and logged | Demo banner → **Time this demo** / **End demo**; log in Admin → Settings → Demo runs (`demoRuns`) |
+| #9 demo data-handling note | Demo banner → **Data handling**. Shows a DRAFT label to admins until `kDemoTermsCounselReviewed` (lib/verin_app/demo/data_handling.dart) is set to `true` after counsel review |
+| #12 sample matters, all five practices | Reset demo now builds 7 fictional matters (family ×3, personal injury, immigration, civil, criminal) |
+| #19 accuracy targets measured | Verify against the original → **Date is wrong** / **Wrong place in thread**; Admin → Dashboard → Accuracy. Targets in `lib/verin/verin_config.dart` |
+| #22 MyCase tier told up front | Practice mgmt tab |
+| #29 client never sees an error | SMS auto-reply (when `SMS_AUTO_REPLY=true`) confirms receipt and gives the 911 line |
+| #41 Terms / Privacy | Sign-up requires agreeing; links go to `www.verinlegal.com/terms` and `/privacy` (publish those pages on Framer) |
+| #50 client instruction card, English and Spanish | Intake channel → **Copy instructions** / **Copiar en español**, with a what-to-send note per practice |
+| #51 support | Profile → **Help & support**: address, hours, response time, ten how-tos. Edit them in `verin_config.dart` |
+| #52 status and incidents | Create Firestore doc `systemStatus/current` in the console: `active: true`, `level: info / degraded / outage`, `message`, `updatedAt`. Every screen shows the strip; set `active: false` to clear |
+| #66 / #69 chronology export | Thread tab → **Chronology (Excel)** |
+| #73 declaration template | Exhibits → finished production → **Draft declaration** (counsel to review the template before first use) |
+
+Also: cited summaries on the Thread tab (`summarizeThread` function), hearing and filing dates on
+each matter with Upcoming hearings on the Matters list, search across all evidence from the
+Matters search box, and a per-item access log in the receipt drawer (admins).
+
+Deploy: functions (new `summarizeThread`, updated `seedDemoWorkspace` and `inboundSms`),
+`firestore:rules`, then hosting. Then press **Reset demo** once in the demo workspace.

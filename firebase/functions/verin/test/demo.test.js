@@ -19,3 +19,17 @@ test('demo pdf has a box per text line', async () => {
   assert.strictEqual(p.boxes.length, 2);
   assert.strictEqual(p.pdf.slice(0, 4).toString(), '%PDF');
 });
+
+test('sample matters cover every practice besides family law, with fictional contact details', () => {
+  const { practiceMatters } = require('../demo/seed')._internal;
+  const pms = practiceMatters();
+  assert.deepStrictEqual(pms.map((p) => p.matter.practiceArea).sort(), ['Civil', 'Criminal', 'Immigration', 'Personal injury']);
+  for (const p of pms) {
+    assert.ok(p.items.length >= 2, p.matter.matterName);
+    for (const ph of p.matter.clientPhones) assert.match(ph, /^\+1317555\d{4}$/);
+    for (const em of p.matter.clientEmails) assert.match(em, /example\.com$/);
+    for (const it of p.items) {
+      if (it.kind === 'document') for (const [, line] of it.statements) assert.ok(it.lines[line] && it.lines[line].text);
+    }
+  }
+});

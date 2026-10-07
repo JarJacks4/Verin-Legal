@@ -166,6 +166,11 @@ class VerinApi {
   static Future<Map<String, dynamic>> demoSimulateArrival(String matterId) =>
       _call('demoSimulateArrival', {'matterId': matterId}, timeout: const Duration(seconds: 90));
 
+  /// Summary of the matter's thread; every line cites message keys.
+  /// Returns { lines: [{ text, cites: [key] }], model, demo }.
+  static Future<Map<String, dynamic>> summarizeThread(String matterId, {String topic = ''}) =>
+      _call('summarizeThread', {'matterId': matterId, 'topic': topic}, timeout: const Duration(seconds: 120));
+
   static Future<Map<String, dynamic>> seedDemoWorkspace() =>
       _call('seedDemoWorkspace', {}, timeout: const Duration(seconds: 540));
 
