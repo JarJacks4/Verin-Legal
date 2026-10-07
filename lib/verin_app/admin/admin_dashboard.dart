@@ -4,6 +4,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import 'accuracy_card.dart';
+
 import '/backend/backend.dart';
 import '/verin/record_ext.dart';
 import '/verin/verin_config.dart';
@@ -174,6 +176,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     children: [Expanded(child: lagCard), const SizedBox(width: 24.0), Expanded(child: volCard)],
                   );
                 }),
+                const SizedBox(height: 24.0),
+                AccuracyCard(receipts: receipts),
                 const SizedBox(height: 32.0),
                 ValueReport(firm: widget.firm),
                 const SizedBox(height: 32.0),

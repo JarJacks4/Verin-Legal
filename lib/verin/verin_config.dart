@@ -30,3 +30,9 @@ const String kTermsVersion = '2026-10';
 const String kSupportEmail = 'support@verinlegal.com';
 const String kSupportHours = 'Monday to Friday, 9 AM – 6 PM Eastern';
 const String kSupportResponse = 'Reply within one business day; same business day for anything blocking a filing or hearing.';
+
+/// Accuracy targets: reviewer-noted wrong dates and wrong thread placements
+/// per 100 items, and how many matters must be measured before launch.
+const double kTargetWrongDatesPer100 = 1.0;
+const double kTargetWrongJoinsPer100 = 1.0;
+const int kAccuracyMattersNeeded = 10;
