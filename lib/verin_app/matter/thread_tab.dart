@@ -11,6 +11,7 @@ import '/backend/backend.dart';
 import '/verin/record_ext.dart';
 import '/verin/verin_api.dart';
 
+import 'cited_summary.dart';
 import '../data/corrections.dart';
 import '../data/model.dart';
 import '../data/record_view.dart';
@@ -219,6 +220,10 @@ class _ThreadTabState extends State<ThreadTab> {
         if (thread.otherNames.isNotEmpty || thread.clientNames.length > 1) ...[
           const SizedBox(height: 12.0),
           _namesCard(context, thread),
+        ],
+        if (!_onlyAnnotated && thread.stat('messages') > 0) ...[
+          const SizedBox(height: 12.0),
+          CitedSummaryCard(matter: widget.matter, receipts: widget.receipts, thread: thread),
         ],
         if (thread.notes.isNotEmpty && !_onlyAnnotated) ...[
           const SizedBox(height: 12.0),

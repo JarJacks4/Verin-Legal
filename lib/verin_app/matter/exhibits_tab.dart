@@ -14,6 +14,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/verin/record_ext.dart';
 import '/verin/verin_api.dart';
 
+import 'declaration.dart';
 import '../data/format.dart';
 import '../data/model.dart';
 import '../data/record_view.dart';
@@ -324,6 +325,13 @@ class _ExhibitsTabState extends State<ExhibitsTab> {
               VButton(label: 'Download ZIP', icon: Icons.download_outlined, size: VButtonSize.sm, onPressed: p.fileUrl('zip').isEmpty ? null : () => launchURL(p.fileUrl('zip'))),
               VButton(label: 'Production PDF', kind: VButtonKind.secondary, size: VButtonSize.sm, onPressed: p.fileUrl('pdf').isEmpty ? null : () => launchURL(p.fileUrl('pdf'))),
               VButton(label: 'Index', kind: VButtonKind.secondary, size: VButtonSize.sm, onPressed: p.fileUrl('index').isEmpty ? null : () => launchURL(p.fileUrl('index'))),
+              VButton(
+                label: 'Draft declaration',
+                icon: Icons.history_edu_outlined,
+                kind: VButtonKind.secondary,
+                size: VButtonSize.sm,
+                onPressed: () => showDeclarationDraft(context, matter: widget.matter, production: p, receipts: widget.receipts),
+              ),
               VButton(label: 'New version from this', kind: VButtonKind.link, size: VButtonSize.sm, onPressed: () => _new(from: p)),
             ] else ...[
               VButton(label: 'Continue', icon: Icons.edit_outlined, size: VButtonSize.sm, onPressed: () => _edit(p)),

@@ -23,6 +23,7 @@ const verinThread = require("./verin/thread/rebuild");
 exports.onReceiptWritten = verinThread.onReceiptWritten;
 exports.onMatterNamesChanged = verinThread.onMatterNamesChanged;
 exports.refreshMatterRecord = verinThread.refreshMatterRecord;
+exports.summarizeThread = require("./verin/thread/summary").summarizeThread;
 
 exports.produceExhibits = require("./verin/exhibits/produce").produceExhibits;
 
