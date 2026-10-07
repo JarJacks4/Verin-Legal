@@ -32,7 +32,14 @@ List<TourStep> mattersTour({required bool admin}) => [
         target: 'matters_search',
         icon: Icons.search_rounded,
         title: 'Find anything fast',
-        body: 'Search by matter name, client or case number.',
+        body: 'Search by matter name, client or case number — or any word in the evidence. Matching messages and documents from every case show under In the evidence.',
+      ),
+      const TourStep(
+        target: 'matters_hearings',
+        icon: Icons.event_outlined,
+        title: 'Hearings coming up',
+        body: 'Every hearing or filing date in the next 30 days, across all your cases. Anything within a week is highlighted.',
+        optional: true,
       ),
       const TourStep(
         target: 'nav_review',
@@ -110,7 +117,7 @@ const Map<String, TourStep> tabTips = {
     target: 'matter_body',
     icon: Icons.forum_outlined,
     title: 'Thread',
-    body: 'The conversation assembled in date order — your client on the right, the other side on the left. Click the file name on a bubble to see the original. Set who is who in the names card, ask for a cited summary where every line links to its messages, and use Annotate on any bubble to add a note — every note also collects on the Annotations page.',
+    body: 'The conversation assembled in date order — your client on the right, the other side on the left. Click the file name on a bubble to see the original. Set who is who in the names card, ask for a cited summary where every line links to its messages, download the chronology for Excel, and use Annotate on any bubble to add a note — every note also collects on the Annotations page.',
   ),
   'followups': TourStep(
     target: 'matter_body',
@@ -122,7 +129,7 @@ const Map<String, TourStep> tabTips = {
     target: 'matter_body',
     icon: Icons.folder_copy_outlined,
     title: 'Exhibits',
-    body: 'Pick items, review redactions, and produce a Bates-stamped set with an index — ready to file or serve.',
+    body: 'Pick items, review redactions, and produce a Bates-stamped set with an index — ready to file or serve. A finished set can start a draft declaration about when each item was received.',
   ),
   'integrity': TourStep(
     target: 'matter_body',
@@ -167,7 +174,7 @@ const Map<String, List<TourStep>> adminTours = {
       target: 'admin_body',
       icon: Icons.insights_rounded,
       title: 'Firm dashboard',
-      body: 'Intake volume, items waiting for review, and Measured value — the time Verin is saving your firm.',
+      body: 'Intake volume, items waiting for review, accuracy against our targets, and Measured value — the time Verin is saving your firm.',
     ),
     TourStep(
       target: 'admin_nav_team',
@@ -290,13 +297,20 @@ const Map<String, List<TourStep>> drawerTours = {
       body: 'See the original beside what Verin read, with each line highlighted where it came from.',
       optional: true,
     ),
+    TourStep(
+      target: 'receipt_access',
+      icon: Icons.visibility_outlined,
+      title: 'Who has opened it',
+      body: 'Admins see each time someone on the team opened or checked this item.',
+      optional: true,
+    ),
   ],
   'verify': [
     TourStep(
       target: 'drawer_body',
       icon: Icons.compare,
       title: 'Original on one side, record on the other',
-      body: 'Click a line to see where it sits in the original. If a word was misread, note the discrepancy — the original is never changed and every reviewer note is kept.',
+      body: 'Click a line to see where it sits in the original. If a word was misread, note the discrepancy; if the date or its place in the thread is wrong, say so with Date is wrong or Wrong place in thread. The original is never changed and every reviewer note is kept.',
     ),
   ],
   'manual': [
@@ -485,14 +499,21 @@ const Map<String, List<TourStep>> demoTours = {
     TourStep(
       target: 'matters_list',
       icon: Icons.folder_open_outlined,
-      title: 'Three cases, already in motion',
-      body: 'Reyes v. Reyes is a custody modification where the client has forwarded texts, an email and a school record over a month. Open it to see what Verin built from them — without anyone retyping a word.',
+      title: 'Seven cases, already in motion',
+      body: 'One sample case for every practice — family, personal injury, immigration, civil and criminal. Reyes v. Reyes is a custody modification where the client has forwarded texts, an email and a school record over a month. Open it to see what Verin built from them — without anyone retyping a word.',
     ),
     TourStep(
       target: 'matters_search',
       icon: Icons.search,
-      title: 'Find a case by name',
-      body: 'Type a client or case name — here, Reyes. Clear the search to see every case again.',
+      title: 'Find a case — or a word in the evidence',
+      body: 'Type a client or case name — here, Reyes. Try a word like "adjuster" and the matching texts from every case show under In the evidence.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'matters_hearings',
+      icon: Icons.event_outlined,
+      title: 'What\'s on the calendar',
+      body: 'The Reyes custody hearing and the Holloway pretrial conference, with how many days are left. Dates within a week turn amber.',
       optional: true,
     ),
     TourStep(
@@ -524,7 +545,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'demo_strip',
       icon: Icons.restart_alt,
       title: 'Sample data, reset any time',
-      body: 'Everything here is fictional. Reset demo puts it all back for the next firm; Replay tips starts this walkthrough again.',
+      body: 'Everything here is fictional. Time this demo logs how long it takes and what came through; Data handling answers "what happens to our files?". Reset demo puts it all back for the next firm; Replay tips starts this walkthrough again.',
       optional: true,
     ),
   ],
@@ -583,7 +604,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'matter_body',
       icon: Icons.forum_outlined,
       title: 'Four screenshots, one conversation',
-      body: 'In date order, the repeated message shown once (both copies kept), and the days with nothing flagged — the questions opposing counsel will ask. Click a file name on any bubble to see it on the original screenshot.',
+      body: 'In date order, the repeated message shown once (both copies kept), and the days with nothing flagged — the questions opposing counsel will ask. Click a file name on any bubble to see it on the original screenshot. Cited summary writes a short summary where every line links back to its messages.',
     ),
     TourStep(
       target: 'matter_body',
@@ -605,7 +626,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'matter_body',
       icon: Icons.folder_copy_outlined,
       title: 'Exhibits without the afternoon',
-      body: 'Pick items, check the suggested redactions — a child\'s name, account numbers — and produce Bates-stamped PDFs with an index. Try it on the Carter bank statement.',
+      body: 'Pick items, check the suggested redactions — a child\'s name, account numbers — and produce Bates-stamped PDFs with an index. Try it on the Carter bank statement. Once produced, Draft declaration fills in when each exhibit arrived.',
     ),
   ],
   'tab_integrity': [
@@ -703,7 +724,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'settings_demo',
       icon: Icons.slideshow_outlined,
       title: 'Start each demo fresh',
-      body: 'Reset sample data puts the three sample cases back the way they started.',
+      body: 'Reset sample data puts the seven sample cases back the way they started. Your demo-run log stays.',
       optional: true,
     ),
   ],

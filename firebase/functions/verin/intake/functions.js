@@ -26,16 +26,15 @@ const { simpleParser } = require('mailparser');
 const { getApps, initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
 const { getStorage } = require('firebase-admin/storage');
-const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onRequest, onCall } = require('firebase-functions/v2/https');
 const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
 
 const P = require('../common/params');
 const S = require('./secrets');
-const { requireAuth, loadMatterForUser, assertDocId, firmIdForUser } = require('../common/access');
-const { processReceipt } = require('../evidence/process');
-const ingest = require('../evidence/ingest');
+const { requireAuth, loadMatterForUser } = require('../common/access');
 const N = require('./normalize');
 const { fileInboundItem } = require('./file');
+const { fileSmsInto } = require('./sms_file');
 
 if (!getApps().length) initializeApp();
 
@@ -434,55 +433,8 @@ async function keepSmsMedia(bucket, event, f) {
   return out;
 }
 
-async function fileSmsInto(db, bucket, { eventId, matterRef, from, to, body, sid, at, media, known }) {
-  const filed = [];
-  const fromLabel = `Text from ${from}`;
-  const common = {
-    db,
-    bucket,
-    matterRef,
-    channelKey: 'sms',
-    fromLabel,
-    senderKey: `tel:${from}`,
-    quarantined: !known,
-    reviewReason: known ? '' : `From ${from}, a number that isn't known on this matter. Approve to read it.`,
-    receivedAt: at,
-  };
-  let parent = null;
-  if (String(body || '').trim()) {
-    const r = await fileInboundItem({
-      ...common,
-      buffer: Buffer.from(N.smsRecordText({ from, to, body, at: at.toISOString(), sid }), 'utf8'),
-      fileName: `Text ${at.toISOString().slice(0, 16).replace('T', ' ')}.txt`,
-      contentType: 'text/plain',
-      kind: 'document',
-      description: String(body).trim().slice(0, 300),
-      source: `sms|from:${from}|to:${to}|sid:${sid}`,
-      extra: { intakeEventId: eventId, smsBody: String(body).slice(0, 5000) },
-    });
-    parent = r.receiptId;
-    filed.push(r.receiptId);
-  }
-  const bucketRef = bucket;
-  for (let i = 0; i < media.length; i++) {
-    const m = media[i];
-    if (!m.path) continue;
-    const [buf] = await bucketRef.file(m.path).download();
-    const name = `Text photo ${at.toISOString().slice(0, 10)} ${i + 1}${N.extFor(m.contentType)}`;
-    const r = await fileInboundItem({
-      ...common,
-      buffer: buf,
-      fileName: name,
-      contentType: m.contentType,
-      kind: N.kindFor(m.contentType, name),
-      description: String(body || '').trim() ? `Sent with: “${String(body).trim().slice(0, 120)}”` : 'Picture message',
-      source: `mms|from:${from}|to:${to}|sid:${sid}|n:${i + 1}`,
-      extra: { intakeEventId: eventId, ...(parent ? { parentReceiptId: parent } : {}) },
-    });
-    filed.push(r.receiptId);
-  }
-  return filed;
-}
+// fileSmsInto lives in ./sms_file.js (no intake secrets), shared with the
+// Review queue actions in ./review.js.
 
 async function fileSms(db, bucket, event) {
   const f = event.data.fields || {};
@@ -562,88 +514,10 @@ exports.onInboundEvent = onDocumentCreated(
   },
 );
 
-// ---------------------------------------------------------------------------
-// Staff actions
-// ---------------------------------------------------------------------------
-
-exports.approveQuarantined = onCall(
-  { secrets: [P.ANTHROPIC_API_KEY], timeoutSeconds: 540, memory: '2GiB' },
-  async (request) => {
-    const uid = requireAuth(request);
-    const db = getFirestore();
-    const data = request.data || {};
-    assertDocId(data.receiptId, 'receiptId');
-    const ref = db.collection('Receipts').doc(data.receiptId);
-    const snap = await ref.get();
-    if (!snap.exists) throw new HttpsError('not-found', 'Receipt not found');
-    const matterRef = snap.get('matterId');
-    const { ref: mRef } = await loadMatterForUser(db, uid, matterRef && matterRef.id);
-    const senderKey = snap.get('senderKey') || '';
-
-    // Approving a sender approves everything they sent to this matter.
-    let targets = [ref];
-    if (senderKey) {
-      const held = await db.collection('Receipts').where('matterId', '==', mRef).where('extractionState', '==', 'quarantined').get();
-      targets = held.docs.filter((d) => d.get('senderKey') === senderKey).map((d) => d.ref);
-      if (!targets.some((r) => r.id === ref.id)) targets.push(ref);
-    }
-    if (data.remember && senderKey) {
-      const v = senderKey.replace(/^(mail|tel):/, '');
-      const field = senderKey.startsWith('tel:') ? 'clientPhones' : 'knownSenders';
-      await mRef.set({ [field]: FieldValue.arrayUnion(v) }, { merge: true });
-    }
-    const deps = ingest.processDeps();
-    let read = 0;
-    for (const r of targets) {
-      await r.set(
-        { isQuarantined: false, classificationLabel: 'Processing', extractionState: 'running', reviewReason: '', approvedBy: uid, approvedAt: FieldValue.serverTimestamp() },
-        { merge: true },
-      );
-      try {
-        await processReceipt(deps, r, { uid });
-        read++;
-      } catch (e) {
-        console.error('approveQuarantined: reading failed', r.id, e);
-        await r.set({ extractionState: 'extraction_failed', classificationLabel: 'Uncertain', extractionErrors: [`reading crashed: ${e.message}`] }, { merge: true });
-      }
-    }
-    return { approved: targets.length, read };
-  },
-);
-
-exports.assignUnrouted = onCall({ timeoutSeconds: 300, memory: '1GiB' }, async (request) => {
-  const uid = requireAuth(request);
-  const db = getFirestore();
-  const bucket = getStorage().bucket();
-  const data = request.data || {};
-  assertDocId(data.id, 'id');
-  const firmId = await firmIdForUser(db, uid);
-  const uref = db.collection('UnroutedIntake').doc(data.id);
-  const u = await uref.get();
-  if (!u.exists || u.get('firmID') !== firmId) throw new HttpsError('not-found', 'Message not found');
-  if (u.get('status') !== 'open') throw new HttpsError('failed-precondition', 'This message was already handled.');
-  if (data.dismiss === true) {
-    await uref.set({ status: 'dismissed', handledBy: uid, handledAt: FieldValue.serverTimestamp() }, { merge: true });
-    return { ok: true };
-  }
-  const { ref: matterRef } = await loadMatterForUser(db, uid, data.matterId);
-  const from = u.get('from');
-  if (data.remember) await matterRef.set({ clientPhones: FieldValue.arrayUnion(from) }, { merge: true });
-  const at = u.get('at') && u.get('at').toDate ? u.get('at').toDate() : new Date();
-  const filed = await fileSmsInto(db, bucket, {
-    eventId: data.id,
-    matterRef,
-    from,
-    to: u.get('to'),
-    body: u.get('body'),
-    sid: u.get('sid'),
-    at,
-    media: u.get('media') || [],
-    known: true, // a person chose the matter
-  });
-  await uref.set({ status: 'filed', matterId: matterRef, receipts: filed, handledBy: uid, handledAt: FieldValue.serverTimestamp() }, { merge: true });
-  return { ok: true, receipts: filed.length };
-});
+// Staff actions (approveQuarantined, assignUnrouted) live in ./review.js so
+// they deploy whether or not live intake is switched on.
+exports.approveQuarantined = require('./review').approveQuarantined;
+exports.assignUnrouted = require('./review').assignUnrouted;
 
 // For tests.
 exports._internal = { parseEmail, synthesizeEml, intakeUpdates, parseMultipart };
