@@ -379,7 +379,7 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
             stream: _access,
             builder: (context, s) {
               final rows = s.data ?? const <Map<String, dynamic>>[];
-              return _section(context, 'Access log', [
+              return TourTarget(id: 'receipt_access', child: _section(context, 'Access log', [
                 if (rows.isEmpty) Text('No one has opened this item yet.', style: VT.muted(context, size: 12.0)),
                 for (final a in rows.take(25))
                   Padding(
@@ -390,7 +390,7 @@ class _ReceiptDetailState extends State<ReceiptDetail> {
                     ),
                   ),
                 if (rows.length > 25) Text('and ${rows.length - 25} earlier', style: VT.muted(context, size: 12.0)),
-              ]);
+              ]));
             },
           ),
 

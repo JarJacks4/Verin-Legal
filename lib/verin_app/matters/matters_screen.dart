@@ -125,7 +125,7 @@ class _MattersScreenState extends State<MattersScreen> {
                 ),
 ),
                 const SizedBox(height: 28.0),
-                UpcomingHearingsCard(matters: matters, onOpen: (m) => openMatter(context, m, admin: widget.admin)),
+                TourTarget(id: 'matters_hearings', child: UpcomingHearingsCard(matters: matters, onOpen: (m) => openMatter(context, m, admin: widget.admin))),
                 TourTarget(
                   id: 'matters_search',
                   onDemoTour: () async {
