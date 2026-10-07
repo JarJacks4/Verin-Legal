@@ -78,6 +78,12 @@ function dash(s) {
   return s === null || s === undefined || String(s).trim() === '' ? '—' : String(s);
 }
 
+// "+13175550142" -> "(317) 555-0142"; anything else unchanged.
+function prettyPhone(s) {
+  const m = /^\+1(\d{3})(\d{3})(\d{4})$/.exec(String(s || ''));
+  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : String(s || '');
+}
+
 function buildRecordPdf(input) {
   const { matter, receipts, chain, verification, generatedAt, generatedBy } = input;
   const gen = generatedAt instanceof Date ? generatedAt : new Date(generatedAt);
@@ -149,6 +155,10 @@ function buildRecordPdf(input) {
   kv('Assigned counsel', matter.assignedCounsel);
   kv('Practice area', matter.practiceArea);
   kv('Matter opened', matter.openedAt ? human(matter.openedAt) : '');
+  // Where the client sends evidence, for staff who only see this record in
+  // the firm's practice-management system.
+  if (matter.intakeEmail) kv('Client sends evidence to', matter.intakeEmail);
+  if (matter.intakeSms) kv('Client texts evidence to', `${prettyPhone(matter.intakeSms)} (from the client's own mobile)`);
   doc.moveDown(0.6);
 
   label('Record');
