@@ -7,7 +7,7 @@
 //   EMAIL_FROM      e.g. "Verin Legal <no-reply@verinlegal.com>"
 
 const P = require('./params');
-const { EMAIL_API_KEY, emailEnabled } = require('./mail_secrets');
+const { emailApiKey, emailEnabled } = require('./mail_secrets');
 
 function parseFrom(from) {
   const m = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(String(from || ''));
@@ -40,7 +40,9 @@ async function sendMail(msg, { fetchImpl = fetch } = {}) {
   if (!emailEnabled()) return { sent: false, reason: 'email sending is not switched on' };
   const from = P.EMAIL_FROM.value();
   if (!from || !msg.to) return { sent: false, reason: 'no sender or recipient' };
-  const req = requestFor(P.EMAIL_PROVIDER.value(), EMAIL_API_KEY.value().trim(), { ...msg, from });
+  const key = emailApiKey();
+  if (!key) return { sent: false, reason: 'EMAIL_API_KEY is not available to this function' };
+  const req = requestFor(P.EMAIL_PROVIDER.value(), key, { ...msg, from });
   const r = await fetchImpl(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) });
   if (!r.ok) return { sent: false, reason: `email provider answered ${r.status}` };
   return { sent: true };

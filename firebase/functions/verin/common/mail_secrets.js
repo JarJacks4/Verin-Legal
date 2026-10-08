@@ -1,10 +1,20 @@
-// Outbound email key, kept apart so the rest of Verin deploys before it exists
-// (Firebase checks every defined secret at deploy time). Functions that send
-// email list it only when EMAIL_ENABLED=true in functions/.env.
+// Outbound email key. Firebase registers every defineSecret it sees and, on
+// deploy, insists the secret exists — so EMAIL_API_KEY is only defined once
+// EMAIL_ENABLED=true is in functions/.env (and the secret has been created).
 //   EMAIL_API_KEY   Postmark server token or SendGrid API key
 const { defineSecret } = require('firebase-functions/params');
 
-const EMAIL_API_KEY = defineSecret('EMAIL_API_KEY');
 const emailEnabled = () => process.env.EMAIL_ENABLED === 'true';
+const EMAIL_API_KEY = emailEnabled() ? defineSecret('EMAIL_API_KEY') : null;
 
-module.exports = { EMAIL_API_KEY, emailEnabled, emailSecrets: () => (emailEnabled() ? [EMAIL_API_KEY] : []) };
+/// The key, inside a function that lists emailSecrets().
+function emailApiKey() {
+  if (!EMAIL_API_KEY) return '';
+  try {
+    return String(EMAIL_API_KEY.value() || '').trim();
+  } catch (_) {
+    return String(process.env.EMAIL_API_KEY || '').trim();
+  }
+}
+
+module.exports = { emailEnabled, emailApiKey, emailSecrets: () => (EMAIL_API_KEY ? [EMAIL_API_KEY] : []) };
