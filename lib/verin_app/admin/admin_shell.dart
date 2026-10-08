@@ -14,6 +14,7 @@ import '../widgets/atoms.dart';
 import '../widgets/motion.dart';
 import '../onboarding/tour.dart';
 import '../shell/demo_banner.dart';
+import '../shell/firm_alerts.dart' show FirmGates;
 import '../shell/help.dart' show SystemStatusBanner;
 import '../onboarding/tours.dart';
 
@@ -110,14 +111,14 @@ class _AdminShellState extends State<AdminShell> {
                               ),
                             ),
                             const SystemStatusBanner(),
-                            Expanded(child: body),
+                            Expanded(child: FirmGates(firm: firm, child: body)),
                           ],
                         )
                       : Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             StillHero(tag: 'admin-sidebar', child: sidebar),
-                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const SystemStatusBanner(), Expanded(child: body)])),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const SystemStatusBanner(), Expanded(child: FirmGates(firm: firm, child: body))])),
                           ],
                         ),
                 ),

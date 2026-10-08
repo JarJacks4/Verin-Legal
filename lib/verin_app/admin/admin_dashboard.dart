@@ -150,14 +150,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     pill: lag == null
                         ? null
                         : VBadge(
-                            label: lag <= kBaselineRecordLagDays ? '−${kBaselineRecordLagDays - lag}d vs baseline' : '+${lag - kBaselineRecordLagDays}d vs baseline',
+                            label: lag <= baselineLagDays(widget.firm) ? '−${baselineLagDays(widget.firm) - lag}d vs baseline' : '+${lag - baselineLagDays(widget.firm)}d vs baseline',
                             bg: c.verified.withValues(alpha: 0.1),
                             fg: c.verified,
                           ),
-                    chart: _LagChart(months: months, values: lagByMonth),
+                    chart: _LagChart(months: months, values: lagByMonth, baseline: baselineLagDays(widget.firm)),
                     legend: Row(
                       children: [
-                        _LegendSwatch(color: c.broken.withValues(alpha: 0.4), label: 'Industry baseline ($kBaselineRecordLagDays d)'),
+                        _LegendSwatch(color: c.broken.withValues(alpha: 0.4), label: firmBaselineCaptured(widget.firm) ? 'Your baseline (${baselineLagDays(widget.firm)} d)' : 'Industry baseline ($kBaselineRecordLagDays d)'),
                         const SizedBox(width: 16.0),
                         _LegendSwatch(color: c.teal, label: 'With Verin', textColor: c.tealDeep),
                       ],
@@ -382,10 +382,11 @@ FlGridData _grid(BuildContext context, {bool vertical = true}) {
 }
 
 class _LagChart extends StatelessWidget {
-  const _LagChart({required this.months, required this.values});
+  const _LagChart({required this.months, required this.values, required this.baseline});
 
   final List<(int, int)> months;
   final List<double?> values;
+  final int baseline;
 
   @override
   Widget build(BuildContext context) {
@@ -394,7 +395,7 @@ class _LagChart extends StatelessWidget {
       for (var i = 0; i < values.length; i++)
         if (values[i] != null) FlSpot(i.toDouble(), values[i]!),
     ];
-    final maxY = [kBaselineRecordLagDays.toDouble(), ...spots.map((s) => s.y)].reduce((a, b) => a > b ? a : b) * 1.1;
+    final maxY = [baseline.toDouble(), ...spots.map((s) => s.y)].reduce((a, b) => a > b ? a : b) * 1.1;
     return LineChart(
       LineChartData(
         minX: 0,
@@ -419,7 +420,7 @@ class _LagChart extends StatelessWidget {
         ),
         lineBarsData: [
           LineChartBarData(
-            spots: [FlSpot(0, kBaselineRecordLagDays.toDouble()), FlSpot((months.length - 1).toDouble(), kBaselineRecordLagDays.toDouble())],
+            spots: [FlSpot(0, baseline.toDouble()), FlSpot((months.length - 1).toDouble(), baseline.toDouble())],
             color: c.broken.withValues(alpha: 0.3),
             barWidth: 1.5,
             dotData: const FlDotData(show: false),

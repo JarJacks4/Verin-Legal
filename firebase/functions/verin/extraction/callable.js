@@ -154,6 +154,7 @@ exports.ingestScreenshot = onCall(
       receiptRef,
       resultFields(result, {
         extractionModel: model,
+        ...(result.audit && result.audit.ai ? { ai: result.audit.ai } : {}),
         extractionSourcePath: storagePath,
         extractionSourceSha256: itemHash,
         extractedAt: FieldValue.serverTimestamp(),

@@ -67,11 +67,32 @@ service cloud.firestore {
         'clioMatterID', 'clioConnected', 'clioSyncedAt', 'clioMatterUrl', 'clioMatterDisplayNumber',
         'providerMatterReference', 'providerSyncedAt',
         'lastExportPath', 'lastExportSha256', 'lastExportAt',
-        'batesNext', 'productionCount'
+        'batesNext', 'productionCount',
+        'demo', 'lastDeliveryAt', 'lastStandingExportAt', 'archiveBuildStartedAt',
+        'intakeProvisionAlertedAt'
       ]);
       allow delete: if false;
 
       match /exports/{exportId} {
+        allow read: if inMyFirm(matterFirm(matterId));
+        allow write: if false;
+      }
+
+      // Server-written: deliveries to the firm's system (#16), weekly digests
+      // (#70), closed-matter imports (#4) and AI usage (#53, #76).
+      match /deliveries/{id} {
+        allow read: if inMyFirm(matterFirm(matterId));
+        allow write: if false;
+      }
+      match /digests/{id} {
+        allow read: if inMyFirm(matterFirm(matterId));
+        allow write: if false;
+      }
+      match /archiveImports/{id} {
+        allow read: if inMyFirm(matterFirm(matterId));
+        allow write: if false;
+      }
+      match /aiUsage/{id} {
         allow read: if inMyFirm(matterFirm(matterId));
         allow write: if false;
       }
@@ -204,7 +225,9 @@ service cloud.firestore {
       allow read: if inMyFirm(resource.data.firmID);
       allow create, delete: if false;
       allow update: if inMyFirm(resource.data.firmID) && isAdmin() && (
-        untouched(planFields().concat(['firmID', 'ownerUid', 'isDemo', 'demoResetting', 'demoSeededAt', 'demoSeededBy', 'smsNumber']))
+        untouched(planFields().concat(['firmID', 'ownerUid', 'isDemo', 'demoResetting', 'demoSeededAt', 'demoSeededBy', 'smsNumber',
+          'smsNumberAssignedAt', 'smsNumberFromPool',
+          'baselineRecordLag', 'baselineRecordLagLockedAt', 'baselineRecordLagAttempt']))
         || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['retentionPolicy', 'retentionRequest'])
             && request.resource.data.get('retentionPolicy', 'standard') == 'standard'));
 
@@ -212,6 +235,36 @@ service cloud.firestore {
         allow read: if inMyFirm(get(/databases/$(database)/documents/firmAccount/$(id)).data.get('firmID', ''));
         allow write: if false;
       }
+
+      // Firm alerts (provisioning, oversize sends, delivery failures): staff
+      // read them and mark them resolved; only the server raises them.
+      match /alerts/{alertId} {
+        allow read: if inMyFirm(get(/databases/$(database)/documents/firmAccount/$(id)).data.get('firmID', ''));
+        allow update: if inMyFirm(get(/databases/$(database)/documents/firmAccount/$(id)).data.get('firmID', ''))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['resolved', 'resolvedByUid', 'resolvedAt'])
+          && request.resource.data.resolved == true;
+        allow create, delete: if false;
+      }
+      // Generated reports, exit exports and demo deletion confirmations.
+      match /reports/{reportId} {
+        allow read: if inMyFirm(get(/databases/$(database)/documents/firmAccount/$(id)).data.get('firmID', ''));
+        allow write: if false;
+      }
+      match /exitExports/{exportId} {
+        allow read: if isAdmin() && inMyFirm(get(/databases/$(database)/documents/firmAccount/$(id)).data.get('firmID', ''));
+        allow write: if false;
+      }
+      match /demoDeletions/{logId} {
+        allow read: if inMyFirm(get(/databases/$(database)/documents/firmAccount/$(id)).data.get('firmID', ''));
+        allow write: if false;
+      }
+    }
+
+    // Weekly cost to serve (#53): Verin's own staff only.
+    match /costReports/{id} {
+      allow read: if signedIn() && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('.*@verinlegal[.]com$');
+      allow write: if false;
     }
 
     // Team list and invitations. Admins invite and remove; joining a firm

@@ -158,7 +158,88 @@ class VerinApi {
   static Future<Map<String, dynamic>> produceExhibits({required String matterId, required String productionId}) =>
       _call('produceExhibits', {'matterId': matterId, 'productionId': productionId}, timeout: const Duration(seconds: 540));
 
+  // ---------------------------------------------------------------- delivery (#16)
+
+  /// Builds the record ZIP and delivers it. target 'clio' uploads it to the
+  /// linked Clio matter and, once Clio confirms, removes Verin's copy of each
+  /// finished item's file. target 'download' returns { downloadUrl,
+  /// deliveryId } and removes nothing until [confirmDelivery].
+  static Future<Map<String, dynamic>> deliverMatterRecord(String matterId, {String target = 'clio'}) =>
+      _call('deliverMatterRecord', {'matterId': matterId, 'target': target}, timeout: const Duration(seconds: 540));
+
+  /// "We've saved this record to our own system" for a download delivery.
+  static Future<Map<String, dynamic>> confirmDelivery(String matterId, String deliveryId) =>
+      _call('confirmDelivery', {'matterId': matterId, 'deliveryId': deliveryId}, timeout: const Duration(seconds: 300));
+
+  // ---------------------------------------------------------------- closed matters (#4)
+
+  /// Files every item inside an uploaded ZIP / mbox / eml into [matterId].
+  /// Large archives continue from nextOffset. Returns { importId, found, filed, skipped, nextOffset }.
+  static Future<Map<String, dynamic>> importClosedMatter({required String matterId, required String uploadPath, required String fileName, int offset = 0, String? importId}) =>
+      _call('importClosedMatter', {
+        'matterId': matterId,
+        'uploadPath': uploadPath,
+        'fileName': fileName,
+        'offset': offset,
+        if (importId != null) 'importId': importId,
+      }, timeout: const Duration(seconds: 540));
+
+  /// { itemsReceived, distinctDatedItems, conversationsRebuilt, messagesRebuilt, itemsFlagged, stillReading }
+  static Future<Map<String, dynamic>> standingRecordCounts(String matterId) => _call('standingRecordCounts', {'matterId': matterId});
+
+  // ---------------------------------------------------------------- reports
+
+  /// Record Lag Audit PDF over [matterIds]: { downloadUrl, fileName, medianDays, items }.
+  static Future<Map<String, dynamic>> exportRecordLagAudit(List<String> matterIds) =>
+      _call('exportRecordLagAudit', {'matterIds': matterIds}, timeout: const Duration(seconds: 300));
+
+  /// One practice packet PDF. kind: pi_treatment_chronology, immigration_checklist,
+  /// civil_key_dates, criminal_event_window (eventAt ISO, windowHours), criminal_mitigation.
+  static Future<Map<String, dynamic>> exportPracticePacket({
+    required String matterId,
+    required String kind,
+    bool redactionsConfirmed = false,
+    DateTime? eventAt,
+    int? windowHours,
+    String? eventLabel,
+  }) =>
+      _call('exportPracticePacket', {
+        'matterId': matterId,
+        'kind': kind,
+        'redactionsConfirmed': redactionsConfirmed,
+        if (eventAt != null) 'eventAt': eventAt.toIso8601String(),
+        if (windowHours != null) 'windowHours': windowHours,
+        if (eventLabel != null) 'eventLabel': eventLabel,
+      }, timeout: const Duration(seconds: 300));
+
+  /// This week's one-page digest for a matter (written back to Clio when asked).
+  static Future<Map<String, dynamic>> buildMatterDigest(String matterId, {bool writeBack = false}) =>
+      _call('buildMatterDigest', {'matterId': matterId, 'writeBack': writeBack}, timeout: const Duration(seconds: 120));
+
+  /// The Standing Record as an editable Word document: { downloadUrl, fileName }.
+  static Future<Map<String, dynamic>> exportStandingRecordDocx(String matterId) =>
+      _call('exportStandingRecordDocx', {'matterId': matterId}, timeout: const Duration(seconds: 180));
+
+  /// Monthly Record Lag and activity report; [month] 'YYYY-MM' (default last month).
+  static Future<Map<String, dynamic>> exportFirmMonthlyReport({String? month}) =>
+      _call('exportFirmMonthlyReport', {if (month != null) 'month': month}, timeout: const Duration(seconds: 300));
+
+  /// This week's cost to serve for the caller's firm (admins).
+  static Future<Map<String, dynamic>> costToServeNow() => _call('costToServeNow', {});
+
+  /// Locks the firm's pre-Verin Record Lag from dated sample items
+  /// [{createdOn, enteredOn}] (YYYY-MM-DD). Returns { stored, baseline }.
+  static Future<Map<String, dynamic>> setBaselineRecordLag(List<Map<String, String>> items, {String note = ''}) =>
+      _call('setBaselineRecordLag', {'items': items, 'note': note});
+
   // ---------------------------------------------------------------- demo
+
+  /// Demo only: deletes a prospect's closed matter and everything Verin holds
+  /// for it; emails [confirmTo] a deletion confirmation. Returns counts,
+  /// reference and confirmationText.
+  static Future<Map<String, dynamic>> deleteDemoMatter(String matterId, {String confirmTo = '', String prospect = ''}) =>
+      _call('deleteDemoMatter', {'matterId': matterId, 'confirmTo': confirmTo, 'prospect': prospect}, timeout: const Duration(seconds: 540));
+
 
   /// Makes this firm an NFR demo workspace, or resets one to the sample data.
   /// Returns { ok, matters, items }.

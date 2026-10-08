@@ -98,12 +98,19 @@ function screenshot({ contact, theme, items, sender }) {
 // Wiping a demo firm
 // ---------------------------------------------------------------------------
 
-const DEMO_SMS_NUMBER = '+13175550000'; // 555-01xx/0000 numbers are reserved for fiction
+const FICTIONAL_SMS_NUMBER = '+13175550000'; // 555-01xx/0000 numbers are reserved for fiction
+// A real demo number (DEMO_TWILIO_SMS_NUMBER) lets a prospect text the demo
+// matter live (#3); otherwise demo matters show a fictional one.
+const DEMO_SMS_NUMBER = (() => {
+  const v = String(process.env.DEMO_TWILIO_SMS_NUMBER || '').replace(/[^\d+]/g, '');
+  return v ? (v.startsWith('+') ? v : `+1${v.replace(/^1/, '')}`) : FICTIONAL_SMS_NUMBER;
+})();
 
 /// "<lastname>-<4 digits>@<domain>", reserved like a real one so mail to it
 /// would route here once intake is switched on.
 async function demoAddress(db, matterRef, firmId, name) {
-  const domain = String(process.env.INBOUND_EMAIL_DOMAIN || 'in.verinlegal.com').toLowerCase();
+  // Demo matters only ever use the demo domain (#1); live addresses never reach a demo.
+  const domain = String(process.env.DEMO_INBOUND_EMAIL_DOMAIN || 'demo.in.verinlegal.com').toLowerCase();
   const stem = String(name || 'matter').toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 1).pop() || 'matter';
   for (let i = 0; i < 8; i++) {
     const local = `${stem.slice(0, 14)}-${1000 + Math.floor(Math.random() * 9000)}`;
@@ -380,11 +387,15 @@ async function seedFirm(db, bucket, firmId, user) {
       emailAddress,
       smsNumber: DEMO_SMS_NUMBER,
       intakeProvisionedAt: data.openedAt || Timestamp.now(),
-      clioMatterID: `9${tail}`,
-      clioMatterDisplayNumber: `${tail}-${last}`,
-      clioMatterUrl: '',
-      clioSyncedAt: Timestamp.fromDate(at(1, 16, 40)),
-      clioLastPushStatus: 'ok',
+      ...(user.realClio
+        ? {}
+        : {
+            clioMatterID: `9${tail}`,
+            clioMatterDisplayNumber: `${tail}-${last}`,
+            clioMatterUrl: '',
+            clioSyncedAt: Timestamp.fromDate(at(1, 16, 40)),
+            clioLastPushStatus: 'ok',
+          }),
       ...data,
     });
     made.matters++;
@@ -400,6 +411,9 @@ async function seedFirm(db, bucket, firmId, user) {
   const reyes = await newMatter({
     matterName: 'Reyes v. Reyes',
     caseTitle: 'Reyes v. Reyes',
+    // Live texts and emails from a prospect's own phone land here (#3).
+    liveDemoTarget: true,
+    liveDemoTargetAt: Timestamp.now(),
     clientName: 'Dana Reyes',
     caseNumber: '49D08-2026-DR-004417',
     practiceArea: 'Child custody',
@@ -979,12 +993,18 @@ exports.seedDemoWorkspace = onCall({ timeoutSeconds: 540, memory: '2GiB' }, asyn
   await acctRef.set({ isDemo: true, demoResetting: true }, { merge: true });
   try {
     await wipeFirm(db, bucket, firmId);
-    const made = await seedFirm(db, bucket, firmId, { uid, name });
-    await db.collection('integrationStatus').doc(firmId).set(
-      { firmID: firmId, clioConnected: true, clioUserName: 'Doe Family Law', clioRegion: 'us', clioConnectedAt: Timestamp.fromDate(at(40, 10)), demo: true },
-      { merge: true },
-    );
-    await acctRef.set({ demoResetting: false, demoSeededAt: FieldValue.serverTimestamp(), demoSeededBy: uid }, { merge: true });
+    // A demo workspace connected to a real Clio sandbox (#2, #6) keeps that
+    // connection: no simulated status, and matters are linked for real.
+    const status = await db.collection('integrationStatus').doc(firmId).get();
+    const realClio = status.exists && status.get('clioConnected') === true && status.get('demo') !== true;
+    const made = await seedFirm(db, bucket, firmId, { uid, name, realClio });
+    if (!realClio) {
+      await db.collection('integrationStatus').doc(firmId).set(
+        { firmID: firmId, clioConnected: true, clioUserName: 'Doe Family Law', clioRegion: 'us', clioConnectedAt: Timestamp.fromDate(at(40, 10)), demo: true },
+        { merge: true },
+      );
+    }
+    await acctRef.set({ demoResetting: false, demoSeededAt: FieldValue.serverTimestamp(), demoSeededBy: uid, smsNumber: DEMO_SMS_NUMBER }, { merge: true });
     return { ok: true, ...made };
   } catch (e) {
     console.error('seedDemoWorkspace failed', e);

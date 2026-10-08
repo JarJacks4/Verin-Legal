@@ -8,6 +8,7 @@ import '/backend/backend.dart';
 
 import '../verin_api.dart';
 import 'auth_shell.dart';
+import '/verin_app/auth/two_step.dart' show PendingTwoStep, kTwoStepNeeded;
 
 Future<String?> verinSignUp({
   required String email,
@@ -78,11 +79,22 @@ Future<String?> verinSignIn({required String email, required String password}) a
     await maybeCreateUser(user);
     _setup = null; // new session: let the firm gate run setup again
     return null;
+  } on FirebaseAuthMultiFactorException catch (e) {
+    // Two-step sign-in: the screen asks for the code (verin_app/auth/two_step.dart).
+    PendingTwoStep.resolver = e.resolver;
+    return kTwoStepNeeded;
   } on FirebaseAuthException catch (e) {
     return authErrorMessage(e.code, e.message);
   } catch (e) {
     return 'Sign-in failed: $e';
   }
+}
+
+/// After the second step succeeded: the same follow-up as a normal sign-in.
+Future<void> finishTwoStepSignIn() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user != null) await maybeCreateUser(user);
+  _setup = null;
 }
 
 Future<String?>? _setup;

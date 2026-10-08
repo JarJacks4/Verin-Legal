@@ -1,4 +1,5 @@
 import '/auth/firebase_auth/auth_util.dart';
+import '/verin_app/auth/two_step.dart' show askTwoStepCode, kTwoStepNeeded;
 import '/components/button19_widget.dart';
 import '/components/text_field11_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -75,8 +76,13 @@ class _FirmWorkspaceSignInWidgetState extends State<FirmWorkspaceSignInWidget> {
       _info = null;
     });
     GoRouter.of(context).prepareAuthEvent();
-    final err = await verinSignIn(email: _email, password: _password);
+    var err = await verinSignIn(email: _email, password: _password);
     if (!mounted) return;
+    if (err == kTwoStepNeeded) {
+      err = await askTwoStepCode(context);
+      if (err == null) await finishTwoStepSignIn();
+      if (!mounted) return;
+    }
     if (err != null) {
       setState(() {
         _busy = false;

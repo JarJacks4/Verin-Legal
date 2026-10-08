@@ -322,6 +322,9 @@ exports.reprocessReceipt = onCall(
     const matterRef = snap.get('matterId');
     if (!matterRef || !matterRef.id) throw new HttpsError('failed-precondition', 'Receipt has no matter');
     await loadMatterForUser(db, uid, matterRef.id);
+    if (snap.get('originalDeletedAt')) {
+      throw new HttpsError('failed-precondition', 'The original was delivered to your firm\'s system and removed from Verin, so it can\'t be read again here.');
+    }
     if (data.clientSide === 'left' || data.clientSide === 'right') await ref.set({ clientSide: data.clientSide }, { merge: true });
     await ref.set({ extractionState: 'running' }, { merge: true });
     try {

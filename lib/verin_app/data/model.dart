@@ -288,6 +288,19 @@ List<int> recordLagsDays(Iterable<ReceiptsRecord> receipts) {
   return out;
 }
 
+/// The firm's own pre-Verin Record Lag when it was captured (#23), else the
+/// industry baseline.
+int baselineLagDays(FirmAccountRecord? firm) {
+  final b = firm?.snapshotData['baselineRecordLag'];
+  if (b is Map && b['medianDays'] is num) return (b['medianDays'] as num).round();
+  return kBaselineRecordLagDays;
+}
+
+bool firmBaselineCaptured(FirmAccountRecord? firm) {
+  final b = firm?.snapshotData['baselineRecordLag'];
+  return b is Map && b['medianDays'] is num;
+}
+
 int? medianDays(List<int> sorted) {
   if (sorted.isEmpty) return null;
   final mid = sorted.length ~/ 2;

@@ -90,6 +90,8 @@ async function processReceipt(deps, receiptRef, { force = false, uid = null } = 
       extractionState: status,
       extractionErrors: errors,
       extractedAt: serverTimestamp(),
+      // Which model and which version of the instructions read this item (#76).
+      ...(audit && audit.ai ? { ai: audit.ai } : {}),
     };
     if (write.resolvedDate === null) delete write.resolvedDate;
     const batch = db.batch();

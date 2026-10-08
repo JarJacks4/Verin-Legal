@@ -24,8 +24,10 @@ import 'receipts_tab.dart';
 import 'exhibits_tab.dart';
 import 'follow_ups.dart';
 import 'thread_tab.dart';
+import 'timeline_tab.dart';
+import 'matter_actions.dart';
 
-enum MatterTab { intake, receipts, thread, followups, exhibits, integrity, practice }
+enum MatterTab { intake, receipts, thread, timeline, followups, exhibits, integrity, practice }
 
 class MatterDetailScreen extends StatefulWidget {
   const MatterDetailScreen({super.key, required this.matter, this.admin = false, this.initialTab = ''});
@@ -168,6 +170,8 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                                       ChainStatusInline(status: chainStatusOf(m), long: true),
                                       const SizedBox(width: 8.0),
                                       ClioBadge(state: clioStateOf(m, firmConnected: firmClio)),
+                                      const SizedBox(width: 8.0),
+                                      MatterActionsButton(matter: m, receipts: receipts),
                                     ],
                                   ),
                                 ),
@@ -199,6 +203,7 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                               MatterTab.intake => IntakeTab(matter: m),
                               MatterTab.receipts => ReceiptsTab(matter: m, receipts: receipts, loading: !rs.hasData, error: rs.error),
                               MatterTab.thread => ThreadTab(matter: m, receipts: receipts),
+                              MatterTab.timeline => TimelineTab(matter: m, receipts: receipts),
                               MatterTab.exhibits => ExhibitsTab(matter: m, receipts: receipts),
                               MatterTab.followups => FollowUpsTab(matter: m, receipts: receipts, onShowInThread: () => setState(() => _tab = MatterTab.thread)),
                               MatterTab.integrity => IntegrityTab(matter: m, receipts: receipts),
@@ -235,6 +240,7 @@ class _TabBar extends StatelessWidget {
       (MatterTab.intake, 'Intake channel', Icons.inbox_outlined),
       (MatterTab.receipts, 'Receipts', Icons.description_outlined),
       (MatterTab.thread, 'Thread', Icons.layers_outlined),
+      (MatterTab.timeline, 'Timeline', Icons.timeline),
       (MatterTab.followups, 'Follow-ups', Icons.mark_email_unread_outlined),
       (MatterTab.exhibits, 'Exhibits', Icons.folder_copy_outlined),
       (MatterTab.integrity, 'Integrity', Icons.verified_user_outlined),

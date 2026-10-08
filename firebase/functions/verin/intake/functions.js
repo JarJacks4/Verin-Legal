@@ -35,6 +35,9 @@ const { requireAuth, loadMatterForUser } = require('../common/access');
 const N = require('./normalize');
 const { fileInboundItem } = require('./file');
 const { fileSmsInto } = require('./sms_file');
+const { raiseAlert } = require('../common/alerts');
+const { sendMail } = require('../common/mailer');
+const { emailSecrets } = require('../common/mail_secrets');
 
 if (!getApps().length) initializeApp();
 
@@ -44,14 +47,34 @@ const MAX_ATTACHMENTS = 40;
 // Addresses and numbers
 // ---------------------------------------------------------------------------
 
-async function firmSmsNumber(db, firmId) {
+const poolNumbers = () =>
+  String(P.TWILIO_NUMBER_POOL.value() || '')
+    .split(',')
+    .map((x) => N.normPhone(x))
+    .filter(Boolean);
+
+/// The texting number for a firm's matters. Demo matters always get the demo
+/// number (#1). A firm without its own number is given the least-used number
+/// from the pool (#15), else everyone shares TWILIO_SMS_NUMBER.
+async function firmSmsNumber(db, firmId, { demo = false } = {}) {
+  if (demo) return N.normPhone(P.DEMO_TWILIO_SMS_NUMBER.value());
   if (firmId) {
     const acct = await db.collection('firmAccount').where('firmID', '==', firmId).limit(1).get();
     const n = acct.empty ? '' : N.normPhone(acct.docs[0].get('smsNumber'));
     if (n) return n;
+    const pool = poolNumbers();
+    if (pool.length && !acct.empty) {
+      const counts = await Promise.all(pool.map(async (num) => (await db.collection('firmAccount').where('smsNumber', '==', num).get()).size));
+      const pick = pool[counts.indexOf(Math.min(...counts))];
+      await acct.docs[0].ref.set({ smsNumber: pick, smsNumberAssignedAt: FieldValue.serverTimestamp(), smsNumberFromPool: true }, { merge: true });
+      return pick;
+    }
   }
   return N.normPhone(P.TWILIO_SMS_NUMBER.value());
 }
+
+const liveDomain = () => String(P.INBOUND_EMAIL_DOMAIN.value() || '').toLowerCase().trim();
+const demoDomain = () => String(P.DEMO_INBOUND_EMAIL_DOMAIN.value() || '').toLowerCase().trim();
 
 /// Reserves "<stem>-<4 digits>" for this matter (unique across Verin).
 async function allocateLocalPart(db, matterRef, matter) {
@@ -72,13 +95,14 @@ async function allocateLocalPart(db, matterRef, matter) {
 /// The intake fields this matter should have; only what changed is returned.
 async function intakeUpdates(db, matterRef, m) {
   const out = {};
-  const domain = String(P.INBOUND_EMAIL_DOMAIN.value() || '').toLowerCase().trim();
+  const demo = m.demo === true;
+  const domain = demo ? demoDomain() : liveDomain();
   if (domain && !m.emailAddress) {
     const local = await allocateLocalPart(db, matterRef, m);
     out.emailAddress = `${local}@${domain}`;
   }
   if (!m.smsNumber) {
-    const n = await firmSmsNumber(db, m.firmID);
+    const n = await firmSmsNumber(db, m.firmID, { demo });
     if (n) out.smsNumber = n;
   }
   const phones = [...new Set([m.clientPhone, ...(Array.isArray(m.clientPhones) ? m.clientPhones : [])].map(N.normPhone).filter(Boolean))];
@@ -96,9 +120,50 @@ exports.onMatterIntake = onDocumentWritten({ document: 'Matters/{matterId}' }, a
   if (!after || !after.exists) return;
   const m = after.data();
   const db = getFirestore();
-  const upd = await intakeUpdates(db, after.ref, m);
-  if (Object.keys(upd).length) await after.ref.set(upd, { merge: true });
+  try {
+    // Matters opened inside an NFR demo workspace are demo matters, so they
+    // only ever get demo intake (#1).
+    if (m.demo !== true && m.firmID) {
+      const firm = await db.collection('firmAccount').where('firmID', '==', m.firmID).limit(1).get();
+      if (!firm.empty && firm.docs[0].get('isDemo') === true) {
+        await after.ref.set({ demo: true }, { merge: true });
+        return; // the write above re-runs this trigger with demo set
+      }
+    }
+    const upd = await intakeUpdates(db, after.ref, m);
+    if (Object.keys(upd).length) await after.ref.set(upd, { merge: true });
+    // A failed or incomplete provisioning must reach a person (#15).
+    const want = provisioningGaps({ ...m, ...upd });
+    if (want.length && !m.intakeProvisionAlertedAt) {
+      await raiseAlert(db, m.firmID, {
+        kind: 'provisioning',
+        matterId: after.id,
+        dedupeKey: `provision_${after.id}`,
+        message: `${m.matterName || m.caseTitle || 'A matter'} has no ${want.join(' or ')} yet, so the client can't send evidence that way. Open the matter's Intake tab and choose Set up again, or contact Verin.`,
+      });
+      await after.ref.set({ intakeProvisionAlertedAt: FieldValue.serverTimestamp() }, { merge: true });
+    }
+  } catch (e) {
+    console.error('onMatterIntake failed', after.id, e);
+    await raiseAlert(db, m.firmID, {
+      kind: 'provisioning',
+      matterId: after.id,
+      dedupeKey: `provision_${after.id}`,
+      severity: 'error',
+      message: `Setting up email and text intake failed for ${m.matterName || m.caseTitle || 'a matter'}: ${String(e.message || e).slice(0, 200)}`,
+    }).catch(() => {});
+  }
 });
+
+/// What a matter should have but doesn't, given what's configured.
+function provisioningGaps(m) {
+  const gaps = [];
+  const demo = m.demo === true;
+  if ((demo ? demoDomain() : liveDomain()) && !m.emailAddress && !(m.intakeEnabled && m.intakeEnabled.email === false)) gaps.push('email address');
+  const smsConfigured = demo ? !!P.DEMO_TWILIO_SMS_NUMBER.value() : !!(P.TWILIO_SMS_NUMBER.value() || P.TWILIO_NUMBER_POOL.value());
+  if (smsConfigured && !m.smsNumber && !(m.intakeEnabled && m.intakeEnabled.sms === false)) gaps.push('texting number');
+  return gaps;
+}
 
 exports.provisionIntake = onCall(async (request) => {
   const uid = requireAuth(request);
@@ -110,7 +175,7 @@ exports.provisionIntake = onCall(async (request) => {
   return {
     emailAddress: fresh.emailAddress || '',
     smsNumber: fresh.smsNumber || '',
-    emailConfigured: !!P.INBOUND_EMAIL_DOMAIN.value(),
+    emailConfigured: !!(fresh.demo === true ? demoDomain() : liveDomain()),
     smsConfigured: !!fresh.smsNumber,
   };
 });
@@ -325,11 +390,20 @@ async function senderKnown(db, matter, firmId, { email, phone }) {
 }
 
 async function fileEmail(db, bucket, event, e) {
-  const domain = String(P.INBOUND_EMAIL_DOMAIN.value() || '').toLowerCase();
-  const locals = [...new Set(e.recipients.map((r) => N.intakeLocalPart(r, domain)).filter(Boolean))];
+  // Live and demo addresses are separate domains; each only reaches its own
+  // kind of workspace (#1).
+  const targets = [];
+  for (const [domain, demo] of [[liveDomain(), false], [demoDomain(), true]]) {
+    if (!domain) continue;
+    for (const r of e.recipients) {
+      const local = N.intakeLocalPart(r, domain);
+      if (local && !targets.some((t) => t.local === local && t.domain === domain)) targets.push({ local, domain, demo });
+    }
+  }
   const filed = [];
   const notes = [];
-  for (const local of locals) {
+  const acks = [];
+  for (const { local, domain, demo } of targets) {
     const a = await db.collection('intakeAddresses').doc(local).get();
     if (!a.exists) {
       notes.push(`no matter for ${local}@${domain}`);
@@ -339,11 +413,16 @@ async function fileEmail(db, bucket, event, e) {
     const ms = await matterRef.get();
     if (!ms.exists) continue;
     const matter = ms.data();
+    if ((matter.demo === true) !== demo) {
+      notes.push(`${local}@${domain} is not a ${demo ? 'demo' : 'live'} matter; not filed`);
+      continue;
+    }
     if (matter.intakeEnabled && matter.intakeEnabled.email === false) {
       notes.push(`email intake is off for ${matterRef.id}`);
       continue;
     }
-    const known = await senderKnown(db, matter, matter.firmID, { email: e.from.email });
+    // A live demo case accepts whoever the prospect is (#3).
+    const known = (demo && matter.liveDemoTarget === true) || (await senderKnown(db, matter, matter.firmID, { email: e.from.email }));
     const fromLabel = e.from.name ? `${e.from.name} <${e.from.email}>` : e.from.email || 'Unknown sender';
     const reason = known ? '' : `From ${e.from.email || 'an unknown sender'}, who isn't known on this matter. Approve to read it.`;
     const common = {
@@ -369,7 +448,19 @@ async function fileEmail(db, bucket, event, e) {
       extra: { intakeEventId: event.id, emailSubject: subject, emailFrom: e.from.email, rawMimeSupplied: !!e.raw },
     });
     filed.push(msg.receiptId);
-    const atts = e.attachments.filter((x) => x.content && x.content.length && !N.isDecorativeAttachment(x)).slice(0, MAX_ATTACHMENTS);
+    const allAtts = e.attachments.filter((x) => x.content && x.content.length && !N.isDecorativeAttachment(x));
+    const atts = allAtts.slice(0, MAX_ATTACHMENTS);
+    if (allAtts.length > MAX_ATTACHMENTS) {
+      // Nothing is dropped silently: the email itself (with every attachment)
+      // is already preserved above; the firm is asked to follow up (#29).
+      await raiseAlert(db, matter.firmID, {
+        kind: 'oversize',
+        matterId: matterRef.id,
+        dedupeKey: `att_${msg.receiptId}`,
+        message: `${fromLabel} sent ${allAtts.length} attachments in one email (“${subject}”). The whole email is preserved; the first ${MAX_ATTACHMENTS} were filed as separate items. Open the email to see the rest, or ask the client to send them in smaller batches.`,
+      });
+    }
+    if (known && e.from.email) acks.push({ to: e.from.email, firmID: matter.firmID, count: 1 + atts.length, demo });
     for (let i = 0; i < atts.length; i++) {
       const x = atts[i];
       const name = x.filename || `attachment-${i + 1}${N.extFor(x.contentType)}`;
@@ -386,14 +477,51 @@ async function fileEmail(db, bucket, event, e) {
       filed.push(r.receiptId);
     }
   }
-  return { filed, notes };
+  return { filed, notes, acks };
+}
+
+/// "Received" email back to a known sender, with the emergency line (#29).
+async function acknowledgeEmail(db, acks, subject) {
+  if (P.EMAIL_AUTO_REPLY.value() !== 'true' || !acks.length) return;
+  const seen = new Set();
+  for (const a of acks) {
+    if (seen.has(a.to)) continue;
+    seen.add(a.to);
+    let firmName = 'your attorney\'s office';
+    const f = await db.collection('firmAccount').where('firmID', '==', a.firmID).limit(1).get();
+    if (!f.empty && f.docs[0].get('firmName')) firmName = f.docs[0].get('firmName');
+    const total = acks.filter((x) => x.to === a.to).reduce((n, x) => n + x.count, 0);
+    await sendMail({
+      to: a.to,
+      subject: `Received: ${subject || 'your email'}`,
+      text: [
+        `${firmName} has received your email${total > 1 ? ` (${total} items including attachments)` : ''}. It has been saved with the time it arrived.`,
+        '',
+        'This address is not monitored around the clock. If this is an emergency, call 911.',
+        '',
+        'You don\'t need to reply to this message.',
+      ].join('\n'),
+    }).catch((e) => console.warn('email ack failed', e.message));
+  }
+}
+
+/// The demo case the presenter marked "live" (most recent), in the demo
+/// firm(s) using the demo number.
+async function liveDemoMatter(db, firmIds) {
+  const snap = await db.collection('Matters').where('liveDemoTarget', '==', true).get();
+  const docs = snap.docs.filter((d) => d.get('demo') === true && (!firmIds.length || firmIds.includes(d.get('firmID'))));
+  const at = (d) => (d.get('liveDemoTargetAt') && d.get('liveDemoTargetAt').toMillis ? d.get('liveDemoTargetAt').toMillis() : 0);
+  return docs.sort((a, b) => at(b) - at(a))[0] || null;
 }
 
 /// Matters this number belongs to (open first), limited to the firms whose
 /// texting number received it when that is known.
 async function mattersForPhone(db, phone, toNumber) {
   const snap = await db.collection('Matters').where('clientPhones', 'array-contains', phone).get();
-  let docs = snap.docs;
+  // The demo number reaches only demo matters, and live numbers never do (#1).
+  const demoNum = N.normPhone(P.DEMO_TWILIO_SMS_NUMBER.value());
+  const toDemo = !!demoNum && toNumber === demoNum;
+  let docs = snap.docs.filter((d) => (d.get('demo') === true) === toDemo);
   const firmsForTo = (await db.collection('firmAccount').where('smsNumber', '==', toNumber).get()).docs.map((d) => d.get('firmID'));
   if (firmsForTo.length) docs = docs.filter((d) => firmsForTo.includes(d.get('firmID')));
   const open = docs.filter((d) => String(d.get('status') || 'Open') !== 'Closed');
@@ -447,7 +575,11 @@ async function fileSms(db, bucket, event) {
   const media = await keepSmsMedia(bucket, event, f);
   if (!from) return { filed: [], notes: ['no sender number'], media };
   const { list, firmsForTo } = await mattersForPhone(db, from, to);
-  const target = list.find((d) => !(d.get('intakeEnabled') && d.get('intakeEnabled').sms === false));
+  let target = list.find((d) => !(d.get('intakeEnabled') && d.get('intakeEnabled').sms === false));
+  // "Text it now" (#3): on the demo number, a prospect's own phone isn't on
+  // any matter, so it goes to the case the presenter marked as live.
+  const demoNum = N.normPhone(P.DEMO_TWILIO_SMS_NUMBER.value());
+  if (!target && demoNum && to === demoNum) target = await liveDemoMatter(db, firmsForTo);
   if (!target) {
     // Nobody we know: hold it for the firm to file by hand.
     const firmID = firmsForTo.length === 1 ? firmsForTo[0] : list.length ? list[0].get('firmID') : await soleFirmFor(db, to);
@@ -463,6 +595,15 @@ async function fileSms(db, bucket, event) {
       at: Timestamp.fromDate(at),
     });
     return { filed: [], notes: ['unrouted'], media };
+  }
+  const failedMedia = media.filter((m) => m.error).length;
+  if (failedMedia) {
+    await raiseAlert(db, target.get('firmID'), {
+      kind: 'oversize',
+      matterId: target.id,
+      dedupeKey: `media_${event.id}`,
+      message: `A text from ${from} had ${failedMedia} photo or video file${failedMedia === 1 ? '' : 's'} that could not be collected (often too large for text messaging). The message is saved. Ask the client to email it to the matter's address instead.`,
+    });
   }
   const filed = await fileSmsInto(db, bucket, {
     eventId: event.id,
@@ -491,7 +632,7 @@ async function soleFirmFor(db, to) {
 }
 
 exports.onInboundEvent = onDocumentCreated(
-  { document: 'InboundEvents/{eventId}', secrets: [S.TWILIO_AUTH_TOKEN], memory: '2GiB', timeoutSeconds: 540 },
+  { document: 'InboundEvents/{eventId}', secrets: [S.TWILIO_AUTH_TOKEN, ...emailSecrets()], memory: '2GiB', timeoutSeconds: 540 },
   async (ev) => {
     const snap = ev.data;
     if (!snap) return;
@@ -507,6 +648,7 @@ exports.onInboundEvent = onDocumentCreated(
         const e = await parseEmail(data.provider, body, data.contentType);
         result = await fileEmail(db, bucket, { id: snap.id }, e);
         result.from = e.from.email;
+        await acknowledgeEmail(db, result.acks || [], e.subject);
       } else {
         result = await fileSms(db, bucket, { id: snap.id, data });
       }
@@ -524,4 +666,4 @@ exports.approveQuarantined = require('./review').approveQuarantined;
 exports.assignUnrouted = require('./review').assignUnrouted;
 
 // For tests.
-exports._internal = { parseEmail, synthesizeEml, intakeUpdates, parseMultipart };
+exports._internal = { parseEmail, synthesizeEml, intakeUpdates, parseMultipart, provisioningGaps, firmSmsNumber };

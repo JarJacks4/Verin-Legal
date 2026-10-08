@@ -13,6 +13,7 @@
 //               Items over the automatic threshold (10 min) are deferred.
 
 const { execFile } = require('child_process');
+const aiLayer = require('../ai/models');
 const { promisify } = require('util');
 
 const { validateExtraction, toThreadMessages } = require('../extraction/validate');
@@ -191,12 +192,18 @@ async function analyzeVideo({ project, location, model, gcsUri, mimeType, client
   const audit = { model, engine: 'gemini-vertex' };
   let res;
   try {
-    const ai = client || genAIClient(project, location);
-    res = await ai.models.generateContent({
-      model,
-      contents: [{ role: 'user', parts: [{ fileData: { fileUri: gcsUri, mimeType } }, { text: videoPrompt({ clientSide, hasAudio }) }] }],
-      config: { responseMimeType: 'application/json', responseSchema: VIDEO_SCHEMA, temperature: 0 },
-    });
+    const genai = client || genAIClient(project, location);
+    const out = await aiLayer.call(
+      'video',
+      {
+        model,
+        contents: [{ role: 'user', parts: [{ fileData: { fileUri: gcsUri, mimeType } }, { text: videoPrompt({ clientSide, hasAudio }) }] }],
+        config: { responseMimeType: 'application/json', responseSchema: VIDEO_SCHEMA, temperature: 0 },
+      },
+      { client: genai },
+    );
+    res = out.response;
+    Object.assign(audit, { ai: out.meta, promptId: out.meta.promptId, promptVersion: out.meta.promptVersion, provider: out.meta.provider });
   } catch (e) {
     const msg = e && e.message ? e.message : String(e);
     const hint = /PERMISSION_DENIED|has not been used|disabled|SERVICE_DISABLED/i.test(msg)

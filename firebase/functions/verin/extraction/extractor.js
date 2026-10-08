@@ -10,6 +10,7 @@
 //       result (or a clear failure state) back onto that document.
 
 const crypto = require('crypto');
+const ai = require('../ai/models');
 const { EXTRACTION_SCHEMA, buildSystemPrompt, buildUserText } = require('./schema');
 const {
   detectImageMediaType,
@@ -99,12 +100,12 @@ async function extractFromBytes({ anthropic, model, maxTokens, bytes, clientSide
 
   let response;
   try {
-    response = await anthropic.messages.create(
-      buildRequest({ model, maxTokens, mediaType, base64: bytes.toString('base64'), clientSide }),
-    );
+    const out = await ai.call('extraction', buildRequest({ model, maxTokens, mediaType, base64: bytes.toString('base64'), clientSide }), { client: anthropic });
+    response = out.response;
+    Object.assign(audit, { ai: out.meta, promptId: out.meta.promptId, promptVersion: out.meta.promptVersion, provider: out.meta.provider });
   } catch (e) {
     const msg = e && e.message ? e.message : String(e);
-    return failed([`Claude API error: ${msg}`], { apiStatus: e && e.status ? e.status : null });
+    return failed([`Claude API error: ${msg}`], { apiStatus: e && e.status ? e.status : null, ...(e && e.aiMeta ? { ai: e.aiMeta } : {}) });
   }
 
   Object.assign(audit, {

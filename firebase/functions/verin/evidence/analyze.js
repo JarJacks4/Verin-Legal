@@ -8,6 +8,7 @@
 // (Video Intake spec §8 applies product-wide).
 
 const { SPEAKERS } = require('../extraction/schema');
+const ai = require('../ai/models');
 const { validateExtraction, toThreadMessages, parseModelResponse } = require('../extraction/validate');
 const { isLegacySamplingModel, truncate } = require('../extraction/extractor');
 const { BOX_SCHEMA, STATEMENT_SCHEMA, SENSITIVE_SCHEMA, messageSource, cleanStatements, cleanSensitive } = require('./source');
@@ -172,9 +173,11 @@ async function analyzeWithClaude({ anthropic, model, maxTokens, content, clientS
   const audit = { model, engine: 'claude' };
   let response;
   try {
-    response = await anthropic.messages.create(buildAnalysisRequest({ model, maxTokens, content, clientSide, kind, fileName, extra, clientName }));
+    const out = await ai.call('analysis', buildAnalysisRequest({ model, maxTokens, content, clientSide, kind, fileName, extra, clientName }), { client: anthropic });
+    response = out.response;
+    Object.assign(audit, { ai: out.meta, promptId: out.meta.promptId, promptVersion: out.meta.promptVersion, provider: out.meta.provider });
   } catch (e) {
-    return { ok: false, errors: [`Claude API error: ${e && e.message ? e.message : e}`], audit: { ...audit, apiStatus: e && e.status ? e.status : null } };
+    return { ok: false, errors: [`Claude API error: ${e && e.message ? e.message : e}`], audit: { ...audit, apiStatus: e && e.status ? e.status : null, ...(e && e.aiMeta ? { ai: e.aiMeta } : {}) } };
   }
   Object.assign(audit, {
     requestId: response._request_id || response.id || null,

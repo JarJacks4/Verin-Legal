@@ -52,13 +52,14 @@ class _AdminProgramState extends State<AdminProgram> {
           final processed = receipts.where((r) => itemStateOf(r) == VItemState.processed).length;
           final lag = medianDays(recordLagsDays(receipts));
           final withRecords = matters.where((m) => receipts.any((r) => r.matterId?.path == m.reference.path)).length;
-          final reduction = lag == null ? null : kBaselineRecordLagDays - lag;
+          final base = baselineLagDays(widget.firm);
+          final reduction = lag == null ? null : base - lag;
 
           final stats = [
             (
               'Record Lag vs baseline',
               reduction == null ? '—' : '${reduction >= 0 ? '−' : '+'}${reduction.abs()} days',
-              lag == null ? 'needs dated items' : '${kBaselineRecordLagDays}d → ${lag}d median',
+              lag == null ? 'needs dated items' : '${base}d → ${lag}d median',
               Icons.trending_down
             ),
             ('Evidence items built', '${receipts.length}', '$processed processed, standing', Icons.description_outlined),

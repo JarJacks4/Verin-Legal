@@ -103,11 +103,13 @@ exports.summarizeThread = onCall({ secrets: [P.ANTHROPIC_API_KEY], timeoutSecond
 
   const model = P.EXTRACTION_MODEL.value();
   const { anthropicClient } = require('../common/anthropic');
-  const res = await anthropicClient({ timeout: 100000 }).messages.create(buildSummaryRequest({ model, entries, topic, clientName: snap.get('clientName') }));
+  const { response: res, meta } = await require('../ai/models').call('summary', buildSummaryRequest({ model, entries, topic, clientName: snap.get('clientName') }), { client: anthropicClient({ timeout: 100000 }) });
   const text = (res.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
   const lines = validateSummary(parseJson(text), entries);
   if (!lines.length) throw new HttpsError('internal', 'The summary could not be tied to specific messages. Try again or narrow the topic.');
-  return { lines, model: res.model || model, demo: false };
+  // Logged for audit and cost-to-serve (checklist #53, #76).
+  await ref.collection('aiUsage').add({ ...meta, firmID: snap.get('firmID') || '', uid }).catch(() => {});
+  return { lines, model: res.model || model, ai: meta, demo: false };
 });
 
 exports._internal = { buildSummaryRequest, validateSummary, cannedSummary, parseJson };

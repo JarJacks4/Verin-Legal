@@ -201,3 +201,85 @@ Future<Map<String, dynamic>> uploadAndIngest({
     clientSide: clientSide,
   );
 }
+
+// ---------------------------------------------------------------------------
+// Closed-matter import (checklist #4)
+// ---------------------------------------------------------------------------
+
+/// Archive types for a closed matter: a ZIP of a folder, a mailbox export,
+/// or loose evidence files.
+const kArchiveExtensions = ['zip', 'mbox', 'eml', 'msg', 'pdf', 'jpg', 'jpeg', 'png', 'heic', 'webp', 'gif', 'mp4', 'mov', 'm4a', 'mp3', 'wav', 'doc', 'docx', 'txt'];
+
+/// Picks one or more archives / files for a closed-matter import.
+Future<PickResult> pickClosedMatterFiles() async {
+  final res = await FilePicker.platform.pickFiles(
+    allowMultiple: true,
+    withData: true,
+    type: FileType.custom,
+    allowedExtensions: kArchiveExtensions,
+  );
+  if (res == null) return PickResult(const [], const []);
+  final files = <StagedFile>[];
+  final skipped = <String>[];
+  for (final f in res.files) {
+    final b = f.bytes;
+    if (b == null || b.isEmpty) {
+      skipped.add('${f.name} (could not be read)');
+      continue;
+    }
+    if (b.length > kMaxUploadBytes) {
+      skipped.add('${f.name} (over 1 GB — split the folder into parts)');
+      continue;
+    }
+    files.add(StagedFile(name: f.name, bytes: b, kind: kindForFile(f.name)));
+  }
+  return PickResult(files, skipped);
+}
+
+/// Uploads one archive and files everything inside it, continuing until the
+/// server has filed every entry. [onStatus] gets short progress lines.
+/// Returns { found, filed, skipped }.
+Future<Map<String, int>> uploadAndImportArchive({
+  required String matterId,
+  required StagedFile file,
+  void Function(String status, double? progress)? onStatus,
+}) async {
+  final uid = currentUserUid;
+  if (uid.isEmpty) throw VerinApiException('Sign in again to upload.');
+  final path = 'intake/$uid/${_uploadId()}/${_safeName(file.name)}';
+  final ref = FirebaseStorage.instance.ref(path);
+  final ct = extensionOf(file.name) == 'zip'
+      ? 'application/zip'
+      : extensionOf(file.name) == 'mbox'
+          ? 'application/mbox'
+          : file.mime;
+  try {
+    final task = ref.putData(file.bytes, SettableMetadata(contentType: ct));
+    task.snapshotEvents.listen((s) {
+      if (s.totalBytes > 0) onStatus?.call('Uploading ${file.name}', s.bytesTransferred / s.totalBytes);
+    }, onError: (_) {});
+    await task;
+  } on FirebaseException catch (e) {
+    throw VerinApiException(e.code == 'unauthorized'
+        ? 'Upload was blocked by Storage rules. Publish the storage rules from firebase/storage.rules.'
+        : 'Upload failed (${e.code}).');
+  }
+  var offset = 0;
+  String? importId;
+  var found = 0;
+  var filed = 0;
+  var skipped = 0;
+  while (true) {
+    onStatus?.call(offset == 0 ? 'Opening ${file.name}' : 'Filing items ($filed of $found)', found == 0 ? null : filed / found);
+    final r = await VerinApi.importClosedMatter(matterId: matterId, uploadPath: path, fileName: file.name, offset: offset, importId: importId);
+    importId = r['importId'] as String?;
+    found = (r['found'] as num?)?.toInt() ?? found;
+    filed += (r['filed'] as num?)?.toInt() ?? 0;
+    skipped += (r['skipped'] as num?)?.toInt() ?? 0;
+    final next = (r['nextOffset'] as num?)?.toInt();
+    if (next == null) break;
+    offset = next;
+  }
+  onStatus?.call('Filed $filed of $found', 1.0);
+  return {'found': found, 'filed': filed, 'skipped': skipped};
+}
