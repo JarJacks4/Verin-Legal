@@ -8,6 +8,15 @@ test('phones normalize to E.164', () => {
   assert.strictEqual(N.normPhone('1-317-555-0142'), '+13175550142');
   assert.strictEqual(N.normPhone('+44 7700 900123'), '+447700900123');
   assert.strictEqual(N.normPhone('555-0142'), '');
+  // Twilio's WhatsApp senders, including international ones
+  assert.strictEqual(N.normPhone('whatsapp:+447700900123'), '+447700900123');
+  assert.strictEqual(N.normPhone('whatsapp:+13175550142'), '+13175550142');
+});
+
+test('WhatsApp messages are told apart from texts', () => {
+  assert.strictEqual(N.messageChannel('whatsapp:+447700900123'), 'whatsapp');
+  assert.strictEqual(N.messageChannel('+13175550142'), 'sms');
+  assert.strictEqual(N.messageChannel(''), 'sms');
 });
 
 test('emails and intake local parts', () => {

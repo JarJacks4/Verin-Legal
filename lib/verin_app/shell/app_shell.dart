@@ -18,6 +18,8 @@ import '../widgets/drawer.dart';
 import '../widgets/motion.dart';
 import '../onboarding/tour.dart';
 import 'demo_banner.dart';
+import 'firm_alerts.dart';
+import '../auth/two_step.dart' show TwoStepCard;
 
 enum ConsoleNav { matters, review, annotations }
 
@@ -81,14 +83,14 @@ class _AppShellState extends State<AppShell> {
                                 ),
                               ),
                               const SystemStatusBanner(),
-                              Expanded(child: widget.child),
+                              Expanded(child: FirmGates(firm: firmSnap.data, child: widget.child)),
                             ],
                           )
                         : Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               StillHero(tag: 'console-sidebar', child: sidebar),
-                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const SystemStatusBanner(), Expanded(child: widget.child)])),
+                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const SystemStatusBanner(), Expanded(child: FirmGates(firm: firmSnap.data, child: widget.child))])),
                             ],
                           ),
                   ),
@@ -344,6 +346,8 @@ class _ProfileDrawerBodyState extends State<ProfileDrawerBody> {
             ],
           ),
         ),
+        const SizedBox(height: 16.0),
+        const TwoStepCard(),
         const SizedBox(height: 24.0),
         VButton(
           label: 'Help & support',

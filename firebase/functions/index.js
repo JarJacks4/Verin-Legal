@@ -48,6 +48,38 @@ exports.exportRecordZip = verinArchive.exportRecordZip;
 exports.exportFirmData = verinArchive.exportFirmData;
 exports.exportIntegrationReport = verinArchive.exportIntegrationReport;
 
+// Delivery to the firm's system, then removal of Verin's copy (#16).
+const verinDelivery = require("./verin/export/delivery");
+exports.deliverMatterRecord = verinDelivery.deliverMatterRecord;
+exports.confirmDelivery = verinDelivery.confirmDelivery;
+exports.autoDeliverToClio = verinDelivery.autoDeliverToClio;
+
+// The firm's own pre-Verin Record Lag (#23); Clio capture runs on connect.
+exports.setBaselineRecordLag = require("./verin/baseline/record_lag").setBaselineRecordLag;
+
+// Closed-matter import and the demo counts (#4).
+const verinArchiveBuild = require("./verin/archive/import");
+exports.importClosedMatter = verinArchiveBuild.importClosedMatter;
+exports.standingRecordCounts = verinArchiveBuild.standingRecordCounts;
+
+// Reports (#27, #53, #67, #69, #70, #71, #74) and demo deletion (#9).
+exports.exportRecordLagAudit = require("./verin/reports/lag_audit").exportRecordLagAudit;
+exports.exportPracticePacket = require("./verin/reports/packets").exportPracticePacket;
+const verinDigest = require("./verin/reports/digest");
+exports.buildMatterDigest = verinDigest.buildMatterDigest;
+exports.weeklyMatterDigests = verinDigest.weeklyMatterDigests;
+const verinMonthly = require("./verin/reports/firm_report");
+exports.exportFirmMonthlyReport = verinMonthly.exportFirmMonthlyReport;
+exports.monthlyFirmReports = verinMonthly.monthlyFirmReports;
+exports.exportStandingRecordDocx = require("./verin/reports/standing_docx").exportStandingRecordDocx;
+const verinDemoOps = require("./verin/reports/demo_ops");
+exports.deleteDemoMatter = verinDemoOps.deleteDemoMatter;
+exports.weeklyCostToServe = verinDemoOps.weeklyCostToServe;
+exports.costToServeNow = verinDemoOps.costToServeNow;
+
+// Nightly backup of system and audit data (#31).
+exports.nightlyFirestoreBackup = require("./verin/ops/backup").nightlyFirestoreBackup;
+
 // ---- Verin: client email and text intake (SendGrid / Postmark, Twilio) ----
 // Off until the intake secrets exist (INBOUND_WEBHOOK_KEY, TWILIO_AUTH_TOKEN):
 // set INTAKE_ENABLED=true in .env, then deploy. See DEPLOYMENT.md.

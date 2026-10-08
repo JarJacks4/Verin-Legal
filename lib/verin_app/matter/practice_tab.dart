@@ -125,7 +125,8 @@ class _PracticeTabState extends State<PracticeTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (DemoMode.active) return DemoPracticeTab(matter: widget.matter);
+    // Simulated in a demo workspace, unless it is connected to a real Clio sandbox (#6).
+    if (DemoMode.active && widget.firmStatus['demo'] != false) return DemoPracticeTab(matter: widget.matter);
     final c = VC.of(context);
     final m = widget.matter;
     final clio = clioStateOf(m, firmConnected: widget.firmConnected);

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/verin/auth/auth_actions.dart';
+import 'two_step.dart' show askTwoStepCode, kTwoStepNeeded;
 import '/verin/auth/auth_shell.dart' show SignupDraft, looksLikeEmail;
 import '/verin/verin_config.dart';
 import '/backend/backend.dart';
@@ -298,8 +299,13 @@ class _SignInViewState extends State<SignInView> with _RedirectIfSignedIn {
       _info = null;
     });
     GoRouter.of(context).prepareAuthEvent();
-    final err = await verinSignIn(email: email, password: _password.text);
+    var err = await verinSignIn(email: email, password: _password.text);
     if (!mounted) return;
+    if (err == kTwoStepNeeded) {
+      err = await askTwoStepCode(context);
+      if (err == null) await finishTwoStepSignIn();
+      if (!mounted) return;
+    }
     if (err != null) {
       setState(() {
         _busy = false;

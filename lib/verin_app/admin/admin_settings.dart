@@ -15,6 +15,7 @@ import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
 import 'admin_shell.dart';
 import 'exhibit_template_card.dart';
+import 'records_settings.dart';
 import '../shell/demo_banner.dart';
 import '../demo/demo_runs.dart' show DemoRunsLog;
 import '../onboarding/tour.dart' show TourTarget, demoType;
@@ -114,7 +115,7 @@ class _AdminSettingsState extends State<AdminSettings> {
       if (url.isNotEmpty) await launchURL(url);
       if (!mounted) return;
       setState(() => _export = 'done');
-      showVToast(context, 'Export ready — download started', description: '${r['fileName'] ?? ''} · ${r['matters'] ?? 0} matters');
+      showVToast(context, 'Export ready — download started', description: '${r['fileName'] ?? ''} · ${r['matters'] ?? 0} matters · ${r['files'] ?? 0} files with an index');
       Future.delayed(const Duration(seconds: 6), () {
         if (mounted) setState(() => _export = 'idle');
       });
@@ -217,6 +218,9 @@ class _AdminSettingsState extends State<AdminSettings> {
             ),
           ),
           _section('Exhibit template', ExhibitTemplateCard(key: ValueKey(widget.firm?.reference.path ?? 'none'), firm: widget.firm)),
+          _section('Records and delivery', RecordsSettingsCard(firm: widget.firm)),
+          _section('Baseline Record Lag', BaselineCard(firm: widget.firm)),
+          _section('Reports', ReportsCard(firm: widget.firm)),
           if (_showDemoWorkspace) _section('Demo workspace', TourTarget(id: 'settings_demo', child: DemoWorkspaceCard(firm: widget.firm))),
           if (isDemoFirm(widget.firm)) _section('Demo runs', const DemoRunsLog()),
           _section(

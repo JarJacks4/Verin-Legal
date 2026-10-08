@@ -262,6 +262,14 @@ No code change: the webhook recognises either provider.
 3. Optional per firm: set `smsNumber` on that firm's `firmAccount` document to
    give the firm its own number; otherwise `TWILIO_SMS_NUMBER` is used.
 
+### 4. WhatsApp — same Twilio number (optional)
+1. Twilio → Messaging → Senders → WhatsApp senders → self sign-up: connect the Meta
+   Business account, finish Meta business verification, register the firm's Twilio
+   number with display name "Verin Legal". The number must not be on the WhatsApp app.
+2. On the sender, "A message comes in" → the same `inboundSms` URL, HTTP POST.
+3. Once Meta approves it, set `WHATSAPP_ENABLED=true` in `.env` and deploy functions.
+   Messages are filed like texts but labelled WhatsApp; client cards gain a WhatsApp line.
+
 Existing matters get their address the first time someone opens their Intake tab.
 
 ## NFR demo workspace
@@ -298,3 +306,41 @@ Matters search box, and a per-item access log in the receipt drawer (admins).
 
 Deploy: functions (new `summarizeThread`, updated `seedDemoWorkspace` and `inboundSms`),
 `firestore:rules`, then hosting. Then press **Reset demo** once in the demo workspace.
+
+## Launch checklist release 2 (Oct 8, 2026)
+
+Everything app-side still open on launch checklist v2, except billing (firms sign a contract first).
+
+| Checklist | What was added | Where |
+|---|---|---|
+| #1 separate demo intake | Demo matters use their own email domain and texting number; live addresses never reach a demo and demo addresses never reach a firm. Any matter opened in a demo workspace is a demo matter. | `DEMO_INBOUND_EMAIL_DOMAIN`, `DEMO_TWILIO_SMS_NUMBER` in `.env` |
+| #3 "text it now" | Demo Intake tab shows the real demo number and address, and celebrates anything that arrives while it's open. Texts from any phone (and emails from anyone) to the demo number land in the case marked live (Reyes by default; **Use this case for live messages** on another). | Intake tab (demo) |
+| #4 closed-matter import | ZIP of a folder, .mbox, .eml or loose files; every file becomes its own item. Counts: items received, distinct dated items, conversations rebuilt, items flagged. | Matter → **Record** → Import a closed matter |
+| #5 before and after | As-sent items next to the assembled record; every line cites its item; gaps and unreadable items shown. | Matter → **Timeline** tab → Before and after |
+| #6 write-back live | Connecting a real Clio sandbox from the demo workspace replaces the simulation; Reset demo keeps the real connection. | Practice mgmt tab |
+| #9 demo deletion | Deletes a prospect's material and emails the deletion confirmation (or shows it to copy). | Matter → Record → Delete demo material (demo only) |
+| #15 provisioning | Failed or incomplete provisioning raises a firm alert; `TWILIO_NUMBER_POOL` hands numbers out one per firm. | Alert strip at the top of every page |
+| #16 delete after delivery | Record ZIP delivered to Clio (confirmed upload) or downloaded and confirmed by the firm, then Verin deletes its copy of each finished file. Hashes, RFC 3161 tokens, chain and audit log stay. Nightly Clio delivery. **Verify a file** checks any copy against the record in the browser. | Matter → Record → Deliver the record / Verify a file; Settings → Records and delivery |
+| #21 timeline | Every item on one dated line with both dates, hearings as milestones. | Timeline tab |
+| #22 versioned write-back | Each push to Clio is a new version of the same document, not a duplicate. | automatic |
+| #23 baseline at connect | Firm's own pre-Verin Record Lag captured from Clio when it connects, then locked; or entered from a dated sample. Dashboard and Program use it. | Settings → Baseline Record Lag |
+| #29 client never sees an error | Email receipt with the emergency line (`EMAIL_AUTO_REPLY`); more than 40 attachments, or a text photo that couldn't be collected, raises a firm-facing request. | alerts |
+| #31 two-step sign-in | Authenticator-app codes; firms can require it for everyone. | Profile drawer; Settings → Records and delivery |
+| #53 cost to serve | Weekly per firm (`costReports`, Verin staff only) and on demand for admins. | Settings → Reports |
+| #27 / #71 packets | PI treatment chronology, immigration checklist coverage, civil key-date chronology, criminal event window and mitigation packet; family uses Exhibits. Redactions confirmed first; flagged values masked. | Matter → Record → Hearing / filing packet |
+| #67 Record Lag Audit | Headline median, three figures, matter table, latest-arriving item, method, every item. | Settings → Reports |
+| #68 Standing Record | Record PDF now has both dates per item, pre-intake flags, a gap memorandum and a receipt and handling log. | every record export |
+| #69 Word export | Status, review queue, requests, issues, cited chronology, exhibits, integrity appendix. | Matter → Record → Standing Record (Word) |
+| #70 weekly digest | Mondays 7:00: one page per open matter, added to Clio as a new version, optional email. | Settings toggles; Record → This week's digest |
+| #72 exit export | Firm export now carries every native file plus `index.csv` mapping each file to its entry. | Settings → Export all data |
+| #74 monthly report | 1st of each month, or on demand. | Settings → Reports |
+| #76 AI model layer | Every model call goes through `verin/ai/models.js`; provider, model, prompt id and prompt fingerprint are saved on each item. | backend |
+
+### One-time setup for this release
+
+1. **Deploy:** functions, `firestore:rules`, `firestore:indexes`, then hosting (the usual `deploy.bat`). Then press **Reset demo** in the demo workspace.
+2. **Two-step sign-in:** Firebase console → Authentication → Settings → upgrade to **Identity Platform** (free tier covers this), then enable **Multi-factor authentication → TOTP**. Until then the "Turn on" button explains that it isn't enabled.
+3. **Outbound email** (client receipts, digests, deletion confirmations): create the secret `EMAIL_API_KEY` (Postmark server token, or a SendGrid key for the demo) in Secret Manager, then set `EMAIL_ENABLED=true` and `EMAIL_FROM` in `.env` and deploy functions. With it off, everything else works and emails are simply not sent.
+4. **Demo intake:** buy a second Twilio number for demos, point it at the same `inboundSms` webhook, and set `DEMO_TWILIO_SMS_NUMBER`; add a demo email domain (e.g. `demo.in.verinlegal.com`) to SendGrid Inbound Parse with the same webhook, and set `DEMO_INBOUND_EMAIL_DOMAIN`. Both need `INTAKE_ENABLED=true`.
+5. **Clio sandbox for demos:** sign in to the demo workspace as an admin and connect the Clio sandbox account from Settings; link each demo matter to a sandbox matter in its Practice mgmt tab.
+6. **Backups (#31):** create a bucket `verin-legal-fbzp5w-backups` (same region, 30-day lifecycle delete), give the App Engine default service account the roles **Cloud Datastore Import Export Admin** and **Storage Admin** on that bucket, then set `BACKUP_BUCKET=verin-legal-fbzp5w-backups` in `.env` and deploy. Test a restore once into a scratch project: `gcloud firestore import gs://verin-legal-fbzp5w-backups/firestore/<date> --project <scratch-project>`.

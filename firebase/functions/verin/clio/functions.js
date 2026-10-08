@@ -271,9 +271,22 @@ exports.clioOAuthCallback = onRequest({ secrets: CLIO_SECRETS }, async (req, res
         clioUserName: (who && who.name) || '',
         clioConnectedAt: FieldValue.serverTimestamp(),
         clioConnectedByUid: saved.uid,
+        demo: false, // a real connection, even in an NFR demo workspace (sandbox)
       },
       { merge: true },
     );
+    // Demo matters carry sample Clio links; a real sandbox connection replaces them.
+    const demoMatters = await db().collection('Matters').where('firmID', '==', saved.firmId).where('demo', '==', true).get();
+    for (const d of demoMatters.docs) {
+      if (!d.get('clioMatterUrl')) {
+        await d.ref.set(
+          { clioMatterID: FieldValue.delete(), clioMatterDisplayNumber: FieldValue.delete(), clioSyncedAt: FieldValue.delete(), clioLastPushStatus: FieldValue.delete(), providerMatterReference: FieldValue.delete() },
+          { merge: true },
+        );
+      }
+    }
+    // The firm's pre-Verin Record Lag, captured before Verin receives anything (#23).
+    await require('../baseline/record_lag').captureClioBaseline(db(), sessionFor(saved.firmId), saved.firmId);
     return resultPage(res, {
       ok: true,
       title: 'Clio connected',
@@ -384,12 +397,20 @@ exports.clioPushDocument = onCall({ secrets: CLIO_SECRETS, timeoutSeconds: 120, 
     const sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
 
     const session = sessionFor(firmId);
-    const uploaded = await session.uploadDocument({
-      clioMatterId,
-      name,
-      bytes,
-      contentType: meta.contentType || 'application/pdf',
-    });
+    // One Clio document per kind of record, versioned on every push (#22).
+    const kind = /\.zip$/i.test(name) ? 'record_zip' : /integration/i.test(name) ? 'integration_report' : 'record_pdf';
+    const prior = (snap.get('clioDocIds') || {})[kind] || null;
+    let uploaded;
+    let fresh = !prior;
+    try {
+      uploaded = await session.uploadDocument({ clioMatterId, name, bytes, contentType: meta.contentType || 'application/pdf', versionOf: prior });
+    } catch (e) {
+      if (!prior) throw e;
+      // The earlier document was deleted or moved in Clio: start a new one.
+      uploaded = await session.uploadDocument({ clioMatterId, name, bytes, contentType: meta.contentType || 'application/pdf' });
+      fresh = true;
+    }
+    if (fresh) await ref.set({ clioDocIds: { [kind]: uploaded.id } }, { merge: true });
 
     const batch = db().batch();
     batch.set(logRef, { ...baseLog, status: 'Synced', clioDocumentId: uploaded.id, sha256, error: '' });
@@ -406,3 +427,5 @@ exports.clioPushDocument = onCall({ secrets: CLIO_SECRETS, timeoutSeconds: 120, 
 });
 
 exports._internal = { intakeNote, prettyPhone };
+// Used by verin/export/delivery.js (delete-after-delivery).
+exports._clio = { sessionFor, CLIO_SECRETS };

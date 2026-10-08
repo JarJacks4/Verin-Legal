@@ -1,5 +1,8 @@
 // Intake channel tab — port of the Make's <IntakeTab>.
 
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '/backend/backend.dart';
@@ -12,6 +15,7 @@ import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import 'manual_entry_drawer.dart';
 import '/verin/verin_api.dart';
+import '/verin/verin_config.dart' show currentFirmId;
 import '../widgets/drawer.dart';
 import '../onboarding/tour.dart' show DemoMode, TourTarget;
 
@@ -409,6 +413,65 @@ class _DemoArrivalState extends State<_DemoArrival> {
   static bool _autoSent = false;
   bool _busy = false;
 
+  // "Text it now" (#3): watch for anything that arrives while this is open.
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _sub;
+  String? _lastSeen;
+
+  @override
+  void initState() {
+    super.initState();
+    _sub = FirebaseFirestore.instance
+        .collection('Receipts')
+        .where('matterId', isEqualTo: widget.matter.reference)
+        .where('firmID', isEqualTo: currentFirmId())
+        .orderBy('receivedAt', descending: true)
+        .limit(1)
+        .snapshots()
+        .listen((q) {
+      final d = q.docs.isEmpty ? null : q.docs.first;
+      if (d == null) return;
+      if (_lastSeen == null) {
+        _lastSeen = d.id; // what was already there
+        return;
+      }
+      if (d.id == _lastSeen) return;
+      _lastSeen = d.id;
+      if (_busy || !mounted) return; // the simulated one celebrates itself
+      final ch = '${d.data()['channelKey'] ?? ''}';
+      celebrate(context,
+          title: ch == 'email' ? 'Your email just arrived' : 'Your text just arrived',
+          subtitle: 'Received, fingerprinted and time-stamped live. Open Receipts or Thread to see it.');
+    }, onError: (_) {});
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  bool get _live => widget.matter.snapshotData['liveDemoTarget'] == true;
+
+  /// The demo number when it's a real one (not the fictional 555-0000).
+  String get _liveNumber {
+    final n = widget.matter.smsNumber;
+    return n.isEmpty || n == '+13175550000' ? '' : n;
+  }
+
+  static String _prettyNumber(String e164) {
+    final m = RegExp(r'^\+1(\d{3})(\d{3})(\d{4})$').firstMatch(e164);
+    return m == null ? e164 : '(${m[1]}) ${m[2]}-${m[3]}';
+  }
+
+  Future<void> _makeLive() async {
+    try {
+      await widget.matter.reference.update({'liveDemoTarget': true, 'liveDemoTargetAt': FieldValue.serverTimestamp()});
+      if (mounted) showVToast(context, 'This is the live case', description: 'Texts to the demo number from any phone, and emails to this address from anyone, land here.');
+    } catch (e) {
+      if (mounted) showVToast(context, 'Could not set it', error: true, description: '$e');
+    }
+  }
+
   Future<void> _send() async {
     if (_busy) return;
     setState(() => _busy = true);
@@ -450,9 +513,16 @@ class _DemoArrivalState extends State<_DemoArrival> {
                 Text('TRY IT LIVE', style: VT.eyebrow(context, size: 11.0)),
                 const SizedBox(height: 4.0),
                 Text(
-                  'Have the client send the next message to this case. It arrives through the same steps as a real one — stored, fingerprinted, time-stamped and read — in a few seconds.',
+                  _liveNumber.isNotEmpty
+                      ? 'Text a screenshot to ${_prettyNumber(_liveNumber)} or forward an email to ${widget.matter.emailAddress.isEmpty ? 'this case' : widget.matter.emailAddress} — from your own phone. It appears here, dated and filed, while we talk.'
+                      : 'Have the client send the next message to this case. It arrives through the same steps as a real one — stored, fingerprinted, time-stamped and read — in a few seconds.',
                   style: VT.body(context, size: 13.0),
                 ),
+                if (_liveNumber.isNotEmpty && !_live)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6.0),
+                    child: VButton(label: 'Use this case for live messages', icon: Icons.podcasts, kind: VButtonKind.link, size: VButtonSize.sm, onPressed: _makeLive),
+                  ),
               ],
             ),
           ),

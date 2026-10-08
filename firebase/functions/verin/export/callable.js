@@ -12,7 +12,7 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const P = require('../common/params');
 const { requireAuth, loadMatterForUser } = require('../common/access');
 const { verifyEntries } = require('../chain/chain');
-const { buildRecordPdf } = require('./record_pdf');
+const { buildRecordPdf, toPdfReceipt } = require('./record_pdf');
 
 if (!getApps().length) initializeApp();
 
@@ -44,22 +44,10 @@ exports.exportMatterRecord = onCall({ timeoutSeconds: 120, memory: '1GiB' }, asy
   ]);
 
   const receipts = receiptSnap.docs
-    .map((d) => {
-      const r = d.data();
-      return {
-        id: d.id,
-        receivedAt: toDate(r.receivedAt),
-        channel: r.channel || '',
-        itemKind: r.itemKind || '',
-        headline: headlineOf(r),
-        itemHash: r.item_hash || '',
-        entryHash: r.entryHash || '',
-        chainSeq: r.chainSeq || 0,
-        detectedPlatform: r.detectedPlatform || '',
-        threadMessages: Array.isArray(r.threadMessages) ? r.threadMessages : [],
-      };
-    })
+    .map((d) => ({ ...toPdfReceipt(d.id, d.data()), headline: headlineOf(d.data()) }))
     .sort((a, b) => (a.receivedAt ? a.receivedAt.getTime() : 0) - (b.receivedAt ? b.receivedAt.getTime() : 0));
+  const threadDoc = await ref.collection('derived').doc('thread').get();
+  const gaps = threadDoc.exists && Array.isArray(threadDoc.get('gaps')) ? threadDoc.get('gaps') : [];
 
   const chain = chainSnap.docs.map((d) => d.data()).sort((a, b) => (a.seq || 0) - (b.seq || 0));
   const verification = verifyEntries(chain);
@@ -90,6 +78,7 @@ exports.exportMatterRecord = onCall({ timeoutSeconds: 120, memory: '1GiB' }, asy
         chainHeadHash: md.chainHeadHash || '',
       },
       receipts,
+      gaps,
       chain: chain.map((e) => ({
         seq: e.seq,
         prevHash: e.prevHash || '',

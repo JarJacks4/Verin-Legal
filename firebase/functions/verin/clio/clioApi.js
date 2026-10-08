@@ -266,12 +266,15 @@ function createClioSession({ fetch, region, clientId, clientSecret, loadTokens, 
 
     // Clio's three-step upload: create the document record (which returns a
     // signed put_url), PUT the bytes there, then mark the version uploaded.
-    uploadDocument: async ({ clioMatterId, name, bytes, contentType = 'application/pdf' }) => {
+    // versionOf: an existing Clio document id → upload as its next version
+    // (versioned, not duplicated); otherwise a new document on the matter.
+    uploadDocument: async ({ clioMatterId, name, bytes, contentType = 'application/pdf', versionOf = null }) => {
+      const parent = versionOf ? { id: Number(versionOf), type: 'Document' } : { id: Number(clioMatterId), type: 'Matter' };
       const created = await request({
         method: 'POST',
         path: '/documents.json',
         query: { fields: 'id,name,latest_document_version{uuid,put_url,put_headers}' },
-        body: { data: { name, parent: { id: Number(clioMatterId), type: 'Matter' } } },
+        body: { data: { name, parent } },
       });
       const doc = created && created.data;
       const version = doc && doc.latest_document_version;

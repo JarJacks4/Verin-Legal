@@ -52,6 +52,22 @@ module.exports = {
   // "true" sends a short "Received" reply (needs A2P / toll-free registration).
   SMS_AUTO_REPLY: defineString('SMS_AUTO_REPLY', { default: 'false' }),
 
+  // Separate demo intake (#1): prospects' messages land only in NFR demo
+  // workspaces, never a live firm. Empty = demo matters keep sample addresses.
+  DEMO_INBOUND_EMAIL_DOMAIN: defineString('DEMO_INBOUND_EMAIL_DOMAIN', { default: '' }),
+  DEMO_TWILIO_SMS_NUMBER: defineString('DEMO_TWILIO_SMS_NUMBER', { default: '' }),
+  // Number pool (#15): comma-separated Twilio numbers handed out one per firm
+  // when a firm has no number of its own. Empty = everyone shares TWILIO_SMS_NUMBER.
+  TWILIO_NUMBER_POOL: defineString('TWILIO_NUMBER_POOL', { default: '' }),
+  // "true" emails a short receipt (with the emergency line) to known senders.
+  EMAIL_AUTO_REPLY: defineString('EMAIL_AUTO_REPLY', { default: 'false' }),
+  // Outbound email (common/mailer.js). The key is the EMAIL_API_KEY secret.
+  EMAIL_PROVIDER: defineString('EMAIL_PROVIDER', { default: 'postmark' }),
+  EMAIL_FROM: defineString('EMAIL_FROM', { default: '' }),
+  // "true" once Meta has approved the firm's Twilio number as a WhatsApp sender
+  // (its webhook is the same inboundSms URL). Adds the WhatsApp line to client cards.
+  WHATSAPP_ENABLED: defineString('WHATSAPP_ENABLED', { default: 'false' }),
+
   // Single-tenant fallback: the firmID every matter is filed under today.
   DEFAULT_FIRM_ID: defineString('DEFAULT_FIRM_ID', { default: 'harbow-law' }),
 };

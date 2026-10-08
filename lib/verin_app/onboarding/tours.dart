@@ -79,7 +79,14 @@ const matterTour = [
     target: 'matter_tabs',
     icon: Icons.east_rounded,
     title: 'Work from left to right',
-    body: 'Intake → Receipts → Thread → Follow-ups → Exhibits. Integrity and Practice mgmt are there when you need them.',
+    body: 'Intake → Receipts → Thread → Timeline → Follow-ups → Exhibits. Integrity and Practice mgmt are there when you need them.',
+  ),
+  TourStep(
+    target: 'matter_actions',
+    icon: Icons.inventory_2_outlined,
+    title: 'Everything you do with the record',
+    body: 'Deliver it to Clio or download it, export it to Word, build this week\'s digest or a hearing packet, import a closed matter, or check that a file matches an item exactly.',
+    optional: true,
   ),
 ];
 
@@ -112,6 +119,12 @@ const Map<String, TourStep> tabTips = {
     icon: Icons.description_outlined,
     title: 'Receipts',
     body: 'Every item that arrived, newest first, with its status. Click one to see details or check it against the original. You can also drop files here to add them yourself.',
+  ),
+  'timeline': TourStep(
+    target: 'matter_body',
+    icon: Icons.timeline,
+    title: 'Timeline',
+    body: 'Every item on one dated line, with both dates: the date the item carries and the day it reached you. Before and after shows what the client sent next to the record Verin assembled from it — every line cites its item, and gaps stay visible.',
   ),
   'thread': TourStep(
     target: 'matter_body',
@@ -214,6 +227,27 @@ const Map<String, List<TourStep>> adminTours = {
       body: 'Connections like Clio, your exhibit template, API access and retention. Changes apply to the whole firm.',
     ),
     TourStep(
+      target: 'settings_records',
+      icon: Icons.move_to_inbox_outlined,
+      title: 'Delivery and digests',
+      body: "Verin delivers each record to your firm's system, then removes its copy of the files. Choose nightly Clio delivery, weekly digests and whether everyone must use two-step sign-in.",
+      optional: true,
+    ),
+    TourStep(
+      target: 'settings_baseline',
+      icon: Icons.lock_clock_outlined,
+      title: 'Your starting point',
+      body: 'Your Record Lag before Verin, captured when you connect Clio and locked, so every later comparison is against the same number.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'settings_reports',
+      icon: Icons.query_stats_rounded,
+      title: 'Reports for the partners',
+      body: 'A Record Lag Audit over any matters, the monthly firm report and this week\'s cost to serve.',
+      optional: true,
+    ),
+    TourStep(
       target: 'settings_demo',
       icon: Icons.slideshow_outlined,
       title: 'Demo workspace',
@@ -254,6 +288,52 @@ const annotationsTour = [
 /// Sheet tips, keyed by tour id. Sheets find theirs by title
 /// ([drawerTourForTitle]) or pass `tour:` to showVDrawer.
 const Map<String, List<TourStep>> drawerTours = {
+  'practice_packet': [
+    TourStep(
+      target: 'packet_kinds',
+      icon: Icons.gavel_outlined,
+      title: 'One packet per practice',
+      body: 'Pick the packet for this kind of case. Flagged personal details are masked, and you confirm redactions before anything is exported.',
+    ),
+  ],
+  'closed_import': [
+    TourStep(
+      target: 'import_pick',
+      icon: Icons.unarchive_outlined,
+      title: 'A whole closed matter at once',
+      body: 'Choose a ZIP of the folder, an email export or the files themselves. Each file becomes its own fingerprinted, time-stamped item.',
+    ),
+    TourStep(
+      target: 'import_counts',
+      icon: Icons.insights_rounded,
+      title: 'The four numbers',
+      body: 'Items received, distinct dated items, conversations rebuilt and items flagged for a person. Refresh while Verin reads.',
+    ),
+  ],
+  'baseline_entry': [
+    TourStep(
+      target: 'baseline_rows',
+      icon: Icons.edit_calendar_outlined,
+      title: 'Two dates per item',
+      body: 'For each sample item: the date it was created, then the date it entered your file. Ten or more lines; the median is locked as your baseline.',
+    ),
+  ],
+  'lag_audit': [
+    TourStep(
+      target: 'audit_matters',
+      icon: Icons.query_stats_rounded,
+      title: 'Pick the matters',
+      body: 'Closed matters work best: the audit shows how late material reached the firm, matter by matter, with every item listed.',
+    ),
+  ],
+  'verify_file': [
+    TourStep(
+      target: 'verify_pick',
+      icon: Icons.fingerprint,
+      title: 'Is this the same file?',
+      body: 'Choose any copy. Its fingerprint is computed on this computer and compared with every item in the matter. A match means the bytes are identical.',
+    ),
+  ],
   'new_matter': [
     TourStep(
       target: 'drawer_body',
@@ -561,6 +641,27 @@ const Map<String, List<TourStep>> demoTours = {
       icon: Icons.east_rounded,
       title: 'The whole case, left to right',
       body: 'Intake → Receipts → Thread → Follow-ups → Exhibits. Start with Intake below, then open Thread — that\'s where four screenshots become one conversation.',
+    ),
+  ],
+  'tab_timeline': [
+    TourStep(
+      target: 'timeline_status',
+      icon: Icons.speed_rounded,
+      title: 'The case at a glance',
+      body: 'How many items, how late they reached the firm (Record Lag), what needs a person and what\'s new since you last looked.',
+    ),
+    TourStep(
+      target: 'timeline_switch',
+      icon: Icons.compare_arrows,
+      title: 'Before and after',
+      body: 'Left: what Dana actually sent, in the order it came in. Right: the record Verin assembled — every line cites its screenshot, and the gaps are shown, not hidden.',
+    ),
+    TourStep(
+      target: 'before_after',
+      icon: Icons.layers_outlined,
+      title: 'Nothing retyped',
+      body: 'This is the difference a partner sees in one glance: a phone full of screenshots on one side, a dated, cited record on the other.',
+      optional: true,
     ),
   ],
   'tab_intake': [

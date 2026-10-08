@@ -84,6 +84,39 @@ function prettyPhone(s) {
   return m ? `(${m[1]}) ${m[2]}-${m[3]}` : String(s || '');
 }
 
+const tsDate = (v) => (v && typeof v.toDate === 'function' ? v.toDate() : v instanceof Date ? v : v ? new Date(v) : null);
+
+/// One stored receipt → what the record PDF prints (#68: both dates,
+/// pre-intake flag and the receipt and handling log).
+function toPdfReceipt(id, r) {
+  return {
+    id,
+    receivedAt: tsDate(r.receivedAt),
+    channel: r.channel || '',
+    itemKind: r.itemKind || '',
+    headline: r.content || r.description || r.originalFileName || '',
+    itemHash: r.item_hash || '',
+    entryHash: r.entryHash || '',
+    chainSeq: r.chainSeq || 0,
+    detectedPlatform: r.detectedPlatform || '',
+    threadMessages: Array.isArray(r.threadMessages) ? r.threadMessages : [],
+    evidenceDate: tsDate(r.resolvedDate),
+    dateSource: r.dateSource || '',
+    dateConfidence: r.dateConfidence || '',
+    fromLabel: r.fromLabel || '',
+    state: r.classificationLabel || '',
+    isDuplicate: r.isDuplicate === true,
+    tsaName: r.tsaName || '',
+    tsaGenTime: tsDate(r.tsaGenTime),
+    ai: r.ai || null,
+    reviewReason: r.reviewReason || '',
+    deliveredTo: r.deliveredTo || '',
+    deliveredAt: tsDate(r.deliveredAt),
+    originalDeletedAt: tsDate(r.originalDeletedAt),
+    custodyNotes: r.custodyNotes || '',
+  };
+}
+
 function buildRecordPdf(input) {
   const { matter, receipts, chain, verification, generatedAt, generatedBy } = input;
   const gen = generatedAt instanceof Date ? generatedAt : new Date(generatedAt);
@@ -238,7 +271,11 @@ function buildRecordPdf(input) {
   }
   receipts.forEach((r, i) => {
     const desc = printable(dash(r.headline));
-    const hashLine = `item_hash ${r.itemHash || '—'}`;
+    const preIntake = r.evidenceDate && matter.openedAt && r.evidenceDate < new Date(matter.openedAt);
+    const dateLine = r.evidenceDate
+      ? `Item dated ${human(r.evidenceDate).replace(' UTC', '')}${r.dateSource ? ` · from ${String(r.dateSource).replace(/_/g, ' ')}` : ''}${r.dateConfidence ? ` · ${r.dateConfidence} confidence` : ''}${preIntake ? ' · PRE-INTAKE (dated before the matter opened)' : ''}`
+      : 'No date found in the item itself';
+    const hashLine = `${dateLine}\nitem_hash ${r.itemHash || '—'}`;
     const meta = [r.channel, (r.itemKind || '').replace(/_/g, ' ')].filter(Boolean).join(' · ') || '—';
     doc.font('Sans').fontSize(9);
     const descH = doc.heightOfString(desc, { width: cols[3].w - 6 });
@@ -323,6 +360,67 @@ function buildRecordPdf(input) {
     });
   }
 
+  // ------------------------------------------------------------ gap memorandum
+  const gaps = Array.isArray(input.gaps) ? input.gaps : [];
+  doc.addPage();
+  doc.font('Serif').fontSize(16).fillColor(NAVY).text('Gap Memorandum', left, doc.y, { width });
+  doc.moveDown(0.3);
+  doc
+    .font('Sans')
+    .fontSize(8.5)
+    .fillColor(MUTED)
+    .text(
+      'Places where the record cannot show that messages are continuous: between screenshots that do not overlap, ' +
+        'or where a run of messages ends. A gap means only that continuity is not established here; it says nothing ' +
+        'about what, if anything, was sent in between.',
+      { width },
+    );
+  doc.moveDown(0.6);
+  const gapLines = gaps.length
+    ? gaps.map((g, i) => {
+        const why = g.reason === 'cut_off' ? 'The screenshot cuts off here' : 'Continuity between these messages is not shown by the screenshots';
+        const when = (d) => (d ? ` (${String(d).slice(0, 16).replace('T', ' ')})` : '');
+        return `${i + 1}. ${why}: after "${printable(String(g.afterText || '').slice(0, 80))}"${when(g.afterDate)} and before "${printable(String(g.beforeText || '').slice(0, 80))}"${when(g.beforeDate)}.`;
+      })
+    : receipts.flatMap((r, i) => (r.threadMessages || []).filter((m) => m.isGap).map(() => `Exhibit ${i + 1} — continuity not established within this item.`));
+  if (!gapLines.length) {
+    doc.font('Sans').fontSize(10).fillColor(INK).text('No gaps detected in the assembled messages.', { width });
+  }
+  for (const line of gapLines) {
+    ensure(16);
+    doc.font('Sans').fontSize(9.5).fillColor(INK).text(line, left, doc.y, { width });
+    doc.moveDown(0.3);
+  }
+
+  // ------------------------------------------------------------ handling log
+  doc.addPage();
+  doc.font('Serif').fontSize(16).fillColor(NAVY).text('Receipt and Handling Log', left, doc.y, { width });
+  doc.moveDown(0.3);
+  doc
+    .font('Sans')
+    .fontSize(8.5)
+    .fillColor(MUTED)
+    .text('What happened to each item inside Verin, from arrival to delivery. Times are UTC.', { width });
+  doc.moveDown(0.6);
+  receipts.forEach((r, i) => {
+    const steps = [
+      `Received ${human(r.receivedAt)} by ${dash(r.channel)}${r.fromLabel ? ` from ${r.fromLabel}` : ''}${r.isDuplicate ? ' (same bytes as an earlier item; kept as a second arrival)' : ''}`,
+      `SHA-256 computed on arrival and added to the hash chain as entry #${r.chainSeq || '—'}`,
+      r.tsaGenTime ? `Independent RFC 3161 timestamp from ${r.tsaName || 'the time-stamp authority'}: ${human(r.tsaGenTime)}` : 'No independent timestamp recorded',
+      r.ai && r.ai.model ? `Read by ${r.ai.model} (instructions ${r.ai.promptVersion || '—'}); status ${dash(r.state)}` : `Status ${dash(r.state)}`,
+      ...(r.reviewReason ? [`Flagged for a person: ${r.reviewReason}`] : []),
+      ...(r.custodyNotes ? [`Firm notes: ${r.custodyNotes}`] : []),
+      ...(r.deliveredAt ? [`Delivered to ${r.deliveredTo || "the firm's system"} ${human(r.deliveredAt)}`] : []),
+      ...(r.originalDeletedAt ? [`File removed from Verin after delivery ${human(r.originalDeletedAt)}; hash and timestamp kept`] : []),
+    ];
+    doc.font('Sans').fontSize(9);
+    const h = steps.reduce((n, t) => n + doc.heightOfString(printable(t), { width: width - 18 }) + 2, 16);
+    ensure(h + 8);
+    doc.font('Bold').fontSize(9.5).fillColor(INK).text(`Exhibit ${i + 1} — ${printable(dash(r.headline)).slice(0, 90)}`, left, doc.y, { width });
+    for (const t of steps) doc.font('Sans').fontSize(8.5).fillColor(INK).text(`•  ${printable(t)}`, left + 8, doc.y + 1, { width: width - 18 });
+    doc.moveDown(0.5);
+  });
+
   // ------------------------------------------------------------ chain appendix
   doc.addPage();
   doc.font('Serif').fontSize(16).fillColor(NAVY).text('Appendix A — Hash Chain', left, doc.y, { width });
@@ -377,4 +475,4 @@ function buildRecordPdf(input) {
   return done;
 }
 
-module.exports = { buildRecordPdf, printable, human, dash, FONTS, COLORS: { NAVY, TEAL, INK, MUTED, RULE, WARN } };
+module.exports = { buildRecordPdf, toPdfReceipt, printable, human, dash, prettyPhone, FONTS, COLORS: { NAVY, TEAL, INK, MUTED, RULE, WARN } };
