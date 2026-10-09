@@ -26,8 +26,13 @@ const String kTermsUrl = 'https://www.verinlegal.com/terms';
 const String kPrivacyUrl = 'https://www.verinlegal.com/privacy';
 const String kTermsVersion = '2026-10';
 
-/// Where firm staff reach Verin Legal support.
-const String kSupportEmail = 'support@verinlegal.com';
+/// Where firm staff reach Verin Legal support. Mail to this address opens a
+/// ticket in the Spiceworks help desk, so nothing is lost in an inbox.
+const String kSupportEmail = 'help@verin-legal.on.spiceworks.com';
+
+/// The firm-facing help desk. Staff can raise a ticket and follow it there
+/// rather than waiting on an email thread.
+const String kHelpDeskUrl = 'https://verin-legal.on.spiceworks.com/portal';
 const String kSupportHours = 'Monday to Friday, 9 AM – 6 PM Eastern';
 const String kSupportResponse = 'Reply within one business day; same business day for anything blocking a filing or hearing.';
 

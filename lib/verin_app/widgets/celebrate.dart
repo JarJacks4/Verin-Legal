@@ -252,3 +252,59 @@ class _CelebrationState extends State<_Celebration> with SingleTickerProviderSta
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+
+/// An upload in progress, and the moment it lands: the bar runs to full, then
+/// gives way to a check that draws itself with a burst of brand colour. The
+/// point is that nobody has to wonder whether a file made it.
+class VUploadProgress extends StatefulWidget {
+  const VUploadProgress({
+    super.key,
+    required this.value,
+    this.height = 3.0,
+    this.label = 'Added',
+    this.compact = false,
+  });
+
+  /// 0.0–1.0, or null while the size is still unknown.
+  final double? value;
+  final double height;
+  final String label;
+
+  /// Just the check, no words — for a thumbnail with no room for a label.
+  final bool compact;
+
+  @override
+  State<VUploadProgress> createState() => _VUploadProgressState();
+}
+
+class _VUploadProgressState extends State<VUploadProgress> {
+  bool get _done => (widget.value ?? 0.0) >= 1.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    if (!_done) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(widget.height),
+        child: LinearProgressIndicator(
+          value: widget.value,
+          minHeight: widget.height,
+          color: c.teal,
+          backgroundColor: c.secondary,
+        ),
+      );
+    }
+    final burst = VSuccessBurst(size: widget.compact ? 26.0 : 20.0);
+    if (widget.compact) return Center(child: burst);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        burst,
+        const SizedBox(width: 8.0),
+        Text(widget.label, style: VT.body(context, size: 11.5, weight: FontWeight.w600, color: c.verified)),
+      ],
+    );
+  }
+}

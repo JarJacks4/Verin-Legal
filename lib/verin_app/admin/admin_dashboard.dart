@@ -14,6 +14,7 @@ import '../data/format.dart';
 import '../data/model.dart';
 import '../matters/matters_screen.dart' show receiptsByMatterStream;
 import '../theme/tokens.dart';
+import '../widgets/motion.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
 import 'admin_shell.dart';
@@ -282,7 +283,14 @@ class _Kpi extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12.0),
-          Text(value, style: VT.body(context, size: 28.0, weight: FontWeight.w700, color: accent, height: 1.0)),
+          Builder(builder: (context) {
+            final style = VT.body(context, size: 28.0, weight: FontWeight.w700, color: accent, height: 1.0);
+            // Plain numbers count up; anything else ("—", "12d") pops in.
+            final n = num.tryParse(value);
+            return n == null
+                ? VPop(trigger: value, from: 0.8, child: Text(value, style: style))
+                : VCountUp(value: n, style: style);
+          }),
           const SizedBox(height: 4.0),
           Text(sub, style: VT.muted(context, size: 11.0)),
         ],
