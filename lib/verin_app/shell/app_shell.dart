@@ -18,6 +18,7 @@ import '../widgets/drawer.dart';
 import '../widgets/motion.dart';
 import '../onboarding/tour.dart';
 import 'demo_banner.dart';
+import 'notifications.dart';
 import 'firm_alerts.dart';
 import '../auth/two_step.dart' show TwoStepCard;
 
@@ -196,6 +197,8 @@ class ConsoleSidebar extends StatelessWidget {
               ),
             ),
           ),
+          NotificationBell(firm: firm),
+          const SizedBox(height: 4.0),
           const VThemeToggle(style: VThemeToggleStyle.row),
           const SizedBox(height: 4.0),
           TourTarget(
