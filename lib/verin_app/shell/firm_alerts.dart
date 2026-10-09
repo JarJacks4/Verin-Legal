@@ -15,6 +15,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 
 import '../auth/two_step.dart';
 import '../theme/tokens.dart';
+import 'notifications.dart';
 import '../widgets/atoms.dart';
 
 class FirmGates extends StatefulWidget {
@@ -38,7 +39,7 @@ class _FirmGatesState extends State<FirmGates> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.firm != null) FirmAlertsBanner(firm: widget.firm!),
-        Expanded(child: widget.child),
+        Expanded(child: ArrivalWatcher(child: widget.child)),
       ],
     );
     if (!_required) return body;

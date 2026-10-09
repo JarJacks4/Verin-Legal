@@ -211,6 +211,20 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "Receipts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "firmID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "receivedAt",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [
