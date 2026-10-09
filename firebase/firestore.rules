@@ -69,6 +69,7 @@ service cloud.firestore {
         'lastExportPath', 'lastExportSha256', 'lastExportAt',
         'batesNext', 'productionCount',
         'demo', 'lastDeliveryAt', 'lastStandingExportAt', 'archiveBuildStartedAt',
+        'practiceLinks', 'practiceSyncedAt',
         'intakeProvisionAlertedAt'
       ]);
       allow delete: if false;

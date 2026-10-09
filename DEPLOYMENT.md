@@ -344,3 +344,19 @@ Everything app-side still open on launch checklist v2, except billing (firms sig
 4. **Demo intake:** buy a second Twilio number for demos, point it at the same `inboundSms` webhook, and set `DEMO_TWILIO_SMS_NUMBER`; add a demo email domain (e.g. `demo.in.verinlegal.com`) to SendGrid Inbound Parse with the same webhook, and set `DEMO_INBOUND_EMAIL_DOMAIN`. Both need `INTAKE_ENABLED=true`.
 5. **Clio sandbox for demos:** sign in to the demo workspace as an admin and connect the Clio sandbox account from Settings; link each demo matter to a sandbox matter in its Practice mgmt tab.
 6. **Backups (#31):** create a bucket `verin-legal-fbzp5w-backups` (same region, 30-day lifecycle delete), give the App Engine default service account the roles **Cloud Datastore Import Export Admin** and **Storage Admin** on that bucket, then set `BACKUP_BUCKET=verin-legal-fbzp5w-backups` in `.env` and deploy. Test a restore once into a scratch project: `gcloud firestore import gs://verin-legal-fbzp5w-backups/firestore/<date> --project <scratch-project>`.
+
+## PracticePanther and Filevine
+
+Built and switched off until each vendor grants API access. Code: `firebase/functions/verin/practice/` (API clients in `providers.js`; endpoint paths the vendors only publish behind developer access are marked **CONFIRM** in one place there). App: Practice mgmt tab cards, and the Record → Deliver dialog.
+
+**PracticePanther** (OAuth, like Clio)
+1. Request API access (support.practicepanther.com → "PracticePanther API" → request form). Give them the redirect URI `https://us-central1-verin-legal-fbzp5w.cloudfunctions.net/practicePantherOAuthCallback`.
+2. With the client ID and secret: `firebase functions:secrets:set PRACTICEPANTHER_CLIENT_SECRET`, then in `.env` set `PRACTICEPANTHER_ENABLED=true`, `PRACTICEPANTHER_CLIENT_ID=…`.
+3. Check the matters, notes and files paths in `providers.js` against their Swagger docs, deploy functions, and connect a test account from a matter's Practice mgmt tab.
+
+**Filevine** (service-account token)
+1. Email Filevine Partnerships (the address in their "API access for developers" support article) for partner client credentials; ask about the Certified Partner program. Until then a firm can use its own client ID/secret from Account Manager → Access Tokens → Client Secrets.
+2. Set `FILEVINE_ENABLED=true` in `.env`. With partner credentials also: `firebase functions:secrets:set FILEVINE_CLIENT_SECRET`, `FILEVINE_PARTNER=true`, `FILEVINE_CLIENT_ID=…`. Deploy functions.
+3. Each firm: create a Filevine service account for Verin, have an Account Admin create its personal access token, and paste it in Practice mgmt → Filevine → Connect.
+
+Deliveries to either system work like Clio's: the record ZIP is uploaded, and only once the system accepts it does Verin remove its copy of each finished file.

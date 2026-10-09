@@ -80,6 +80,17 @@ exports.costToServeNow = verinDemoOps.costToServeNow;
 // Nightly backup of system and audit data (#31).
 exports.nightlyFirestoreBackup = require("./verin/ops/backup").nightlyFirestoreBackup;
 
+// PracticePanther and Filevine (switched on in .env once API access is granted).
+const verinPractice = require("./verin/practice/functions");
+exports.practiceAvailability = verinPractice.practiceAvailability;
+exports.practicePantherAuthStart = verinPractice.practicePantherAuthStart;
+exports.practicePantherOAuthCallback = verinPractice.practicePantherOAuthCallback;
+exports.filevineConnect = verinPractice.filevineConnect;
+exports.practiceDisconnect = verinPractice.practiceDisconnect;
+exports.practiceSearchMatters = verinPractice.practiceSearchMatters;
+exports.practiceLinkMatter = verinPractice.practiceLinkMatter;
+exports.practicePushDocument = verinPractice.practicePushDocument;
+
 // ---- Verin: client email and text intake (SendGrid / Postmark, Twilio) ----
 // Off until the intake secrets exist (INBOUND_WEBHOOK_KEY, TWILIO_AUTH_TOKEN):
 // set INTAKE_ENABLED=true in .env, then deploy. See DEPLOYMENT.md.

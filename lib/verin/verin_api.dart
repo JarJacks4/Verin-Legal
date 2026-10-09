@@ -171,6 +171,41 @@ class VerinApi {
   static Future<Map<String, dynamic>> confirmDelivery(String matterId, String deliveryId) =>
       _call('confirmDelivery', {'matterId': matterId, 'deliveryId': deliveryId}, timeout: const Duration(seconds: 300));
 
+  // ---------------------------------------------------------------- PracticePanther and Filevine
+
+  /// { practicepanther: bool, filevine: bool, filevinePartner: bool } — which
+  /// systems Verin can connect to right now.
+  static Future<Map<String, dynamic>> practiceAvailability() => _call('practiceAvailability', {});
+
+  /// The PracticePanther approval page for this firm.
+  static Future<String> practicePantherAuthStart() async {
+    final r = await _call('practicePantherAuthStart', {});
+    return '${r['url'] ?? ''}';
+  }
+
+  /// Saves the firm's Filevine service-account token (and its own client id
+  /// and secret when Verin has no partner keys). Returns { connected, name }.
+  static Future<Map<String, dynamic>> filevineConnect({required String token, String clientId = '', String clientSecret = '', String region = 'us'}) =>
+      _call('filevineConnect', {'token': token, 'clientId': clientId, 'clientSecret': clientSecret, 'region': region});
+
+  static Future<void> practiceDisconnect(String provider) => _call('practiceDisconnect', {'provider': provider});
+
+  static Future<List<Map<String, dynamic>>> practiceSearchMatters(String provider, String query) async {
+    final r = await _call('practiceSearchMatters', {'provider': provider, 'query': query});
+    final list = r['matters'];
+    return list is List ? [for (final m in list) if (m is Map) Map<String, dynamic>.from(m)] : const [];
+  }
+
+  static Future<Map<String, dynamic>> practiceLinkMatter({
+    required String provider,
+    required String matterId,
+    required String externalId,
+    String display = '',
+    String name = '',
+    String url = '',
+  }) =>
+      _call('practiceLinkMatter', {'provider': provider, 'matterId': matterId, 'externalId': externalId, 'display': display, 'name': name, 'url': url});
+
   // ---------------------------------------------------------------- closed matters (#4)
 
   /// Files every item inside an uploaded ZIP / mbox / eml into [matterId].
