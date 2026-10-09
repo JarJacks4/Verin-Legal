@@ -41,6 +41,7 @@ class _AdminSettingsState extends State<AdminSettings> {
   bool _saving = false;
   bool _saved = false;
   String _export = 'idle';
+  String _tab = 'firm';
 
   Map<String, dynamic> get _data => widget.firm?.snapshotData ?? const {};
 
@@ -170,8 +171,17 @@ class _AdminSettingsState extends State<AdminSettings> {
         children: [
           Text('Settings', style: VT.h1(context, size: 28.0)),
           const SizedBox(height: 4.0),
-          Text('Firm profile, notifications, and API access.', style: VT.muted(context)),
-          const SizedBox(height: 32.0),
+          Text('Firm profile, record delivery, reports, and account.', style: VT.muted(context)),
+          const SizedBox(height: 20.0),
+          VSegmented<String>(
+            value: _tab,
+            options: const ['firm', 'records', 'reports', 'account'],
+            fontSize: 12.0,
+            labelFor: (t) => const {'firm': 'Firm', 'records': 'Records & delivery', 'reports': 'Reports', 'account': 'Account'}[t]!,
+            onChanged: (t) => setState(() => _tab = t),
+          ),
+          const SizedBox(height: 28.0),
+          if (_tab == 'firm') ...[
           _section(
             'Firm profile',
             TourTarget(
@@ -218,11 +228,24 @@ class _AdminSettingsState extends State<AdminSettings> {
             ),
           ),
           _section('Exhibit template', ExhibitTemplateCard(key: ValueKey(widget.firm?.reference.path ?? 'none'), firm: widget.firm)),
-          _section('Records and delivery', RecordsSettingsCard(firm: widget.firm)),
-          _section('Baseline Record Lag', BaselineCard(firm: widget.firm)),
-          _section('Reports', ReportsCard(firm: widget.firm)),
           if (_showDemoWorkspace) _section('Demo workspace', TourTarget(id: 'settings_demo', child: DemoWorkspaceCard(firm: widget.firm))),
           if (isDemoFirm(widget.firm)) _section('Demo runs', const DemoRunsLog()),
+          VButton(
+            label: _saved ? 'Saved' : 'Save changes',
+            icon: _saved ? Icons.check_circle_outline : null,
+            size: VButtonSize.lg,
+            fullWidth: true,
+            loading: _saving,
+            loadingLabel: 'Saving…',
+            onPressed: _save,
+          ),
+          ],
+          if (_tab == 'records') ...[
+            _section('Records and delivery', RecordsSettingsCard(firm: widget.firm)),
+            _section('Baseline Record Lag', BaselineCard(firm: widget.firm)),
+          ],
+          if (_tab == 'reports') _section('Reports', ReportsCard(firm: widget.firm)),
+          if (_tab == 'account') ...[
           _section(
             'API access',
             VHover(
@@ -360,15 +383,7 @@ class _AdminSettingsState extends State<AdminSettings> {
               ),
             ),
           ),
-          VButton(
-            label: _saved ? 'Saved' : 'Save changes',
-            icon: _saved ? Icons.check_circle_outline : null,
-            size: VButtonSize.lg,
-            fullWidth: true,
-            loading: _saving,
-            loadingLabel: 'Saving…',
-            onPressed: _save,
-          ),
+          ],
         ],
       ),
     );
