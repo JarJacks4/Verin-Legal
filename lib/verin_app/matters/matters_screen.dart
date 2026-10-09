@@ -239,7 +239,7 @@ class _MattersTable extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             header(),
-            for (final m in rows) _row(context, m, compact),
+            for (final (i, m) in rows.indexed) VReveal(index: i, rise: 12.0, slide: 10.0, child: _row(context, m, compact)),
             if (rows.isEmpty)
               Container(
                 decoration: BoxDecoration(border: Border(top: BorderSide(color: c.border))),

@@ -9,7 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/tokens.dart';
 import 'celebrate.dart';
 
-export 'celebrate.dart' show celebrate, VSuccessBurst;
+export 'celebrate.dart' show celebrate, VSuccessBurst, VUploadProgress;
 
 // ---------------------------------------------------------------------------
 // Brand

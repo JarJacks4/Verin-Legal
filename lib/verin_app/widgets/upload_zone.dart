@@ -174,12 +174,21 @@ class StagedGrid extends StatelessWidget {
                       ),
                     ),
                     if (progress != null && progress![i] != null)
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: LinearProgressIndicator(value: progress![i], minHeight: 3.0, color: c.teal, backgroundColor: Colors.transparent),
-                      ),
+                      (progress![i]! >= 1.0
+                          ? Positioned.fill(
+                              child: IgnorePointer(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(color: c.verifiedBg.withValues(alpha: 0.72)),
+                                  child: VUploadProgress(value: progress![i], compact: true),
+                                ),
+                              ),
+                            )
+                          : Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              child: VUploadProgress(value: progress![i], height: 4.0),
+                            )),
                     Positioned(
                       top: 6.0,
                       right: 6.0,
@@ -279,10 +288,7 @@ class StagedList extends StatelessWidget {
                   ),
                   if (progress != null && progress![i] != null) ...[
                     const SizedBox(height: 8.0),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4.0),
-                      child: LinearProgressIndicator(value: progress![i], minHeight: 3.0, color: c.teal, backgroundColor: c.secondary),
-                    ),
+                    VUploadProgress(value: progress![i], height: 4.0),
                   ],
                 ],
               ),

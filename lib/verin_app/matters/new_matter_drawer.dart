@@ -18,22 +18,22 @@ import '../onboarding/tour.dart';
 Future<MattersRecord?> showNewMatterDrawer(BuildContext context) =>
     showVDrawer<MattersRecord>(context, title: 'New matter', width: 500.0, builder: (_) => const NewMatterForm());
 
-/// Practice areas offered when opening a matter. Verin is built for family
-/// law, so its common matter types come first.
+/// Practice areas offered when opening a matter. The first three are the
+/// areas the product was designed around; the rest are the areas Clio,
+/// Smokeball and MyCase firms work in, so a firm coming in through one of
+/// them finds its own work on this list.
 const kPracticeAreas = [
   'Family law',
-  'Divorce',
-  'Child custody',
-  'Child support',
-  'Protective / restraining order',
-  'Domestic violence',
-  'Adoption',
-  'Guardianship',
-  'Estate & probate',
+  'Employment law',
+  'Civil litigation',
   'Personal injury',
-  'Civil',
-  'Criminal',
+  'Criminal defense',
   'Immigration',
+  'Estate planning & probate',
+  'Real estate',
+  'Bankruptcy',
+  'Workers\' compensation',
+  'Business & commercial',
   'Other',
 ];
 
@@ -174,7 +174,7 @@ class _NewMatterFormState extends State<NewMatterForm> {
             await demoType(_name, 'Alvarez v. Alvarez');
             await demoType(_client, 'Sofia Alvarez');
             await demoType(_cause, '49D08-2026-DR-005120');
-            if (mounted) setState(() => _practiceArea = kPracticeAreas.contains('Child custody') ? 'Child custody' : _practiceArea);
+            if (mounted) setState(() => _practiceArea = 'Family law');
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

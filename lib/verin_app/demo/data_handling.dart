@@ -44,7 +44,7 @@ const kDemoTermsSections = <(String, String)>[
   ),
   (
     'Questions',
-    'Write to support@verinlegal.com at any time, before or after the demo.',
+    'Write to help@verin-legal.on.spiceworks.com at any time, before or after the demo.',
   ),
 ];
 

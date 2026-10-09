@@ -292,10 +292,13 @@ class _NotificationBellState extends State<NotificationBell> {
                 const SizedBox(width: 10.0),
                 Expanded(child: Text('Notifications', style: VT.body(context, size: 13.0, weight: FontWeight.w500))),
                 if (n > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7.0, vertical: 2.0),
-                    decoration: BoxDecoration(color: urgent ? c.broken : c.teal, borderRadius: BorderRadius.circular(999)),
-                    child: Text(n > 99 ? '99+' : '$n', style: VT.body(context, size: 10.0, weight: FontWeight.w700, color: c.paper)),
+                  VPop(
+                    trigger: n,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7.0, vertical: 2.0),
+                      decoration: BoxDecoration(color: urgent ? c.broken : c.teal, borderRadius: BorderRadius.circular(999)),
+                      child: Text(n > 99 ? '99+' : '$n', style: VT.body(context, size: 10.0, weight: FontWeight.w700, color: c.paper)),
+                    ),
                   ),
               ],
             ),
@@ -468,6 +471,7 @@ class _EventRow extends StatelessWidget {
     final tone = e.needsAttention ? (e.severity == 'error' ? c.broken : c.pending) : c.teal;
     return VReveal(
       index: index,
+      slide: 14.0,
       child: VArriveGlow(
         on: isNew,
         child: Container(

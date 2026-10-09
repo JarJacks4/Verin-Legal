@@ -89,12 +89,15 @@ class _HelpBodyState extends State<_HelpBody> {
               const SizedBox(height: 4.0),
               Text(kSupportHours, style: VT.body(context, size: 13.0)),
               Text(kSupportResponse, style: VT.muted(context, size: 12.0)),
+              const SizedBox(height: 4.0),
+              Text('Raise a ticket at the help desk to track it to a close.', style: VT.muted(context, size: 12.0)),
               const SizedBox(height: 12.0),
               Wrap(
                 spacing: 8.0,
                 runSpacing: 8.0,
                 children: [
                   VButton(label: 'Email support', icon: Icons.mail_outline, size: VButtonSize.sm, onPressed: () => launchURL('mailto:$kSupportEmail?subject=Verin%20support')),
+                  VButton(label: 'Open the help desk', icon: Icons.support_agent_outlined, kind: VButtonKind.secondary, size: VButtonSize.sm, onPressed: () => launchURL(kHelpDeskUrl)),
                   VButton(label: 'Copy address', icon: Icons.copy, kind: VButtonKind.secondary, size: VButtonSize.sm, onPressed: () => copyToClipboard(context, kSupportEmail, what: 'Support address copied')),
                 ],
               ),

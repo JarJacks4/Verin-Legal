@@ -1,6 +1,8 @@
 // Shared motion: curves, durations, the page transition and shared-element
 // heroes, so every screen moves the same way.
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
@@ -10,6 +12,10 @@ class VMotion {
   static const Curve exit = Cubic(0.55, 0.0, 1.0, 0.45);
   static const Curve standard = Cubic(0.4, 0.0, 0.2, 1.0);
   static const Duration page = Duration(milliseconds: 380);
+
+  /// Overshoots a little and settles — the curve for anything that should
+  /// read as arriving rather than merely appearing.
+  static const Curve spring = Cubic(0.17, 0.89, 0.32, 1.28);
   static const Duration pageReverse = Duration(milliseconds: 300);
 }
 
@@ -142,15 +148,26 @@ class VReveal extends StatefulWidget {
     super.key,
     required this.child,
     this.index = 0,
-    this.rise = 8.0,
-    this.duration = const Duration(milliseconds: 280),
-    this.step = const Duration(milliseconds: 40),
-    this.maxStaggered = 8,
+    this.rise = 18.0,
+    this.slide = 0.0,
+    this.scaleFrom = 0.96,
+    this.duration = const Duration(milliseconds: 460),
+    this.step = const Duration(milliseconds: 55),
+    this.maxStaggered = 10,
   });
 
   final Widget child;
   final int index;
+
+  /// Pixels it travels up into place.
   final double rise;
+
+  /// Pixels it travels in from the right — for rows that should read as
+  /// arriving from somewhere, not fading up in place.
+  final double slide;
+
+  /// Starting scale. 1.0 turns the grow-into-place off.
+  final double scaleFrom;
   final Duration duration, step;
 
   /// Rows past this many start together, so a long list doesn't crawl in.
@@ -184,13 +201,23 @@ class _VRevealState extends State<VReveal> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final t = CurvedAnimation(parent: _c, curve: VMotion.enter);
+    final t = CurvedAnimation(parent: _c, curve: VMotion.spring);
     return AnimatedBuilder(
       animation: t,
-      builder: (context, child) => Opacity(
-        opacity: t.value.clamp(0.0, 1.0),
-        child: Transform.translate(offset: Offset(0.0, widget.rise * (1.0 - t.value)), child: child),
-      ),
+      builder: (context, child) {
+        final v = t.value;
+        // Opacity leads the movement, so nothing is ever a ghost mid-flight.
+        final fade = (v * 1.6).clamp(0.0, 1.0);
+        return Opacity(
+          opacity: fade,
+          child: Transform.translate(
+            offset: Offset(widget.slide * (1.0 - v), widget.rise * (1.0 - v)),
+            child: widget.scaleFrom == 1.0
+                ? child
+                : Transform.scale(scale: widget.scaleFrom + (1.0 - widget.scaleFrom) * v, child: child),
+          ),
+        );
+      },
       child: widget.child,
     );
   }
@@ -199,20 +226,22 @@ class _VRevealState extends State<VReveal> with SingleTickerProviderStateMixin {
 /// A one-off wash of colour behind something that just arrived — used on a new
 /// row so the eye lands on it, then fades and leaves the row as it was.
 class VArriveGlow extends StatefulWidget {
-  const VArriveGlow({super.key, required this.child, required this.on, this.radius = 12.0});
+  const VArriveGlow({super.key, required this.child, required this.on, this.pulses = 3});
 
   final Widget child;
 
   /// Runs once each time this turns true.
   final bool on;
-  final double radius;
+
+  /// How many times it breathes before settling.
+  final int pulses;
 
   @override
   State<VArriveGlow> createState() => _VArriveGlowState();
 }
 
 class _VArriveGlowState extends State<VArriveGlow> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2400));
 
   @override
   void didChangeDependencies() {
@@ -243,13 +272,17 @@ class _VArriveGlowState extends State<VArriveGlow> with SingleTickerProviderStat
     return AnimatedBuilder(
       animation: _c,
       builder: (context, child) {
-        // Up fast, then a slow fade out.
         final t = _c.value;
-        final a = t == 0.0 ? 0.0 : (t < 0.18 ? t / 0.18 : 1.0 - (t - 0.18) / 0.82);
+        if (t == 0.0 || t == 1.0) return child!;
+        // Breathes [pulses] times, each one fainter, then settles to nothing.
+        final wave = 0.5 - 0.5 * math.cos(t * widget.pulses * 2 * math.pi);
+        final a = (wave * (1.0 - t)).clamp(0.0, 1.0);
+        // A one-sided border and a corner radius can't be painted together,
+        // and the glowed row is square anyway.
         return DecoratedBox(
           decoration: BoxDecoration(
-            color: tone.withValues(alpha: 0.10 * a.clamp(0.0, 1.0)),
-            borderRadius: BorderRadius.circular(widget.radius),
+            color: tone.withValues(alpha: 0.16 * a),
+            border: Border(left: BorderSide(color: tone.withValues(alpha: a), width: 3.0)),
           ),
           child: child,
         );
@@ -287,6 +320,153 @@ class VCountUp extends StatelessWidget {
       duration: duration,
       curve: VMotion.enter,
       builder: (context, v, _) => Text(_format(v), style: style),
+    );
+  }
+}
+
+/// Springs in from nothing, overshooting slightly — for a badge, a count or a
+/// tick that should land rather than fade up. Re-runs whenever [trigger]
+/// changes, so the same widget can pop again on each new value.
+class VPop extends StatefulWidget {
+  const VPop({super.key, required this.child, this.trigger, this.from = 0.6, this.duration = const Duration(milliseconds: 420)});
+
+  final Widget child;
+  final Object? trigger;
+  final double from;
+  final Duration duration;
+
+  @override
+  State<VPop> createState() => _VPopState();
+}
+
+class _VPopState extends State<VPop> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: widget.duration);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _c.value = 1.0;
+    } else if (_c.value == 0.0) {
+      _c.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant VPop old) {
+    super.didUpdateWidget(old);
+    if (widget.trigger != old.trigger && !MediaQuery.disableAnimationsOf(context)) _c.forward(from: 0.0);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = CurvedAnimation(parent: _c, curve: VMotion.spring);
+    return AnimatedBuilder(
+      animation: t,
+      builder: (context, child) => Transform.scale(
+        scale: widget.from + (1.0 - widget.from) * t.value,
+        child: Opacity(opacity: (t.value * 2.0).clamp(0.0, 1.0), child: child),
+      ),
+      child: widget.child,
+    );
+  }
+}
+
+/// Lifts and brightens under the pointer. Cards that do something when
+/// clicked should feel like they are waiting to be clicked.
+class VLift extends StatefulWidget {
+  const VLift({super.key, required this.child, this.lift = 3.0, this.onTap});
+
+  final Widget child;
+  final double lift;
+  final VoidCallback? onTap;
+
+  @override
+  State<VLift> createState() => _VLiftState();
+}
+
+class _VLiftState extends State<VLift> {
+  bool _on = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    final still = MediaQuery.disableAnimationsOf(context);
+    return MouseRegion(
+      cursor: widget.onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _on = true),
+      onExit: (_) => setState(() => _on = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: still ? Duration.zero : const Duration(milliseconds: 180),
+          curve: VMotion.standard,
+          transform: Matrix4.translationValues(0.0, _on && !still ? -widget.lift : 0.0, 0.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(VR.card),
+            boxShadow: _on && !still
+                ? [BoxShadow(color: c.teal.withValues(alpha: 0.18), blurRadius: 18.0, offset: const Offset(0.0, 6.0))]
+                : const [],
+          ),
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+/// A band of light travelling across a placeholder block while real content
+/// loads, instead of a spinner that says nothing about what is coming.
+class VShimmer extends StatefulWidget {
+  const VShimmer({super.key, this.width, this.height = 14.0, this.radius = 6.0});
+
+  final double? width;
+  final double height, radius;
+
+  @override
+  State<VShimmer> createState() => _VShimmerState();
+}
+
+class _VShimmerState extends State<VShimmer> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!MediaQuery.disableAnimationsOf(context) && !_c.isAnimating) _c.repeat();
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    return SizedBox(
+      width: widget.width,
+      height: widget.height,
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (context, _) => DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.radius),
+            gradient: LinearGradient(
+              begin: Alignment(-3.0 + 4.0 * _c.value, 0.0),
+              end: Alignment(-1.0 + 4.0 * _c.value, 0.0),
+              colors: [c.secondary, c.border, c.secondary],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
