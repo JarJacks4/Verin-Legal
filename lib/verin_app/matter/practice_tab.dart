@@ -95,6 +95,7 @@ class PracticeTab extends StatefulWidget {
 
 class _PracticeTabState extends State<PracticeTab> {
   bool _busy = false;
+  bool _moreSystems = false;
   Stream<List<ClioSyncLogRecord>>? _log;
   String? _logFor;
 
@@ -131,6 +132,10 @@ class _PracticeTabState extends State<PracticeTab> {
     if (DemoMode.active && widget.firmStatus['demo'] != false) return DemoPracticeTab(matter: widget.matter);
     final c = VC.of(context);
     final m = widget.matter;
+    bool inUse(PracticeSystemInfo x) =>
+        widget.firmStatus['${x.id}Connected'] == true || '${practiceLinkOf(m, x.id)['id'] ?? ''}'.isNotEmpty;
+    final connectedSystems = kPracticeSystems.where(inUse).toList();
+    final otherSystems = kPracticeSystems.where((x) => !inUse(x)).toList();
     final clio = clioStateOf(m, firmConnected: widget.firmConnected);
     final clioUser = '${widget.firmStatus['clioUserName'] ?? ''}';
 
@@ -292,14 +297,36 @@ class _PracticeTabState extends State<PracticeTab> {
             ],
           ),
         ),
-        for (final sys in kPracticeSystems) ...[
+        // Systems this firm already uses come first; the rest fold away so the
+        // tab isn't a wall of cards that don't apply.
+        for (final sys in connectedSystems) ...[
           const SizedBox(height: 16.0),
           PracticeSystemCard(system: sys, matter: m, firmStatus: widget.firmStatus, isAdmin: VUser.current().isAdmin),
         ],
-        const SizedBox(height: 16.0),
-        const _ComingSoonCard(name: 'MyCase', icon: Icons.work_outline, note: 'MyCase write-back needs partner API approval from MyCase. It will appear here once approved. It needs the MyCase Advanced plan or above; firms on lower MyCase plans can still export records and upload them by hand.'),
-        const SizedBox(height: 16.0),
-        const _ComingSoonCard(name: 'Smokeball', icon: Icons.bolt_outlined, note: 'Smokeball write-back is planned after Clio.'),
+        const SizedBox(height: 12.0),
+        VHover(
+          onTap: () => setState(() => _moreSystems = !_moreSystems),
+          builder: (context, _) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6.0),
+            child: Row(
+              children: [
+                Icon(_moreSystems ? Icons.expand_less : Icons.expand_more, size: 18.0, color: c.mutedFg),
+                const SizedBox(width: 6.0),
+                Text(_moreSystems ? 'Hide other systems' : 'More systems', style: VT.body(context, size: 13.0, weight: FontWeight.w500, color: c.mutedFg)),
+              ],
+            ),
+          ),
+        ),
+        if (_moreSystems) ...[
+          for (final sys in otherSystems) ...[
+            const SizedBox(height: 12.0),
+            PracticeSystemCard(system: sys, matter: m, firmStatus: widget.firmStatus, isAdmin: VUser.current().isAdmin),
+          ],
+          const SizedBox(height: 12.0),
+          const _ComingSoonCard(name: 'MyCase', icon: Icons.work_outline, note: 'MyCase write-back needs partner API approval from MyCase. It will appear here once approved. It needs the MyCase Advanced plan or above; firms on lower MyCase plans can still export records and upload them by hand.'),
+          const SizedBox(height: 12.0),
+          const _ComingSoonCard(name: 'Smokeball', icon: Icons.bolt_outlined, note: 'Smokeball write-back is planned after Clio.'),
+        ],
         const SizedBox(height: 20.0),
         Text(
           'Each push uploads a newly generated record; earlier uploads stay in Clio. Any failure is surfaced here — a write-back that fails silently is a trust incident, not a bug.',

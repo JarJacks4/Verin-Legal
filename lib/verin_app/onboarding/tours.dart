@@ -47,12 +47,6 @@ List<TourStep> mattersTour({required bool admin}) => [
         title: 'Review queue',
         body: 'When Verin is not sure how to read something, it waits here for a quick human check. Nothing is guessed silently.',
       ),
-      const TourStep(
-        target: 'nav_annotations',
-        icon: Icons.comment_outlined,
-        title: 'Annotations',
-        body: 'Every note your firm adds to thread messages, in one place — filter by tag or matter and jump back to the message.',
-      ),
       if (admin)
         const TourStep(
           target: 'nav_admin',
@@ -60,12 +54,6 @@ List<TourStep> mattersTour({required bool admin}) => [
           title: 'Admin console',
           body: 'Invite your team, connect Clio, set your exhibit template and see the value Verin is adding.',
         ),
-      const TourStep(
-        target: 'nav_profile',
-        icon: Icons.person_outline_rounded,
-        title: 'Your profile',
-        body: 'Update your details, switch light or dark, or replay these tips any time.',
-      ),
     ];
 
 const matterTour = [
