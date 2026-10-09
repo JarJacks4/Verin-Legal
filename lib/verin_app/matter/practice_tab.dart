@@ -1,6 +1,7 @@
 // Practice management tab — the Make's <PracticeManagementTab> layout with
 // the real Clio integration (OAuth connect, matter link, document push, sync
-// log). MyCase and Smokeball are shown as coming soon.
+// log). PracticePanther and Filevine have their own cards (practice_systems.dart);
+// MyCase and Smokeball are shown as coming soon.
 
 import 'package:flutter/material.dart';
 
@@ -18,6 +19,7 @@ import '../widgets/badges.dart';
 import '../widgets/drawer.dart';
 import '../onboarding/tour.dart' show DemoMode;
 import 'demo_practice.dart';
+import 'practice_systems.dart';
 
 /// Revokes Verin's current Clio grant, then starts a fresh sign-in so Clio
 /// issues a token with the app's current permissions.
@@ -290,6 +292,10 @@ class _PracticeTabState extends State<PracticeTab> {
             ],
           ),
         ),
+        for (final sys in kPracticeSystems) ...[
+          const SizedBox(height: 16.0),
+          PracticeSystemCard(system: sys, matter: m, firmStatus: widget.firmStatus, isAdmin: VUser.current().isAdmin),
+        ],
         const SizedBox(height: 16.0),
         const _ComingSoonCard(name: 'MyCase', icon: Icons.work_outline, note: 'MyCase write-back needs partner API approval from MyCase. It will appear here once approved. It needs the MyCase Advanced plan or above; firms on lower MyCase plans can still export records and upload them by hand.'),
         const SizedBox(height: 16.0),

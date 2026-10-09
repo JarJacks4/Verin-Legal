@@ -27,6 +27,7 @@ import '../onboarding/tour.dart' show DemoMode, TourTarget;
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
+import 'practice_systems.dart' show kPracticeSystems, practiceLinkOf;
 
 class MatterActionsButton extends StatelessWidget {
   const MatterActionsButton({super.key, required this.matter, required this.receipts});
@@ -161,7 +162,7 @@ class _DeliverDialogState extends State<_DeliverDialog> {
       Navigator.of(context).pop();
       celebrate(
         context,
-        title: 'Delivered to Clio',
+        title: 'Delivered to ${r['to'] ?? 'Clio'}',
         subtitle: '${r['items'] ?? 0} items · ${r['removed'] ?? 0} files removed from Verin',
       );
     } catch (e) {
@@ -220,6 +221,18 @@ class _DeliverDialogState extends State<_DeliverDialog> {
             loadingLabel: 'Delivering…',
             onPressed: linked && _busy == null ? () => _go('clio') : null,
           ),
+          for (final sys in kPracticeSystems)
+            if ('${practiceLinkOf(widget.matter, sys.id)['id'] ?? ''}'.isNotEmpty) ...[
+              const SizedBox(height: 8.0),
+              VButton(
+                label: 'Send to ${sys.label}',
+                icon: Icons.upload_rounded,
+                fullWidth: true,
+                loading: _busy == sys.id,
+                loadingLabel: 'Delivering…',
+                onPressed: _busy == null ? () => _go(sys.id) : null,
+              ),
+            ],
           const SizedBox(height: 8.0),
           VButton(
             label: 'Download the record',

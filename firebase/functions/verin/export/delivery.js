@@ -176,6 +176,28 @@ async function deliver({ db, bucket, ref, md, firm, uid, exportedBy, target, cli
     return { status: 'delivered', deliveryId: deliveryRef.id, items: receiptIds.length, removed: purge.removed.length, kept: purge.kept.length, clioDocumentId: uploaded.id };
   }
 
+  if (target === 'practicepanther' || target === 'filevine') {
+    // Same delivery, to the firm's PracticePanther or Filevine matter: the
+    // upload must succeed before anything is removed from Verin.
+    const { pushToProvider } = require('../practice/functions')._practice;
+    const file = bucket.file(zipRes.storagePath);
+    const [bytes] = await file.download();
+    const t0 = Date.now();
+    let up;
+    try {
+      up = await pushToProvider({ firmId, provider: target, matterRef: ref, matter: md, name: zipRes.fileName, bytes, contentType: 'application/zip', uid, storagePath: zipRes.storagePath, deliveryId: deliveryRef.id });
+    } catch (e) {
+      await deliveryRef.set({ ...record, status: 'failed', error: String(e.message || e).slice(0, 500) });
+      throw e instanceof HttpsError ? e : new HttpsError('unavailable', `The record was not accepted: ${e.message || e}. Nothing was removed from Verin.`);
+    }
+    const label = target === 'filevine' ? 'Filevine' : 'PracticePanther';
+    const purge = await purgeDelivered({ db, bucket, matterRef: ref, matter: md, firm, deliveryId: deliveryRef.id, deliveredTo: label, receiptIds });
+    if (purge.removed.length) await file.delete({ ignoreNotFound: true }).catch(() => {});
+    await deliveryRef.set({ ...record, status: 'delivered', externalDocumentId: up.documentId, writeBackMs: Date.now() - t0, confirmedAt: FieldValue.serverTimestamp(), removed: purge.removed, kept: purge.kept });
+    await ref.set({ lastDeliveryAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { status: 'delivered', deliveryId: deliveryRef.id, items: receiptIds.length, removed: purge.removed.length, kept: purge.kept.length, to: label };
+  }
+
   await deliveryRef.set({ ...record, status: 'awaiting_confirmation', zipStoragePath: zipRes.storagePath });
   return { status: 'awaiting_confirmation', deliveryId: deliveryRef.id, items: receiptIds.length, downloadUrl: zipRes.downloadUrl, fileName: zipRes.fileName, sha256: zipRes.sha256 };
 }
@@ -184,12 +206,12 @@ function clioDeps() {
   return require('../clio/functions')._clio;
 }
 
-exports.deliverMatterRecord = onCall({ secrets: clioDeps().CLIO_SECRETS, timeoutSeconds: 540, memory: '2GiB' }, async (request) => {
+exports.deliverMatterRecord = onCall({ secrets: [...clioDeps().CLIO_SECRETS, ...require('../practice/secrets').practiceSecrets()], timeoutSeconds: 540, memory: '2GiB' }, async (request) => {
   const uid = requireAuth(request);
   const db = getFirestore();
   const bucket = getStorage().bucket();
   const data = request.data || {};
-  const target = data.target === 'clio' ? 'clio' : 'download';
+  const target = ['clio', 'practicepanther', 'filevine'].includes(data.target) ? data.target : 'download';
   const { ref, snap, firmId } = await loadMatterForUser(db, uid, data.matterId);
   const firm = await firmData(db, firmId);
   const { generatedByName } = require('./archive');
