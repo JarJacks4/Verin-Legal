@@ -5,6 +5,43 @@ const { printable, human, dash, FONTS, COLORS } = require('../export/record_pdf'
 
 const { NAVY, TEAL, INK, MUTED, RULE } = COLORS;
 
+const path = require('path');
+const fs = require('fs');
+
+// The wordmark, drawn in the header and once per page as a faint watermark so
+// a printed packet is recognisably Verin's wherever it ends up. Missing or
+// unreadable, the report still builds — branding is never worth a failed export.
+const WORDMARK = path.join(__dirname, '..', '..', 'assets', 'verin-wordmark.png');
+let wordmarkBytes;
+function wordmark() {
+  if (wordmarkBytes === undefined) {
+    try {
+      wordmarkBytes = fs.readFileSync(WORDMARK);
+    } catch (e) {
+      console.warn('wordmark missing, reports will print without it:', e.message);
+      wordmarkBytes = null;
+    }
+  }
+  return wordmarkBytes;
+}
+
+/// A large, pale wordmark across the middle of the current page.
+function drawWatermark(doc) {
+  const img = wordmark();
+  if (!img) return;
+  const w = doc.page.width * 0.55;
+  try {
+    doc.save();
+    doc.opacity(0.05);
+    doc.image(img, (doc.page.width - w) / 2, doc.page.height / 2 - w * 0.15, { width: w });
+    doc.restore();
+    doc.opacity(1);
+  } catch (_) {
+    doc.restore();
+    doc.opacity(1);
+  }
+}
+
 function createReport({ title, subtitle = '', kicker = 'VERIN', footer = '', info = {} }) {
   const PDFDocument = require('pdfkit');
   const doc = new PDFDocument({
@@ -139,6 +176,7 @@ function createReport({ title, subtitle = '', kicker = 'VERIN', footer = '', inf
       const range = doc.bufferedPageRange();
       for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);
+        drawWatermark(doc);
         const saved = doc.page.margins.bottom;
         doc.page.margins.bottom = 0;
         const y = doc.page.height - 40;
@@ -152,6 +190,15 @@ function createReport({ title, subtitle = '', kicker = 'VERIN', footer = '', inf
     },
   };
 
+  const mark = wordmark();
+  if (mark) {
+    try {
+      doc.image(mark, left, doc.y, { width: 96 });
+      doc.y += 30;
+    } catch (_) {
+      // Unreadable image: fall through to the text kicker alone.
+    }
+  }
   doc.font('Bold').fontSize(9).fillColor(TEAL).text(kicker, left, doc.y, { characterSpacing: 2 });
   doc.moveDown(0.2);
   doc.font('Serif').fontSize(22).fillColor(NAVY).text(printable(title), left, doc.y, { width });

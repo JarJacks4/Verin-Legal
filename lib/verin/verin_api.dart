@@ -255,6 +255,9 @@ class VerinApi {
   static Future<Map<String, dynamic>> exportStandingRecordDocx(String matterId) =>
       _call('exportStandingRecordDocx', {'matterId': matterId}, timeout: const Duration(seconds: 180));
 
+  static Future<Map<String, dynamic>> exportChronologyPdf(String matterId) =>
+      _call('exportChronologyPdf', {'matterId': matterId}, timeout: const Duration(seconds: 180));
+
   /// Monthly Record Lag and activity report; [month] 'YYYY-MM' (default last month).
   static Future<Map<String, dynamic>> exportFirmMonthlyReport({String? month}) =>
       _call('exportFirmMonthlyReport', {if (month != null) 'month': month}, timeout: const Duration(seconds: 300));

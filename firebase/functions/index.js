@@ -72,6 +72,7 @@ const verinMonthly = require("./verin/reports/firm_report");
 exports.exportFirmMonthlyReport = verinMonthly.exportFirmMonthlyReport;
 exports.monthlyFirmReports = verinMonthly.monthlyFirmReports;
 exports.exportStandingRecordDocx = require("./verin/reports/standing_docx").exportStandingRecordDocx;
+exports.exportChronologyPdf = require("./verin/reports/chronology").exportChronologyPdf;
 const verinDemoOps = require("./verin/reports/demo_ops");
 exports.deleteDemoMatter = verinDemoOps.deleteDemoMatter;
 exports.weeklyCostToServe = verinDemoOps.weeklyCostToServe;

@@ -182,7 +182,25 @@ async function buildPacketPdf({ kind, matter, receipts, thread, annotations, opt
   return { pdf: await R.finish(), flags: mk.count };
 }
 
+// Anything thrown that isn't already an HttpsError reaches the browser as a
+// bare "internal", which tells nobody anything. Log it and send the real
+// message instead, so a failed packet can be read rather than guessed at.
+function reportable(e) {
+  if (e instanceof HttpsError) return e;
+  console.error('exportPracticePacket failed', e && e.stack ? e.stack : e);
+  const msg = (e && e.message ? String(e.message) : String(e)).slice(0, 300);
+  return new HttpsError('internal', `The packet could not be built: ${msg}`);
+}
+
 exports.exportPracticePacket = onCall({ timeoutSeconds: 300, memory: '1GiB' }, async (request) => {
+  try {
+    return await buildAndSavePacket(request);
+  } catch (e) {
+    throw reportable(e);
+  }
+});
+
+async function buildAndSavePacket(request) {
   const uid = requireAuth(request);
   const db = getFirestore();
   const data = request.data || {};
@@ -217,6 +235,6 @@ exports.exportPracticePacket = onCall({ timeoutSeconds: 300, memory: '1GiB' }, a
   const saved = await saveReport({ db, bucket: getStorage().bucket(), firmId, storagePath, bytes: pdf, contentType: 'application/pdf', fileName, uid, kind, extra: { matterId: ref.id } });
   await ref.collection('exports').add({ kind, storagePath, fileName, sha256: saved.sha256, bytes: pdf.length, generatedByUid: uid, generatedAt: generatedAt });
   return saved;
-});
+}
 
 exports._internal = { KINDS, masker, immigrationCoverage, inWindow, buildPacketPdf };

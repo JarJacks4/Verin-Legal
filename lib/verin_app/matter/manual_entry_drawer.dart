@@ -206,7 +206,7 @@ class _ManualEntryFormState extends State<ManualEntryForm> {
   @override
   Widget build(BuildContext context) {
     final c = VC.of(context);
-    if (_done) return VSuccessState(title: 'Entry added', desc: _doneDesc);
+    if (_done) return VSuccessState(title: 'Evidence Received', desc: _doneDesc);
     final label = evidenceKindLabel(_kind).toLowerCase();
 
     return Column(
