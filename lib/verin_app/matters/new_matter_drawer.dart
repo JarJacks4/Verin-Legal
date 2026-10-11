@@ -18,22 +18,15 @@ import '../onboarding/tour.dart';
 Future<MattersRecord?> showNewMatterDrawer(BuildContext context) =>
     showVDrawer<MattersRecord>(context, title: 'New matter', width: 500.0, builder: (_) => const NewMatterForm());
 
-/// Practice areas offered when opening a matter. The first three are the
-/// areas the product was designed around; the rest are the areas Clio,
-/// Smokeball and MyCase firms work in, so a firm coming in through one of
-/// them finds its own work on this list.
+/// The five practice areas Verin sells. Every doc, the website and the decks
+/// name exactly these, so the app names them too — a sixth here would be a
+/// promise nothing else makes.
 const kPracticeAreas = [
   'Family law',
-  'Employment law',
-  'Civil litigation',
   'Personal injury',
-  'Criminal defense',
   'Immigration',
-  'Estate planning & probate',
-  'Real estate',
-  'Bankruptcy',
-  'Workers\' compensation',
-  'Business & commercial',
+  'Civil litigation',
+  'Criminal defense',
   'Other',
 ];
 

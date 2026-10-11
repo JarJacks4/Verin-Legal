@@ -1,4 +1,6 @@
-// Getting started: six short slides shown once after an account is created
+// Getting started: six short slides shown once after an account is created.
+// The finished record is first, then intake, then annotations — the order a
+// firm asks about them in.
 // (and from Profile → Replay the walkthrough). Each slide pairs one plain
 // sentence with a looping animation of that part of Verin.
 
@@ -29,44 +31,43 @@ class _Slide {
 }
 
 List<_Slide> _slides(bool admin) => [
+      // The finished record comes first. Showing the destination before the
+      // steps is what makes the rest land: a firm knows within ten seconds
+      // what they get, then learns how it is built.
       _Slide(
-        eyebrow: 'WELCOME',
-        title: 'Welcome to Verin',
-        body: 'Verin turns what your clients send you — emails, texts, photos and videos — into one organized record, ready for your review. Here is how it works, in about a minute.',
-        demo: () => const ArriveDemo(),
+        eyebrow: 'WHAT YOU END UP WITH',
+        title: 'A finished record, ready to file',
+        body: 'One organized record of everything your client sent — in date order, every line citing the item it came from, gaps named rather than papered over. Delivered into Clio, or downloaded as a packet.',
+        points: const ['Bates-stamped exhibit sets with an index', 'Hearing and filing packets for your practice area'],
+        demo: () => const ProduceDemo(),
       ),
       _Slide(
         eyebrow: 'STEP 1 · RECEIVE',
         title: 'Every matter gets its own inbox',
-        body: 'Create a matter and Verin gives it a private intake address. Your client forwards evidence there — nothing to install, no accounts for them.',
-        points: const ['Email and text messages (with photos) both work', 'You can also upload files yourself'],
+        body: 'Create a matter and Verin gives it a private intake address and phone number. Your client forwards evidence there from the phone they already own — nothing to install, no account, no password.',
+        points: const ['Email, text, photos and video all work', 'No other product works without an app, an export or a staff upload'],
         demo: () => const IntakeDemo(),
       ),
       _Slide(
-        eyebrow: 'STEP 2 · FINGERPRINT',
+        eyebrow: 'STEP 2 · ANNOTATE',
+        title: "Your team's notes, kept beside the record",
+        body: 'Click any message to see where it came from in the original file, then add a note or a tag. The original is never changed, and every note collects on the Annotations page for the whole matter.',
+        points: const ['Notes are the team\'s, never mixed into what Verin read', 'Tag Key evidence and it carries into the packets'],
+        demo: () => const VerifyDemo(),
+      ),
+      _Slide(
+        eyebrow: 'STEP 3 · FINGERPRINT',
         title: 'Fingerprinted the moment it arrives',
         body: 'Before anyone opens a file, Verin fingerprints it and has an independent authority time-stamp it. You can always show it is exactly what was received.',
         points: const ['SHA-256 fingerprint for every item', 'Each item linked to the one before'],
         demo: () => const SealDemo(),
       ),
       _Slide(
-        eyebrow: 'STEP 3 · READ',
+        eyebrow: 'STEP 4 · READ',
         title: 'Read and put in order for you',
         body: 'Verin reads screenshots, documents and video, then assembles the conversation in date order — your client on one side, the other party on the other — and points out any gaps.',
         points: const ['Duplicates are recognized, not repeated', 'Anything uncertain goes to the Review queue'],
         demo: () => const ThreadDemo(),
-      ),
-      _Slide(
-        eyebrow: 'STEP 4 · CHECK',
-        title: 'Check any line against the original',
-        body: 'Click a message to see exactly where it came from in the original file. Note a transcription discrepancy, add a note, or mark it reviewed — the original is never changed and every note is kept.',
-        demo: () => const VerifyDemo(),
-      ),
-      _Slide(
-        eyebrow: 'STEP 5 · FINISH',
-        title: 'Ask for what is missing, then produce',
-        body: 'When something is missing, send a follow-up from your own email in one click. When you are ready, build a Bates-stamped exhibit set with redactions.',
-        demo: () => const ProduceDemo(),
       ),
       _Slide(
         eyebrow: "YOU'RE SET",
