@@ -21,6 +21,57 @@ const FONTS = {
 };
 
 // Verin brand (Figma Make theme): deep teal, teal, ink, muted, hairline.
+const fs = require('fs');
+
+// The wordmark, drawn at the top of every PDF Verin generates and once per
+// page as a faint watermark, so a printed document is recognisably Verin's
+// wherever it ends up. Missing or unreadable, the document still builds —
+// branding is never worth a failed export.
+const WORDMARK = path.join(__dirname, '..', '..', 'assets', 'verin-wordmark.png');
+let wordmarkBytes;
+function wordmark() {
+  if (wordmarkBytes === undefined) {
+    try {
+      wordmarkBytes = fs.readFileSync(WORDMARK);
+    } catch (e) {
+      console.warn('wordmark missing, PDFs will print without it:', e.message);
+      wordmarkBytes = null;
+    }
+  }
+  return wordmarkBytes;
+}
+
+/// The wordmark at the current cursor. Returns false when there is none, so
+/// the caller can fall back to its text kicker alone.
+function drawWordmark(doc, { x, width = 96, gap = 30 } = {}) {
+  const img = wordmark();
+  if (!img) return false;
+  try {
+    doc.image(img, x === undefined ? doc.page.margins.left : x, doc.y, { width });
+    doc.y += gap;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// A large, pale wordmark across the middle of the current page.
+function drawWatermark(doc) {
+  const img = wordmark();
+  if (!img) return;
+  const w = doc.page.width * 0.55;
+  try {
+    doc.save();
+    doc.opacity(0.05);
+    doc.image(img, (doc.page.width - w) / 2, doc.page.height / 2 - w * 0.15, { width: w });
+    doc.restore();
+    doc.opacity(1);
+  } catch (_) {
+    try { doc.restore(); } catch (__) {}
+    doc.opacity(1);
+  }
+}
+
 const NAVY = '#093F49';
 const TEAL = '#0E6E7D';
 const INK = '#172024';
@@ -174,6 +225,7 @@ function buildRecordPdf(input) {
   };
 
   // ------------------------------------------------------------ certificate
+  drawWordmark(doc, { x: left });
   doc.font('Bold').fontSize(9).fillColor(TEAL).text('VERIN', left, doc.y, { characterSpacing: 2 });
   doc.moveDown(0.2);
   doc.font('Serif').fontSize(22).fillColor(NAVY).text('Certificate of Preparation', left, doc.y, { width });
@@ -475,4 +527,4 @@ function buildRecordPdf(input) {
   return done;
 }
 
-module.exports = { buildRecordPdf, toPdfReceipt, printable, human, dash, prettyPhone, FONTS, COLORS: { NAVY, TEAL, INK, MUTED, RULE, WARN } };
+module.exports = { buildRecordPdf, toPdfReceipt, printable, human, dash, prettyPhone, wordmark, drawWordmark, drawWatermark, FONTS, COLORS: { NAVY, TEAL, INK, MUTED, RULE, WARN } };

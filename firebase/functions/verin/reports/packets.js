@@ -49,10 +49,12 @@ const toD = M.toDate;
 const headline = (r) => String(r.content || r.description || r.originalFileName || 'Item').split('\n')[0].slice(0, 140);
 const textOf = (r) => [r.content, r.description, r.originalFileName, r.aiSummary, r.emailSubject].filter(Boolean).join(' ');
 
-/// Every flagged string across the given items → masker.
-function masker(receipts) {
+/// Every flagged string across the given items, plus the firm's own
+/// always-redact terms → masker.
+function masker(receipts, alwaysRedact = []) {
   const items = [];
   for (const r of receipts) for (const s of r.sensitive || []) if (s && s.text && s.text.length >= 3) items.push(s.text);
+  for (const t of alwaysRedact || []) if (typeof t === 'string' && t.trim().length >= 2) items.push(t.trim());
   const uniq = [...new Set(items)].sort((a, b) => b.length - a.length);
   return {
     count: uniq.length,
@@ -80,9 +82,9 @@ function inWindow(entries, receipts, eventAt, hours) {
   return { msgs, items, t0: new Date(t0), t1: new Date(t1) };
 }
 
-async function buildPacketPdf({ kind, matter, receipts, thread, annotations, opts, generatedAt, firmName }) {
+async function buildPacketPdf({ kind, matter, receipts, thread, annotations, opts, generatedAt, firmName, alwaysRedact = [] }) {
   const k = KINDS[kind];
-  const mk = masker(receipts);
+  const mk = masker(receipts, alwaysRedact);
   const title = matter.matterName || matter.caseTitle || 'Matter';
   const R = createReport({
     title: k.title,
@@ -214,7 +216,9 @@ async function buildAndSavePacket(request) {
     db.collection('firmAccount').where('firmID', '==', firmId).limit(1).get(),
   ]);
   const receipts = rs.docs.map((d) => ({ _id: d.id, ...d.data() }));
-  const flags = masker(receipts).count;
+  const firmDoc = firmSnap.empty ? {} : firmSnap.docs[0].data() || {};
+  const alwaysRedact = Array.isArray(firmDoc.alwaysRedact) ? firmDoc.alwaysRedact : [];
+  const flags = masker(receipts, alwaysRedact).count;
   if (flags && data.redactionsConfirmed !== true) {
     throw new HttpsError('failed-precondition', `This matter has ${flags} suggested redaction${flags === 1 ? '' : 's'}. Review them, then confirm to export (flagged text is masked in the packet).`, { redactionFlags: flags });
   }
@@ -227,7 +231,8 @@ async function buildAndSavePacket(request) {
     annotations: ann.docs.map((d) => d.data()),
     opts: data,
     generatedAt,
-    firmName: firmSnap.empty ? '' : firmSnap.docs[0].get('firmName') || '',
+    firmName: firmDoc.firmName || '',
+    alwaysRedact,
   });
   const md = snap.data() || {};
   const fileName = `${slug(md.matterName || md.caseTitle || ref.id)}-${kind.replace(/_/g, '-')}-${stampOf(generatedAt)}.pdf`;

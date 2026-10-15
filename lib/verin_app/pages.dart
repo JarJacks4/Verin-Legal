@@ -12,6 +12,7 @@ import 'admin/admin_settings.dart';
 import 'admin/admin_shell.dart';
 import 'admin/admin_team.dart';
 import 'annotations/annotations_screen.dart';
+import 'redactions/redactions_screen.dart';
 import 'auth/auth_screens.dart';
 import 'matter/matter_detail_screen.dart';
 import 'matters/matters_screen.dart';
@@ -56,6 +57,12 @@ class VAnnotationsPage extends StatelessWidget {
   const VAnnotationsPage({super.key});
   @override
   Widget build(BuildContext context) => const FirmGate(child: AppShell(nav: ConsoleNav.annotations, child: AnnotationsScreen()));
+}
+
+class VRedactionsPage extends StatelessWidget {
+  const VRedactionsPage({super.key});
+  @override
+  Widget build(BuildContext context) => const FirmGate(child: AppShell(nav: ConsoleNav.redactions, child: RedactionsScreen()));
 }
 
 class VReviewPage extends StatelessWidget {

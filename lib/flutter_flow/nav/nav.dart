@@ -113,6 +113,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => const VAnnotationsPage(),
         ),
         FFRoute(
+          name: 'Redactions',
+          path: '/redactions',
+          requireAuth: true,
+          builder: (context, params) => const VRedactionsPage(),
+        ),
+        FFRoute(
           name: 'GettingStarted',
           path: '/getting-started',
           requireAuth: true,
