@@ -169,6 +169,11 @@ String categoryLabel(String c) => switch (c) {
 
 bool _isImage(ReceiptsRecord r) => r.snapshotData['imageWidth'] is num || ((r.itemKind == 'photo' || r.itemKind == 'screenshot') && r.sourceUrl.isNotEmpty);
 
+/// Video and audio leave in their original form, so nothing inside them can be
+/// masked. Producing one that someone flagged would hand over the very thing
+/// they meant to hide, so the server stops it — this says so first.
+bool cannotBeMasked(ReceiptsRecord r) => r.itemKind == 'video' || r.itemKind == 'audio';
+
 // ---------------------------------------------------------------- tab
 
 class ExhibitsTab extends StatefulWidget {
@@ -552,6 +557,7 @@ class _ProductionEditorState extends State<ProductionEditor> {
     final r = _r(it.receiptId)!;
     final sugg = sensitiveOf(r).length;
     final applied = it.redactions.length + it.textRedactions.length;
+    final blocked = it.include && cannotBeMasked(r) && (applied > 0 || (sugg > 0 && !it.reviewed));
     return Container(
       margin: const EdgeInsets.only(bottom: 8.0),
       padding: const EdgeInsets.fromLTRB(6.0, 8.0, 12.0, 8.0),
@@ -583,6 +589,22 @@ class _ProductionEditorState extends State<ProductionEditor> {
                   ].join(' · '),
                   style: VT.muted(context, size: 11.0),
                 ),
+                if (blocked)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, size: 12.0, color: c.broken),
+                        const SizedBox(width: 4.0),
+                        Expanded(
+                          child: Text(
+                            'Goes out as the original — nothing in it can be masked. Take it out of this production and hand it over separately.',
+                            style: VT.body(context, size: 11.0, color: c.broken),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
@@ -668,6 +690,53 @@ class _RedactionReviewState extends State<RedactionReview> {
   Widget build(BuildContext context) {
     final c = VC.of(context);
     final image = _isImage(r);
+    // Nothing here can mask a video or an audio file: they leave exactly as
+    // they arrived. Offering the checkboxes anyway would be a promise the
+    // production cannot keep, so say so and offer nothing.
+    if (cannotBeMasked(r)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(r.headline, style: VT.body(context, weight: FontWeight.w600)),
+          const SizedBox(height: 12.0),
+          VPanel(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.warning_amber_rounded, size: 16.0, color: c.broken),
+                const SizedBox(width: 10.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('This one cannot be redacted', style: VT.body(context, size: 13.0, weight: FontWeight.w600)),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        '${r.kindLabel} leaves the production in its original form, so nothing inside it can be masked. '
+                        'If it holds something that must not be produced, take it out of this production and hand the original over separately.',
+                        style: VT.muted(context, size: 12.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_sugg.isNotEmpty) ...[
+            const SizedBox(height: 16.0),
+            Text('VERIN FLAGGED (${_sugg.length})', style: VT.eyebrow(context, color: c.mutedFg)),
+            const SizedBox(height: 8.0),
+            for (final s in _sugg)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6.0),
+                child: Text('· ${categoryLabel('${s['category'] ?? 'other'}')}', style: VT.body(context, size: 12.5)),
+              ),
+            const SizedBox(height: 4.0),
+            Text('Shown so you know what is in it. Marking these would not change the file.', style: VT.muted(context, size: 11.5)),
+          ],
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
