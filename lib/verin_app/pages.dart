@@ -8,6 +8,7 @@ import '/backend/backend.dart';
 import 'admin/admin_billing.dart';
 import 'admin/admin_dashboard.dart';
 import 'admin/admin_program.dart';
+import 'admin/admin_redactions.dart';
 import 'admin/admin_settings.dart';
 import 'admin/admin_shell.dart';
 import 'admin/admin_team.dart';
@@ -106,6 +107,7 @@ class VAdminPage extends StatelessWidget {
       builder: (context, user, firm) => switch (nav) {
         AdminNav.dashboard => AdminDashboard(user: user, firm: firm),
         AdminNav.matters => const MattersScreen(admin: true),
+        AdminNav.redactions => AdminRedactions(firm: firm, user: user),
         AdminNav.billing => AdminBilling(firm: firm),
         AdminNav.team => AdminTeam(firm: firm, user: user),
         AdminNav.program => AdminProgram(firm: firm, user: user),

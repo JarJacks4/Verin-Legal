@@ -89,7 +89,7 @@ const intakeTour = [
     target: 'intake_card',
     icon: Icons.assignment_outlined,
     title: 'Give the client one card',
-    body: 'Copy instructions for the client puts the address, number, what to send for this kind of case and a short how-to on your clipboard — in English, or in Spanish with Copiar en español. Paste it into an email or text to them.',
+    body: 'This is the card your client gets: the address and number for this matter, and what to send for this kind of case. Switch it to Spanish, then copy it into an email or text to them. Verin never contacts your client.',
     optional: true,
   ),
   TourStep(
@@ -192,6 +192,28 @@ const Map<String, List<TourStep>> adminTours = {
   ],
   'matters': [
     TourStep(target: 'admin_body', icon: Icons.folder_open_outlined, title: 'All firm matters', body: 'Every matter in the firm, for oversight. Click one to open it.'),
+  ],
+  'redactions': [
+    TourStep(
+      target: 'admin_redaction_counts',
+      icon: Icons.shield_outlined,
+      title: 'Redactions across the firm',
+      body: 'How many personal details Verin has flagged, in how many matters — and how many items it cannot mask at all.',
+    ),
+    TourStep(
+      target: 'admin_always_redact',
+      icon: Icons.lock_outline,
+      title: 'What is always hidden',
+      body: 'Names, numbers or phrases your firm always wants masked, in every matter, on top of what Verin finds on its own. Admins set this.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'admin_redaction_policy',
+      icon: Icons.policy_outlined,
+      title: 'What happens to each kind',
+      body: 'Pictures are burned through, document text is removed and the pages re-rendered. Video and audio leave as they arrived, so they are redacted in the matter first.',
+      optional: true,
+    ),
   ],
   'billing': [
     TourStep(target: 'admin_body', icon: Icons.credit_card, title: 'Billing & plan', body: 'Your plan, invoices and payment details.'),
@@ -562,7 +584,100 @@ const Map<String?, String> drawerTourForTitle = {
 // on screen and says what it saves them. (Keys = TourLauncher ids.)
 // ---------------------------------------------------------------------------
 
+const redactionsTour = [
+  TourStep(
+    target: 'redaction_tabs',
+    icon: Icons.shield_outlined,
+    title: 'Everything flagged, in one place',
+    body: 'Flagged shows the personal details Verin found across your matters. The other tabs are by kind: video and audio, photos, documents.',
+  ),
+  TourStep(
+    target: 'always_redact',
+    icon: Icons.lock_outline,
+    title: 'Always hide these',
+    body: 'A child\'s name, a street, an account number — anything here is masked in every matter, on top of what Verin finds. Your admin sets it.',
+    optional: true,
+  ),
+  TourStep(
+    target: 'flagged_list',
+    icon: Icons.flag_outlined,
+    title: 'A flag is a prompt to look',
+    body: 'Verin marks what usually has to come out. Nothing is hidden until someone confirms it, and the original item is never altered.',
+    optional: true,
+  ),
+];
+
+const videoRedactionTour = [
+  TourStep(
+    target: 'video_frame',
+    icon: Icons.crop_square,
+    title: 'Drag a box over what must not leave',
+    body: 'Then say how long it stays: this moment, a span, or the whole clip. The box holds its exact spot — it does not follow someone who moves.',
+  ),
+  TourStep(
+    target: 'video_timeline',
+    icon: Icons.graphic_eq_rounded,
+    title: 'Silence what is said',
+    body: 'Drag across the audio track to pick a span. It is silenced, not turned down. Boxes you have added show on the track above.',
+    optional: true,
+  ),
+  TourStep(
+    target: 'video_produce',
+    icon: Icons.movie_filter_outlined,
+    title: 'Produce when you are ready',
+    body: 'Verin burns the boxes into the pixels and saves a new file with its own fingerprint. Your original is untouched and still verifies.',
+    optional: true,
+  ),
+];
+
 const Map<String, List<TourStep>> demoTours = {
+  // The demo versions lead with the question a firm in the room is actually
+  // asking — can this hand over a child's name by accident — rather than with
+  // the controls.
+  'redactions_page': [
+    TourStep(
+      target: 'redaction_tabs',
+      icon: Icons.shield_outlined,
+      title: 'Nothing leaves without a person saying so',
+      body: 'Verin marks personal details as evidence arrives — account numbers, dates of birth, children\'s names. Nothing is hidden, and nothing is produced, until someone at the firm confirms it. This page is every one of them, across the sample cases.',
+    ),
+    TourStep(
+      target: 'always_redact',
+      icon: Icons.lock_outline,
+      title: 'The names you never want to see again',
+      body: 'Add a child\'s name once and it is masked in every matter, in every extract and exhibit set, on top of what Verin finds on its own.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'flagged_list',
+      icon: Icons.flag_outlined,
+      title: 'A mark is a prompt to look',
+      body: 'Verin does not decide what is sensitive in your case. It shows you what usually has to come out, and your paralegal decides. The original item is never altered either way.',
+      optional: true,
+    ),
+  ],
+  'video_redaction': [
+    TourStep(
+      target: 'video_frame',
+      icon: Icons.crop_square,
+      title: 'A face, a street number, a document on the table',
+      body: 'Drag a box over it and choose how long it stays. The box holds its exact spot — it does not follow a person who walks. Cover the whole path, or add a second box.',
+    ),
+    TourStep(
+      target: 'video_timeline',
+      icon: Icons.graphic_eq_rounded,
+      title: 'And the name that gets said out loud',
+      body: 'Drag the audio track to pick a span. It is silenced, not turned down — the sound is gone from the file that leaves.',
+      optional: true,
+    ),
+    TourStep(
+      target: 'video_produce',
+      icon: Icons.movie_filter_outlined,
+      title: 'The original never changes',
+      body: 'Verin burns the boxes into the pixels and saves a new file with its own fingerprint. What the client sent stays exactly as it arrived, and still verifies against the record made at receipt.',
+      optional: true,
+    ),
+  ],
   'matters': [
     TourStep(
       target: 'matters_list',
@@ -670,7 +785,7 @@ const Map<String, List<TourStep>> demoTours = {
       target: 'intake_card',
       icon: Icons.assignment_outlined,
       title: 'The only thing you send the client',
-      body: 'Copy instructions for the client gives them the address, number and what to send for this kind of case — in English or Spanish.',
+      body: 'This card is the whole of the client\'s part: an address, a number, and what to send for this kind of case. Hand it over in English or Spanish. No app, no account, no login — they use the phone they already own.',
       optional: true,
     ),
     TourStep(

@@ -223,28 +223,20 @@ class _IntakeTabState extends State<IntakeTab> {
         ),
         ),
         const SizedBox(height: 12.0),
-        TourTarget(
-          id: 'intake_card',
-          child: Wrap(
+        if (anyAssigned)
+          TourTarget(
+            id: 'intake_card',
+            child: ClientCardPreview(
+              key: ValueKey('${matter.reference.id}:${matter.emailAddress}:${matter.smsNumber}'),
+              matter: matter,
+              firmName: VUser.current().firm,
+            ),
+          ),
+        if (anyAssigned) const SizedBox(height: 12.0),
+        Wrap(
           spacing: 8.0,
           runSpacing: 8.0,
           children: [
-            if (anyAssigned)
-              VButton(
-                label: 'Copy instructions for the client',
-                icon: Icons.assignment_outlined,
-                kind: VButtonKind.secondary,
-                size: VButtonSize.sm,
-                onPressed: () => copyToClipboard(context, clientInstructions(matter, CardLang.en), what: 'Client instructions copied'),
-              ),
-            if (anyAssigned)
-              VButton(
-                label: 'Copiar en español',
-                icon: Icons.translate,
-                kind: VButtonKind.secondary,
-                size: VButtonSize.sm,
-                onPressed: () => copyToClipboard(context, clientInstructions(matter, CardLang.es), what: 'Instrucciones copiadas'),
-              ),
             if (rows.any((r) => r.$3.isEmpty))
               VButton(
                 label: 'Assign now',
@@ -255,7 +247,6 @@ class _IntakeTabState extends State<IntakeTab> {
                 onPressed: _assigning ? null : () => _assign(),
               ),
           ],
-        ),
         ),
         if (DemoMode.active) ...[
           const SizedBox(height: 20.0),
