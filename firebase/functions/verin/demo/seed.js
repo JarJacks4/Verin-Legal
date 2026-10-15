@@ -532,6 +532,43 @@ async function seedFirm(db, bucket, firmId, user) {
     }),
   });
 
+  // A short doorbell clip: an address on the house and a child's name on the
+  // figure that crosses the frame. It is here so a demo can show video
+  // redaction on something real — and show that a box does not follow someone
+  // who moves, which is the one thing a firm must not assume.
+  const d3v = at(22, 17, 40);
+  let videoBytes = null;
+  try {
+    videoBytes = require('fs').readFileSync(require('path').join(__dirname, '..', '..', 'assets', 'demo-exchange.mp4'));
+  } catch (e) {
+    console.warn('demo video missing, seeding without it:', e.message);
+  }
+  if (videoBytes) {
+    await file(reyes, {
+      buffer: videoBytes,
+      fileName: 'doorbell_exchange_1104.mp4',
+      contentType: 'video/mp4',
+      kind: 'video',
+      channelKey: 'sms',
+      fromLabel: 'Text from (317) 555-0142',
+      senderKey: 'tel:+13175550142',
+      description: 'Doorbell clip of the Thursday exchange',
+      source: 'demo|sms|doorbell_1104',
+      receivedAt: at(22, 17, 44),
+      extra: readFields({
+        when: d3v,
+        summary: 'Twelve seconds from the doorbell camera at the exchange. The house number is visible throughout and a child\'s name is on the bag carried across the frame.',
+        evidenceType: 'video',
+        itemKind: 'video',
+        sensitive: [
+          { category: 'address', text: '2214 Larkspur Ct' },
+          { category: 'minor_name', text: 'Maya O.' },
+        ],
+        extra: { durationSeconds: 12, documentText: '' },
+      }),
+    });
+  }
+
   // An email the client forwarded.
   const d4 = at(19, 8, 15);
   const emailBody =

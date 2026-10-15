@@ -44,6 +44,7 @@ async function buildLagAuditPdf({ firmName, matters, generatedAt, generatedBy, b
     title: 'Record Lag Audit',
     subtitle: `${firmName || 'Your firm'} · ${matters.length} matter${matters.length === 1 ? '' : 's'} · ${day(generatedAt)}`,
     footer: `Verin Record Lag Audit · ${firmName || ''} · generated ${generatedAt.toISOString()}`,
+    stamp: { when: generatedAt, label: 'RECORD LAG AUDIT' },
   });
   R.label('Headline');
   R.para(

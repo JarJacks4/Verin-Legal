@@ -28,6 +28,30 @@ async function embedMark(doc) {
   return img;
 }
 
+/// Verin's own stamp, drawn with pdf-lib so the exhibit index carries the
+/// same mark as every other PDF we generate. Verin's mark on Verin's own
+/// document — not a seal, and nothing shaped like a court or notary one.
+function drawStampLib(page, { bold, reg, rgb, right = 36, top = 24, label = 'EXHIBIT INDEX', when = new Date() } = {}) {
+  const W = 150;
+  const H = 50;
+  const x = page.getWidth() - right - W;
+  const y = page.getHeight() - top - H;
+  const green = rgb(0.184, 0.49, 0.357); // #2F7D5B
+  try {
+    page.drawRectangle({ x, y, width: W, height: H, borderColor: green, borderWidth: 1.6, opacity: 0 });
+    page.drawRectangle({ x: x + 4, y: y + 4, width: W - 8, height: H - 8, borderColor: green, borderWidth: 0.6, opacity: 0 });
+    const centre = (text, font, size, dy) => {
+      const w = font.widthOfTextAtSize(text, size);
+      page.drawText(text, { x: x + (W - w) / 2, y: y + dy, size, font, color: green });
+    };
+    centre('VERIN LEGAL', bold, 11, H - 20);
+    centre(label, bold, 6.5, H - 31);
+    centre(when.toISOString().slice(0, 10), reg, 6.5, H - 41);
+  } catch (e) {
+    console.warn('stamp could not be drawn:', e.message);
+  }
+}
+
 /// Draws the wordmark at the top-left of a page, where a reader's eye starts
 /// and where letterhead belongs.
 function drawMark(page, img, { left = 36, top = 30, width = 132 } = {}) {
@@ -192,8 +216,13 @@ async function indexPdf(rows, { title, matterTitle, producedAt, version, legend 
   const mark = await embedMark(doc);
   let page = null;
   let y = 0;
+  let first = true;
   const newPage = () => {
     page = doc.addPage([W, H]);
+    if (first) {
+      first = false;
+      drawStampLib(page, { bold, reg, rgb, label: 'EXHIBIT INDEX', when: new Date(producedAt) });
+    }
     // The wordmark sits top-left like letterhead, so the title block starts
     // below it rather than beside it.
     drawMark(page, mark, { left: 36, top: 22, width: 120 });

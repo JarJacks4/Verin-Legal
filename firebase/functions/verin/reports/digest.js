@@ -46,6 +46,7 @@ async function buildDigestPdf({ matter, figures, generatedAt }) {
     title: 'Weekly matter digest',
     subtitle: `${title} · week of ${day(f.since)} to ${day(generatedAt)}`,
     footer: `Verin weekly digest · ${title} · ${generatedAt.toISOString()}`,
+    stamp: { when: generatedAt, label: 'WEEKLY DIGEST' },
   });
   R.tiles([
     { label: 'New this week', value: String(f.recent.length), note: Object.entries(f.byChannel).map(([k, v]) => `${v} ${k}`).join(' · ') || 'nothing new' },

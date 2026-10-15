@@ -285,6 +285,47 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
     showVToast(context, 'Audio muted', description: '${spanLabel(s, e, _duration)} — silenced, not lowered');
   }
 
+  // -- the demo does the work while it explains it ---------------------------
+
+  /// Covers the house number, which sits still for the whole clip.
+  void _demoDrawBox() {
+    if (_boxes.isNotEmpty) return;
+    setState(() {
+      _t = 4;
+      _boxes.add(VideoBox(
+        id: 'demo-address',
+        x: 6,
+        y: 9,
+        w: 24,
+        h: 26,
+        start: 0,
+        end: _duration,
+        reason: 'address',
+      ));
+      _selected = 'demo-address';
+    });
+  }
+
+  /// Silences the span where the name is said aloud.
+  void _demoAddMute() {
+    if (_mutes.isNotEmpty) return;
+    setState(() {
+      _mutes.add(MuteSpan(id: 'demo-mute', start: 5, end: 8));
+      _t = 6;
+    });
+  }
+
+  /// Clears the review gate so the walkthrough can reach Produce, the same
+  /// way a person would after looking at each flagged moment.
+  void _demoReviewFlags() {
+    if (!_blocked) return;
+    setState(() {
+      for (var i = 0; i < _flags.length; i++) {
+        _reviewed.add(i);
+      }
+    });
+  }
+
   // -- build ----------------------------------------------------------------
 
   @override
@@ -363,6 +404,7 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
               const SizedBox(height: 8.0),
               TourTarget(
                 id: 'video_produce',
+                onDemoTour: _demoReviewFlags,
                 child: VButton(
                   label: 'Produce redacted video',
                   icon: Icons.movie_filter_outlined,
@@ -512,6 +554,7 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
     final c = VC.of(context);
     return TourTarget(
       id: 'video_frame',
+      onDemoTour: _demoDrawBox,
       child: VCard(
       padding: const EdgeInsets.all(12.0),
       child: Column(
@@ -773,6 +816,7 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
     final laneCount = lanes.isEmpty ? 1 : (lanes.values.reduce(math.max) + 1);
     return TourTarget(
       id: 'video_timeline',
+      onDemoTour: _demoAddMute,
       child: VCard(
       child: LayoutBuilder(
         builder: (context, box) {

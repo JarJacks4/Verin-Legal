@@ -41,6 +41,7 @@ function buildChronologyPdfDoc({ matter, receipts, thread, corrections, generate
     subtitle: `${title}${matter.caseNumber ? ` · ${matter.caseNumber}` : ''}`,
     kicker: 'VERIN · CHRONOLOGY',
     footer: `Verin Chronology · ${title} · generated ${generatedAt.toISOString()}`,
+    stamp: { when: generatedAt, label: 'CHRONOLOGY' },
   });
 
   R.kv('Client', matter.clientName);

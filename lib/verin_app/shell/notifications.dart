@@ -612,26 +612,17 @@ class _EventRow extends StatelessWidget {
                     const SizedBox(height: 4.0),
                     Row(
                       children: [
-                        Text(fmtWhen(e.at), style: VT.muted(context, size: 11.0)),
+                        Flexible(child: Text(fmtWhen(e.at), overflow: TextOverflow.ellipsis, style: VT.muted(context, size: 11.0))),
+                        // Buttons, not tappable words: these are the two things
+                        // anyone does from this list, and a text-sized target
+                        // is a poor one on a laptop trackpad.
                         if (onOpen != null) ...[
                           const SizedBox(width: 10.0),
-                          VHover(
-                            onTap: onOpen,
-                            builder: (context, hovered) => Text(
-                              'Open',
-                              style: VT.body(context, size: 11.5, weight: FontWeight.w600, color: hovered ? c.tealDeep : c.teal),
-                            ),
-                          ),
+                          VButton(label: 'Open', icon: Icons.arrow_forward, size: VButtonSize.sm, onPressed: onOpen),
                         ],
                         if (onDone != null) ...[
-                          const SizedBox(width: 10.0),
-                          VHover(
-                            onTap: onDone,
-                            builder: (context, hovered) => Text(
-                              'Mark done',
-                              style: VT.body(context, size: 11.5, weight: FontWeight.w600, color: hovered ? c.foreground : c.mutedFg),
-                            ),
-                          ),
+                          const SizedBox(width: 8.0),
+                          VButton(label: 'Mark done', kind: VButtonKind.secondary, size: VButtonSize.sm, onPressed: onDone),
                         ],
                       ],
                     ),

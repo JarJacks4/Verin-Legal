@@ -58,7 +58,7 @@ function monthFigures({ matters, receiptsByMatter, syncLog, deliveries, baseline
 
 async function buildMonthlyPdf({ firmName, f, start, generatedAt, baselineMethod }) {
   const label = start.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-  const R = createReport({ title: 'Record Lag and activity', subtitle: `${firmName || 'Your firm'} · ${label}`, footer: `Verin monthly report · ${firmName || ''} · ${label}` });
+  const R = createReport({ title: 'Record Lag and activity', subtitle: `${firmName || 'Your firm'} · ${label}`, footer: `Verin monthly report · ${firmName || ''} · ${label}`, stamp: { when: generatedAt, label: 'MONTHLY REPORT' } });
   const d = (x) => (x === null || x === undefined ? '—' : `${x} d`);
   R.tiles([
     { label: 'Firm median', value: d(f.median), note: `${f.items} items this month` },
