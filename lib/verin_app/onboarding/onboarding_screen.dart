@@ -37,8 +37,8 @@ List<_Slide> _slides(bool admin) => [
       _Slide(
         eyebrow: 'WHAT YOU END UP WITH',
         title: 'A finished record, ready to file',
-        body: 'One organized record of everything your client sent — in date order, every line citing the item it came from, gaps named rather than papered over. Delivered into Clio, or downloaded as a packet.',
-        points: const ['Bates-stamped exhibit sets with an index', 'Hearing and filing packets for your practice area'],
+        body: 'One organized record of everything your client sent — in date order, every line citing the item it came from, gaps named rather than papered over. Delivered into your case management system, or downloaded.',
+        points: const ['Bates-stamped exhibit sets with an index', 'Record extracts built for your practice area'],
         demo: () => const ProduceDemo(),
       ),
       _Slide(
@@ -52,7 +52,7 @@ List<_Slide> _slides(bool admin) => [
         eyebrow: 'STEP 2 · ANNOTATE',
         title: "Your team's notes, kept beside the record",
         body: 'Click any message to see where it came from in the original file, then add a note or a tag. The original is never changed, and every note collects on the Annotations page for the whole matter.',
-        points: const ['Notes are the team\'s, never mixed into what Verin read', 'Tag Key evidence and it carries into the packets'],
+        points: const ['Notes are the team\'s, never mixed into what Verin read', 'Tag Key evidence and it carries into the extracts'],
         demo: () => const VerifyDemo(),
       ),
       _Slide(

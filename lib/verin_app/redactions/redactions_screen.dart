@@ -7,7 +7,7 @@
 // always want hidden?" — without starting anything.
 //
 // Nothing here alters an original. Flags are suggestions; masking happens when
-// a packet, an exhibit set or a report is produced, and a person confirms
+// an extract, an exhibit set or a report is produced, and a person confirms
 // before any of it leaves.
 
 import 'package:flutter/material.dart';
@@ -104,7 +104,7 @@ class _RedactionsScreenState extends State<RedactionsScreen> {
               const SizedBox(height: 4.0),
               Text(
                 'Personal details Verin has flagged across your matters, and the terms you always want hidden. '
-                'Originals are never altered — flagged text is masked when a packet, exhibit set or report is produced.',
+                'Originals are never altered — flagged text is masked when an extract, exhibit set or report is produced.',
                 style: VT.muted(context),
               ),
               const SizedBox(height: 18.0),

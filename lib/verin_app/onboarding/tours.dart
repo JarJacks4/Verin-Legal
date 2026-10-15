@@ -73,7 +73,7 @@ const matterTour = [
     target: 'matter_actions',
     icon: Icons.inventory_2_outlined,
     title: 'Everything you do with the record',
-    body: 'Deliver it to Clio or download it, export it to Word, build this week\'s digest or a hearing packet, import a closed matter, or check that a file matches an item exactly.',
+    body: 'Deliver it to Clio or download it, export it to Word, build this week\'s digest or a record extract, import a closed matter, or check that a file matches an item exactly.',
     optional: true,
   ),
 ];
@@ -280,8 +280,8 @@ const Map<String, List<TourStep>> drawerTours = {
     TourStep(
       target: 'packet_kinds',
       icon: Icons.gavel_outlined,
-      title: 'One packet per practice',
-      body: 'Pick the packet for this kind of case. Flagged personal details are masked, and you confirm redactions before anything is exported.',
+      title: 'One extract per practice',
+      body: 'Pick the extract for this kind of case. Verin arranges what the record already holds; flagged personal details are masked, and you confirm redactions before anything is exported.',
     ),
   ],
   'closed_import': [

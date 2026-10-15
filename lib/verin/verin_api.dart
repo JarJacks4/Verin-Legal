@@ -228,7 +228,7 @@ class VerinApi {
   static Future<Map<String, dynamic>> exportRecordLagAudit(List<String> matterIds) =>
       _call('exportRecordLagAudit', {'matterIds': matterIds}, timeout: const Duration(seconds: 300));
 
-  /// One practice packet PDF. kind: pi_treatment_chronology, immigration_checklist,
+  /// One record extract PDF. kind: pi_treatment_chronology, immigration_checklist,
   /// civil_key_dates, criminal_event_window (eventAt ISO, windowHours), criminal_mitigation.
   /// Burns black boxes into a video's pixels and silences the marked spans,
   /// producing a new file. The original is untouched and keeps its hash.

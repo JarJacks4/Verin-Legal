@@ -30,7 +30,7 @@ const KINDS = {
   immigration_checklist: { title: 'Evidence Checklist Coverage', practice: 'Immigration', sub: 'What the record holds, by category' },
   civil_key_dates: { title: 'Key-Date Chronology', practice: 'Civil litigation', sub: 'Dated items, hearings and key evidence' },
   criminal_event_window: { title: 'Event Window Report', practice: 'Criminal defense', sub: 'Everything inside the window, to the minute' },
-  criminal_mitigation: { title: 'Mitigation Packet', practice: 'Criminal defense', sub: 'Marked documents and notes' },
+  criminal_mitigation: { title: 'Mitigation Index', practice: 'Criminal defense', sub: 'Marked documents and notes' },
 };
 
 const IMMIGRATION_CATEGORIES = [
