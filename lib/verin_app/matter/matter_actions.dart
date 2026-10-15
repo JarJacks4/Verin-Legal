@@ -300,6 +300,9 @@ class _PracticePacketSheetState extends State<PracticePacketSheet> {
   final _label = TextEditingController();
   bool _busy = false;
   String? _error;
+  bool _diagnosing = false;
+  List<Map<String, dynamic>>? _steps;
+  String? _failedAt;
 
   @override
   void dispose() {
@@ -307,6 +310,35 @@ class _PracticePacketSheetState extends State<PracticePacketSheet> {
     _hours.dispose();
     _label.dispose();
     super.dispose();
+  }
+
+  /// Runs the server-side walk-through of an extract and shows which step
+  /// broke. Nothing here changes the matter; the two test writes are removed
+  /// again on the server.
+  Future<void> _diagnose() async {
+    setState(() {
+      _diagnosing = true;
+      _steps = null;
+      _failedAt = null;
+    });
+    try {
+      final r = await VerinApi.packetDiagnose(matterId: widget.matter.reference.id, kind: _kind);
+      if (!mounted) return;
+      setState(() {
+        _diagnosing = false;
+        _failedAt = r['failedAt'] as String?;
+        _steps = ((r['steps'] as List?) ?? const []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      });
+    } on VerinApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _diagnosing = false;
+        // The diagnostic itself not answering is the answer: the backend is
+        // not reachable at all, so no extract could have run either.
+        _error = 'The diagnostic could not run either: ${e.message}\n'
+            'That means the backend is not answering this browser at all — redeploy the functions, then try again.';
+      });
+    }
   }
 
   Future<void> _make({bool confirmed = false}) async {
@@ -430,7 +462,73 @@ class _PracticePacketSheetState extends State<PracticePacketSheet> {
           const SizedBox(height: 12.0),
           VTextField(controller: _label, label: 'What happened', hint: 'Alleged incident at the residence', optional: 'Optional'),
         ],
-        if (_error != null) ...[const SizedBox(height: 12.0), VErrorBox(message: _error!)],
+        if (_error != null) ...[
+          const SizedBox(height: 12.0),
+          VErrorBox(message: _error!),
+          const SizedBox(height: 8.0),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: VButton(
+              label: 'Find out why',
+              icon: Icons.troubleshoot_outlined,
+              kind: VButtonKind.secondary,
+              loading: _diagnosing,
+              loadingLabel: 'Checking…',
+              onPressed: _diagnosing ? null : _diagnose,
+            ),
+          ),
+        ],
+        if (_steps != null) ...[
+          const SizedBox(height: 12.0),
+          VCard(
+            padding: const EdgeInsets.all(14.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  _failedAt == null
+                      ? 'Every step of an extract works on this matter right now. Try Build extract again.'
+                      : 'The extract stops at: $_failedAt',
+                  style: VT.body(context, size: 13.0, weight: FontWeight.w600),
+                ),
+                const SizedBox(height: 10.0),
+                for (final s in _steps!)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          s['ok'] == true
+                              ? Icons.check_circle_outline
+                              : s['ok'] == false
+                                  ? Icons.error_outline
+                                  : Icons.remove_circle_outline,
+                          size: 15.0,
+                          color: s['ok'] == true
+                              ? c.teal
+                              : s['ok'] == false
+                                  ? c.broken
+                                  : c.mutedFg,
+                        ),
+                        const SizedBox(width: 8.0),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${s['name']}', style: VT.body(context, size: 12.5)),
+                              if ('${s['note'] ?? ''}'.isNotEmpty)
+                                Text('${s['note']}', style: VT.mono(context, size: 11.0, color: s['ok'] == false ? c.broken : null)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 18.0),
         VButton(label: 'Build extract', icon: Icons.picture_as_pdf_outlined, fullWidth: true, loading: _busy, loadingLabel: 'Building…', onPressed: _busy ? null : () => _make()),
       ],

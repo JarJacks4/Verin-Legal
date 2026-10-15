@@ -244,3 +244,111 @@ async function buildAndSavePacket(request) {
 }
 
 exports._internal = { KINDS, masker, immigrationCoverage, inWindow, buildPacketPdf };
+
+// ---------------------------------------------------------------------------
+// Why an extract failed, in one call.
+//
+// A callable that dies before it can answer reaches the browser as a bare
+// "internal" with no message, which is indistinguishable from a function that
+// was never deployed. Rather than ask the firm to read Cloud logs, this walks
+// the same path an extract takes — auth, firm, matter, the three queries, a
+// one-page PDF, a Storage write, the two Firestore writes — and returns what
+// happened at each step instead of throwing. Whatever breaks, the step that
+// broke is named on screen, and that name is enough to fix it.
+exports.packetDiagnose = onCall({ timeoutSeconds: 120, memory: '1GiB' }, async (request) => {
+  const steps = [];
+  let failed = null;
+  const run = async (name, fn) => {
+    if (failed) {
+      steps.push({ name, ok: null, note: 'skipped' });
+      return null;
+    }
+    const t = Date.now();
+    try {
+      const note = await fn();
+      steps.push({ name, ok: true, ms: Date.now() - t, note: note == null ? '' : String(note) });
+      return note;
+    } catch (e) {
+      const code = (e && e.code) || '';
+      steps.push({ name, ok: false, ms: Date.now() - t, note: `${code} ${(e && e.message) || e}`.trim() });
+      console.error(`packetDiagnose failed at ${name}`, e && e.stack ? e.stack : e);
+      failed = name;
+      return null;
+    }
+  };
+
+  const data = request.data || {};
+  const kind = KINDS[String(data.kind || '')] ? String(data.kind) : 'civil_key_dates';
+  const db = getFirestore();
+  let uid = null;
+  let ctx = null;
+  let receipts = [];
+  let pdf = null;
+
+  await run('Signed in', async () => {
+    uid = requireAuth(request);
+    return uid;
+  });
+  await run('Account attached to a firm', async () => {
+    const { firmIdForUser } = require('../common/access');
+    return await firmIdForUser(db, uid);
+  });
+  await run('Matter readable', async () => {
+    ctx = await loadMatterForUser(db, uid, data.matterId);
+    const md = ctx.snap.data() || {};
+    return md.matterName || md.caseTitle || ctx.ref.id;
+  });
+  await run('Receipts query', async () => {
+    const rs = await db.collection('Receipts').where('matterId', '==', ctx.ref).get();
+    receipts = rs.docs.map((d) => ({ _id: d.id, ...d.data() }));
+    return `${receipts.length} items`;
+  });
+  await run('Annotations query', async () => {
+    const a = await db.collection('Annotations').where('matterId', '==', ctx.ref).get();
+    return `${a.size} notes`;
+  });
+  await run('Thread read', async () => {
+    const t = await ctx.ref.collection('derived').doc('thread').get();
+    return t.exists ? 'present' : 'none yet';
+  });
+  await run('Firm record', async () => {
+    const f = await db.collection('firmAccount').where('firmID', '==', ctx.firmId).limit(1).get();
+    return f.empty ? 'no firmAccount row' : (f.docs[0].data().firmName || 'unnamed');
+  });
+  await run('PDF render', async () => {
+    const out = await buildPacketPdf({
+      kind,
+      matter: ctx.snap.data() || {},
+      receipts,
+      thread: null,
+      annotations: [],
+      opts: { eventAt: new Date().toISOString(), windowHours: 24 },
+      generatedAt: new Date(),
+      firmName: '',
+      alwaysRedact: [],
+    });
+    pdf = out.pdf;
+    return `${pdf.length} bytes`;
+  });
+  await run('Storage write', async () => {
+    const bucket = getStorage().bucket();
+    const path = `matters/${ctx.ref.id}/exports/_diagnose-${Date.now()}.pdf`;
+    await bucket.file(path).save(pdf, { resumable: false, contentType: 'application/pdf' });
+    await bucket.file(path).delete().catch(() => {});
+    return bucket.name;
+  });
+  await run('Firm reports write', async () => {
+    const { firmDocRef } = require('../common/firm');
+    const ref = await firmDocRef(db, ctx.firmId);
+    const w = await ref.collection('reports').add({ kind: 'diagnose', generatedByUid: uid, generatedAt: new Date() });
+    await w.delete().catch(() => {});
+    return 'ok';
+  });
+  await run('Matter exports write', async () => {
+    const w = await ctx.ref.collection('exports').add({ kind: 'diagnose', generatedAt: new Date(), generatedByUid: uid });
+    await w.delete().catch(() => {});
+    return 'ok';
+  });
+
+  return { ok: !failed, failedAt: failed, kind, steps };
+});

@@ -39,7 +39,9 @@ class VerinApi {
           code: e.code,
         );
       }
-      throw VerinApiException(raw.isEmpty ? 'Request failed (${e.code}).' : raw, code: e.code);
+      // Keep the code visible. "Request failed" on its own is unreadable in a
+      // screenshot; "(permission-denied)" is half the answer already.
+      throw VerinApiException(raw.isEmpty ? 'Request failed (${e.code}).' : '$raw (${e.code})', code: e.code);
     } catch (e) {
       throw VerinApiException('Request failed: $e');
     }
@@ -280,6 +282,12 @@ class VerinApi {
         if (windowHours != null) 'windowHours': windowHours,
         if (eventLabel != null) 'eventLabel': eventLabel,
       }, timeout: const Duration(seconds: 300));
+
+  /// Walks the same path an extract takes and reports what happened at each
+  /// step: { ok, failedAt, steps: [{ name, ok, ms, note }] }. Used by the
+  /// extract sheet when a build fails, so the failing step is named on screen.
+  static Future<Map<String, dynamic>> packetDiagnose({required String matterId, String? kind}) =>
+      _call('packetDiagnose', {'matterId': matterId, if (kind != null) 'kind': kind}, timeout: const Duration(seconds: 150));
 
   /// This week's one-page digest for a matter (written back to Clio when asked).
   static Future<Map<String, dynamic>> buildMatterDigest(String matterId, {bool writeBack = false}) =>
