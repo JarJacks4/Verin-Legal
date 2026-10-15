@@ -55,6 +55,46 @@ function drawWordmark(doc, { x, width = 96, gap = 30 } = {}) {
   }
 }
 
+/// Verin's own stamp, drawn on the first page of everything we generate.
+///
+/// It is Verin's mark on Verin's own document — not a seal, not a
+/// certification, and deliberately nothing that could be mistaken for a court
+/// or notary mark. It says who produced the document, when, and (when given)
+/// the first characters of the file's own fingerprint, so a page photographed
+/// on someone's desk can still be traced back to the record it came from.
+function drawStamp(doc, { x, y, when, fingerprint = '', label = 'EVIDENCE RECORD' } = {}) {
+  const GREEN = '#2F7D5B';
+  const w = 150;
+  const h = 54;
+  const left = x === undefined ? doc.page.width - doc.page.margins.right - w : x;
+  const top = y === undefined ? doc.page.margins.top - 10 : y;
+  // save/restore keeps the graphics state but not the text cursor, and the
+  // lines below move it — so the caller's place on the page is put back.
+  const savedY = doc.y;
+  try {
+    doc.save();
+    doc.rotate(-4, { origin: [left + w / 2, top + h / 2] });
+    doc.lineWidth(1.6).strokeColor(GREEN).opacity(0.85);
+    doc.roundedRect(left, top, w, h, 6).stroke();
+    doc.lineWidth(0.6);
+    doc.roundedRect(left + 4, top + 4, w - 8, h - 8, 4).stroke();
+    doc.fillColor(GREEN);
+    doc.font('Bold').fontSize(11).text('VERIN LEGAL', left, top + 10, { width: w, align: 'center', characterSpacing: 1.6, lineBreak: false });
+    doc.font('Bold').fontSize(6.5).text(label, left, top + 24, { width: w, align: 'center', characterSpacing: 1.2, lineBreak: false });
+    const stamped = (when instanceof Date ? when : new Date()).toISOString().slice(0, 10);
+    doc.font('Sans').fontSize(6.5).text(stamped, left, top + 34, { width: w, align: 'center', lineBreak: false });
+    if (fingerprint) {
+      doc.font('Mono').fontSize(6).text(String(fingerprint).slice(0, 16).toUpperCase(), left, top + 43, { width: w, align: 'center', lineBreak: false });
+    }
+    doc.opacity(1);
+    doc.restore();
+  } catch (_) {
+    try { doc.restore(); } catch (__) {}
+    doc.opacity(1);
+  }
+  doc.y = savedY;
+}
+
 /// A large, pale wordmark across the middle of the current page.
 function drawWatermark(doc) {
   const img = wordmark();
@@ -226,6 +266,7 @@ function buildRecordPdf(input) {
 
   // ------------------------------------------------------------ certificate
   drawWordmark(doc, { x: left });
+  drawStamp(doc, { when: gen, label: 'CERTIFICATE' });
   doc.font('Bold').fontSize(9).fillColor(TEAL).text('VERIN', left, doc.y, { characterSpacing: 2 });
   doc.moveDown(0.2);
   doc.font('Serif').fontSize(22).fillColor(NAVY).text('Certificate of Preparation', left, doc.y, { width });
@@ -527,4 +568,4 @@ function buildRecordPdf(input) {
   return done;
 }
 
-module.exports = { buildRecordPdf, toPdfReceipt, printable, human, dash, prettyPhone, wordmark, drawWordmark, drawWatermark, FONTS, COLORS: { NAVY, TEAL, INK, MUTED, RULE, WARN } };
+module.exports = { buildRecordPdf, toPdfReceipt, printable, human, dash, prettyPhone, wordmark, drawWordmark, drawWatermark, drawStamp, FONTS, COLORS: { NAVY, TEAL, INK, MUTED, RULE, WARN } };

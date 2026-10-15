@@ -90,6 +90,7 @@ async function buildPacketPdf({ kind, matter, receipts, thread, annotations, opt
     title: k.title,
     subtitle: `${title}${matter.caseNumber ? ` · ${matter.caseNumber}` : ''} · ${k.sub}`,
     kicker: `VERIN · ${k.practice.toUpperCase()}`,
+    stamp: { when: generatedAt, label: 'RECORD EXTRACT' },
     footer: `Verin ${k.title} · ${title} · generated ${generatedAt.toISOString()}`,
   });
   R.kv('Client', matter.clientName);

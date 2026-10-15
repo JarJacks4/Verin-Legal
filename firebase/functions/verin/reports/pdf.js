@@ -1,12 +1,12 @@
 // Small PDF builder shared by Verin's reports: brand header, labelled values,
 // paragraphs, tables that break across pages, and page footers. Same fonts
 // and colours as the record certificate (export/record_pdf.js).
-const { printable, human, dash, drawWordmark, drawWatermark, FONTS, COLORS } = require('../export/record_pdf');
+const { printable, human, dash, drawWordmark, drawWatermark, drawStamp, FONTS, COLORS } = require('../export/record_pdf');
 
 const { NAVY, TEAL, INK, MUTED, RULE } = COLORS;
 
 
-function createReport({ title, subtitle = '', kicker = 'VERIN', footer = '', info = {} }) {
+function createReport({ title, subtitle = '', kicker = 'VERIN', footer = '', info = {}, stamp = {} }) {
   const PDFDocument = require('pdfkit');
   const doc = new PDFDocument({
     size: 'LETTER',
@@ -141,6 +141,9 @@ function createReport({ title, subtitle = '', kicker = 'VERIN', footer = '', inf
       for (let i = range.start; i < range.start + range.count; i++) {
         doc.switchToPage(i);
         drawWatermark(doc);
+        // The stamp goes on the first page only: it marks the document, and
+        // repeating it on every page would read as decoration.
+        if (i === range.start) drawStamp(doc, stamp);
         const saved = doc.page.margins.bottom;
         doc.page.margins.bottom = 0;
         const y = doc.page.height - 40;
