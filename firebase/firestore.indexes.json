@@ -225,6 +225,34 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "Statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "Items",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "matterID",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "batesId",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [
