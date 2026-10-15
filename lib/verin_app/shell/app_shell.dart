@@ -22,11 +22,12 @@ import 'notifications.dart';
 import 'firm_alerts.dart';
 import '../auth/two_step.dart' show TwoStepCard;
 
-enum ConsoleNav { matters, review, annotations }
+enum ConsoleNav { matters, review, annotations, redactions }
 
 const kMattersRoute = 'MattersList';
 const kReviewRoute = 'ReviewQueue';
 const kAnnotationsRoute = 'Annotations';
+const kRedactionsRoute = 'Redactions';
 const kAdminHomeRoute = 'AdminDashBoardPage';
 const kSignInRouteName = 'FirmWorkspaceSignIn';
 
@@ -162,6 +163,7 @@ class ConsoleSidebar extends StatelessWidget {
                   item(ConsoleNav.matters, Icons.folder_open_outlined, 'Matters', kMattersRoute),
                   item(ConsoleNav.review, Icons.checklist, 'Review queue', kReviewRoute),
                   item(ConsoleNav.annotations, Icons.comment_outlined, 'Annotations', kAnnotationsRoute),
+                  item(ConsoleNav.redactions, Icons.shield_outlined, 'Redactions', kRedactionsRoute),
                   if (user.isAdmin) ...[
                     const SizedBox(height: 20.0),
                     const VHairline(),

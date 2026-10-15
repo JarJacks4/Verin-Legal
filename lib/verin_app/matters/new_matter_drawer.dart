@@ -18,7 +18,7 @@ import '../onboarding/tour.dart';
 Future<MattersRecord?> showNewMatterDrawer(BuildContext context) =>
     showVDrawer<MattersRecord>(context, title: 'New matter', width: 500.0, builder: (_) => const NewMatterForm());
 
-/// The five practice areas Verin sells. Every doc, the website and the decks
+/// The five practice areas Verin sells, plus Other. Every doc, the website and the decks
 /// name exactly these, so the app names them too — a sixth here would be a
 /// promise nothing else makes.
 const kPracticeAreas = [

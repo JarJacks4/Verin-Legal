@@ -52,7 +52,7 @@ List<TourStep> mattersTour({required bool admin}) => [
           target: 'nav_admin',
           icon: Icons.dashboard_outlined,
           title: 'Admin console',
-          body: 'Invite your team, connect Clio, set your exhibit template and see the value Verin is adding.',
+          body: 'Invite your team, connect your case management system, set your exhibit template and see the value Verin is adding.',
         ),
     ];
 

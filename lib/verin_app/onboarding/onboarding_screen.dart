@@ -73,7 +73,7 @@ List<_Slide> _slides(bool admin) => [
         eyebrow: "YOU'RE SET",
         title: 'Start with your first matter',
         body: admin
-            ? "We will point things out the first time you open each page. As an admin you can invite your team and connect Clio from the Admin console. Replay this any time from your profile."
+            ? "We will point things out the first time you open each page. As an admin you can invite your team and connect your case management system from the Admin console. Replay this any time from your profile."
             : 'We will point things out the first time you open each page. Replay this any time from your profile.',
         demo: () => const ReadyDemo(),
       ),

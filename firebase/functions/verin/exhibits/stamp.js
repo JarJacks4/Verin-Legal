@@ -7,6 +7,33 @@
 // exhibit with its Bates range and both hashes — original and produced.
 
 const { exhibitLabel, batesLabel, ascii } = require('./template');
+const { wordmark } = require('../export/record_pdf');
+
+/// The Verin wordmark, embedded once per pdf-lib document. Returns null when
+/// the image is missing or unreadable — a production is never worth failing
+/// over branding.
+const marks = new WeakMap();
+async function embedMark(doc) {
+  if (marks.has(doc)) return marks.get(doc);
+  let img = null;
+  const bytes = wordmark();
+  if (bytes) {
+    try {
+      img = await doc.embedPng(bytes);
+    } catch (e) {
+      console.warn('wordmark could not be embedded:', e.message);
+    }
+  }
+  marks.set(doc, img);
+  return img;
+}
+
+/// Draws the wordmark at the top-right of a page, clear of the title block.
+function drawMark(page, img, { right = 36, top = 36, width = 84 } = {}) {
+  if (!img) return;
+  const h = (img.height / img.width) * width;
+  page.drawImage(img, { x: page.getWidth() - right - width, y: page.getHeight() - top - h, width, height: h });
+}
 
 function pdfLib() {
   return require('pdf-lib');
@@ -37,6 +64,7 @@ async function addSlipSheet(doc, { label, item, template, native = false }) {
   const reg = await doc.embedFont(StandardFonts.Helvetica);
   const mono = await doc.embedFont(StandardFonts.Courier);
   const page = doc.addPage([612, 792]);
+  drawMark(page, await embedMark(doc), { right: 72, top: 54 });
   const grey = rgb(...GREY);
   page.drawText(ascii(label, 40).toUpperCase(), { x: 72, y: 600, size: 40, font: bold, color: rgb(0.05, 0.09, 0.13) });
   let y = 560;
@@ -160,10 +188,12 @@ async function indexPdf(rows, { title, matterTitle, producedAt, version, legend 
     ['Source', 110],
     ['Redact.', 40],
   ];
+  const mark = await embedMark(doc);
   let page = null;
   let y = 0;
   const newPage = () => {
     page = doc.addPage([W, H]);
+    drawMark(page, mark, { right: 36, top: 30, width: 76 });
     page.drawText(ascii(title, 60), { x: 36, y: H - 50, size: 16, font: bold });
     page.drawText(ascii(`${matterTitle} - production v${version} - ${producedAt}`, 120), { x: 36, y: H - 68, size: 9, font: reg, color: rgb(...GREY) });
     if (legend) page.drawText(legend, { x: 36, y: 20, size: 8, font: bold, color: rgb(0.48, 0.14, 0.2) });
