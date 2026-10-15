@@ -230,6 +230,28 @@ class VerinApi {
 
   /// One practice packet PDF. kind: pi_treatment_chronology, immigration_checklist,
   /// civil_key_dates, criminal_event_window (eventAt ISO, windowHours), criminal_mitigation.
+  /// Burns black boxes into a video's pixels and silences the marked spans,
+  /// producing a new file. The original is untouched and keeps its hash.
+  ///
+  /// Boxes and mutes are fractions of the frame and seconds into the clip:
+  ///   boxes: [{x, y, w, h, start?, end?}]   omit start/end for the whole clip
+  ///   mutes: [{start?, end?}]
+  ///
+  /// Runs for tens of seconds; watch Matters/{id}/videoRedactions/{jobId} for
+  /// progress rather than waiting on this future alone.
+  static Future<Map<String, dynamic>> redactVideo({
+    required String matterId,
+    required String receiptId,
+    List<Map<String, dynamic>> boxes = const [],
+    List<Map<String, dynamic>> mutes = const [],
+  }) =>
+      _call('redactVideo', {
+        'matterId': matterId,
+        'receiptId': receiptId,
+        'boxes': boxes,
+        'mutes': mutes,
+      });
+
   static Future<Map<String, dynamic>> exportPracticePacket({
     required String matterId,
     required String kind,

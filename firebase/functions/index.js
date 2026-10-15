@@ -65,6 +65,7 @@ exports.standingRecordCounts = verinArchiveBuild.standingRecordCounts;
 // Reports (#27, #53, #67, #69, #70, #71, #74) and demo deletion (#9).
 exports.exportRecordLagAudit = require("./verin/reports/lag_audit").exportRecordLagAudit;
 exports.exportPracticePacket = require("./verin/reports/packets").exportPracticePacket;
+exports.redactVideo = require("./verin/evidence/video_redact").redactVideo;
 const verinDigest = require("./verin/reports/digest");
 exports.buildMatterDigest = verinDigest.buildMatterDigest;
 exports.weeklyMatterDigests = verinDigest.weeklyMatterDigests;
