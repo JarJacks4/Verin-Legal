@@ -124,8 +124,11 @@ function fakeBucket(files) {
   };
 }
 
-test('buildExhibit: images and PDFs become pages, recordings are produced natively', async () => {
-  // Loaded lazily so the firebase-admin import in produce.js isn't needed for the pure parts.
+// produce.js pulls in firebase-admin at load; stub it so these tests don't
+// need credentials. Done once at module scope, because node:test loads the
+// whole file before running anything — a require inside one test would come
+// too late for the others.
+const P = (() => {
   const Module = require('module');
   const realLoad = Module._load;
   Module._load = function (req) {
@@ -134,9 +137,14 @@ test('buildExhibit: images and PDFs become pages, recordings are produced native
     if (req === 'firebase-admin/app') return { initializeApp: () => null, getApps: () => [1] };
     return realLoad.apply(this, arguments);
   };
-  const P = require('../exhibits/produce');
-  Module._load = realLoad;
+  try {
+    return require('../exhibits/produce');
+  } finally {
+    Module._load = realLoad;
+  }
+})();
 
+test('buildExhibit: images and PDFs become pages, recordings are produced natively', async () => {
   const pdf = await samplePdf(['SSN 123-45-6789']);
   const bucket = fakeBucket({
     'm/a.png': { bytes: Buffer.from(imgs.PNG, 'base64'), type: 'image/png' },
@@ -159,4 +167,57 @@ test('buildExhibit: images and PDFs become pages, recordings are produced native
   const red = P.itemRedactions({ redactions: [{ page: 2, box: { x: 0.1, y: 0.1, w: 0.2, h: 0.05 } }, { box: { x: 0, y: 0, w: 0, h: 0 } }], textRedactions: ['ab', 'x'] });
   assert.deepEqual(Object.keys(red.pageBoxes), ['2']);
   assert.equal(red.count, 2);
+});
+
+// --- native items that cannot be masked -----------------------------------
+
+/// A bucket whose file looks like an MP4: 'ftyp' at offset 4 is what
+/// detectKind reads to call it a video.
+function videoBucket(sizeBytes = 1024) {
+  const head = Buffer.alloc(64);
+  head.write('ftyp', 4, 'ascii');
+  return {
+    file() {
+      return {
+        exists: async () => [true],
+        getMetadata: async () => [{ size: sizeBytes, contentType: 'video/mp4' }],
+        createReadStream() {
+          const { Readable } = require('stream');
+          return Readable.from([head]);
+        },
+        download: async () => [head],
+      };
+    },
+  };
+}
+
+test('a video with redactions marked stops the production instead of shipping the original', async () => {
+  const receipt = { id: 'r1', originalFileName: 'kitchen.mp4', sourceStoragePath: 'matters/m1/kitchen.mp4', itemKind: 'video' };
+  const item = { textRedactions: ['Lily'] };
+  await assert.rejects(
+    () => P.buildExhibit(videoBucket(), receipt, item),
+    (e) => /kitchen\.mp4/.test(e.message) && /redactions marked/.test(e.message),
+  );
+});
+
+test('a video Verin flagged stops the production even with nothing marked by hand', async () => {
+  const receipt = {
+    id: 'r2',
+    originalFileName: 'doorbell.mp4',
+    sourceStoragePath: 'matters/m1/doorbell.mp4',
+    itemKind: 'video',
+    sensitive: [{ category: 'minor_name', text: 'Lily' }],
+  };
+  await assert.rejects(
+    () => P.buildExhibit(videoBucket(), receipt, {}),
+    (e) => /doorbell\.mp4/.test(e.message) && /flagged 1 personal detail/.test(e.message),
+  );
+});
+
+test('a clean video still goes out in its original form', async () => {
+  const receipt = { id: 'r3', originalFileName: 'clip.mp4', sourceStoragePath: 'matters/m1/clip.mp4', itemKind: 'video' };
+  const out = await P.buildExhibit(videoBucket(), receipt, {});
+  assert.equal(out.nativeOnly, true);
+  assert.equal(out.kind, 'video');
+  assert.equal(out.redactions, 0);
 });

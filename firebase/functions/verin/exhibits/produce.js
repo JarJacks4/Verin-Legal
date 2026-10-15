@@ -92,7 +92,30 @@ async function buildExhibit(bucket, receipt, it) {
     file.createReadStream({ start: 0, end: 63 }).on('data', (c) => chunks.push(c)).on('error', reject).on('end', () => resolve(Buffer.concat(chunks)));
   });
   const kind = detectKind(head, name, receipt.contentType || meta.contentType);
-  if (!['image', 'pdf', 'docx', 'odt', 'rtf', 'text', 'eml', 'msg'].includes(kind) || size > MAX_RENDER_BYTES) {
+  const renderable = ['image', 'pdf', 'docx', 'odt', 'rtf', 'text', 'eml', 'msg'].includes(kind) && size <= MAX_RENDER_BYTES;
+  if (!renderable) {
+    // A native item leaves exactly as it arrived, so nothing can be masked in
+    // it. Shipping one that someone marked for redaction — or that Verin
+    // flagged — would hand over the very thing they meant to hide, and the
+    // index would say "redacted" over an untouched file. Stop instead.
+    // Suggestions only count until someone has reviewed the item: once they
+    // have looked and marked nothing, that is an answer, not an oversight.
+    const flagged = it.reviewed === true ? 0 : Array.isArray(receipt.sensitive) ? receipt.sensitive.length : 0;
+    if (red.count > 0 || flagged > 0) {
+      const what = receipt.originalFileName || receipt.id;
+      const why =
+        kind === 'video'
+          ? 'a video'
+          : kind === 'audio'
+            ? 'an audio file'
+            : size > MAX_RENDER_BYTES
+              ? 'too large to re-render'
+              : `in a format Verin cannot re-render (${kind})`;
+      throw new HttpsError(
+        'failed-precondition',
+        `"${what}" is ${why}, so it leaves in its original form and nothing in it can be masked — but ${red.count > 0 ? 'it has redactions marked' : `Verin flagged ${flagged} personal detail${flagged === 1 ? '' : 's'} in it`}. Take it out of this production and hand the original over separately.`,
+      );
+    }
     return { bytes: null, pages: 0, native, redactions: 0, note: `produced in native format (${kind})`, nativeOnly: true, kind };
   }
   const [bytes] = await file.download();

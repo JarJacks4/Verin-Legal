@@ -10,6 +10,7 @@
 // written when the feed is opened. Alerts stay in the count until someone
 // marks them done, since they are work, not news.
 
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -107,25 +108,85 @@ Stream<List<VEvent>> _alertEvents(DocumentReference? firmRef) {
       }).toList());
 }
 
+/// A shared listener that hands every new subscriber the latest value it has
+/// already seen, then follows along live.
+///
+/// This is why the bell used to sit at zero: a plain broadcast stream only
+/// delivers what arrives *after* you subscribe, and Firestore sends its
+/// current snapshot once, to whoever listens first. The live watcher got it;
+/// the bell, subscribing a moment later, got silence until the next write —
+/// which on a quiet firm is never.
+class _Shared<T> {
+  _Shared(this._source) {
+    _sub = _source.listen(
+      (v) {
+        _last = v;
+        _has = true;
+        if (!_out.isClosed) _out.add(v);
+      },
+      onError: (Object e, StackTrace st) {
+        if (!_out.isClosed) _out.addError(e, st);
+      },
+    );
+  }
+
+  final Stream<T> _source;
+  final StreamController<T> _out = StreamController<T>.broadcast();
+  StreamSubscription<T>? _sub;
+  T? _last;
+  bool _has = false;
+
+  Stream<T> get stream {
+    // Subscribing before replaying matters: an async* body would attach to
+    // _out only after the consumer asked for the second event, and a
+    // broadcast controller buffers nothing, so anything arriving in that gap
+    // would reach nobody.
+    final out = StreamController<T>();
+    StreamSubscription<T>? sub;
+    out.onListen = () {
+      sub = _out.stream.listen(out.add, onError: out.addError, onDone: out.close);
+      if (_has) out.add(_last as T);
+    };
+    out.onCancel = () => sub?.cancel();
+    return out.stream;
+  }
+
+  void dispose() {
+    _sub?.cancel();
+    _sub = null;
+    _out.close();
+  }
+}
+
 /// One listener per firm, shared by the bell, the open drawer and the live
 /// watcher — they all want the same thirty documents.
-Stream<List<ReceiptsRecord>>? _sharedArrivals;
-String _sharedArrivalsFirm = '';
+_Shared<List<ReceiptsRecord>>? _arrivalsShared;
+String _arrivalsFirm = '';
 
 Stream<List<ReceiptsRecord>> sharedArrivals() {
   final firm = currentFirmId();
-  if (_sharedArrivals == null || _sharedArrivalsFirm != firm) {
-    _sharedArrivalsFirm = firm;
-    _sharedArrivals = _arrivals().asBroadcastStream();
+  // Before the firm id lands the query would match nothing, and caching that
+  // would keep the bell empty for the rest of the session.
+  if (firm.isEmpty) return const Stream<List<ReceiptsRecord>>.empty();
+  if (_arrivalsShared == null || _arrivalsFirm != firm) {
+    _arrivalsShared?.dispose();
+    _arrivalsFirm = firm;
+    _arrivalsShared = _Shared<List<ReceiptsRecord>>(_arrivals());
   }
-  return _sharedArrivals!;
+  return _arrivalsShared!.stream;
 }
 
-final Map<String, Stream<List<VEvent>>> _sharedAlerts = {};
+_Shared<List<VEvent>>? _alertsShared;
+String _alertsFirm = '';
 
 Stream<List<VEvent>> sharedAlertEvents(DocumentReference? firmRef) {
   if (firmRef == null) return Stream.value(const <VEvent>[]);
-  return _sharedAlerts[firmRef.path] ??= _alertEvents(firmRef).asBroadcastStream();
+  if (_alertsShared == null || _alertsFirm != firmRef.path) {
+    _alertsShared?.dispose();
+    _alertsFirm = firmRef.path;
+    _alertsShared = _Shared<List<VEvent>>(_alertEvents(firmRef));
+  }
+  return _alertsShared!.stream;
 }
 
 Stream<List<VEvent>> _arrivalEvents() => sharedArrivals().asyncMap((receipts) async {
@@ -171,12 +232,17 @@ class FeedBuilder extends StatefulWidget {
 
 class _FeedBuilderState extends State<FeedBuilder> {
   late Stream<List<VEvent>> _alerts = sharedAlertEvents(widget.firmRef);
-  final Stream<List<VEvent>> _arrivalsStream = _arrivalEvents();
+  late Stream<List<VEvent>> _arrivalsStream = _arrivalEvents();
 
   @override
   void didUpdateWidget(covariant FeedBuilder old) {
     super.didUpdateWidget(old);
-    if (old.firmRef?.path != widget.firmRef?.path) _alerts = sharedAlertEvents(widget.firmRef);
+    if (old.firmRef?.path != widget.firmRef?.path) {
+      _alerts = sharedAlertEvents(widget.firmRef);
+      // The firm id arrives with the firm document, so the arrivals query is
+      // worth rebuilding at the same moment.
+      _arrivalsStream = _arrivalEvents();
+    }
   }
 
   @override
@@ -559,7 +625,10 @@ class ArrivalWatcher extends StatefulWidget {
 }
 
 class _ArrivalWatcherState extends State<ArrivalWatcher> {
-  late final Stream<List<ReceiptsRecord>> _stream = sharedArrivals();
+  // Rebound whenever the firm id changes, including the moment it first
+  // arrives — before that the query matches nothing.
+  Stream<List<ReceiptsRecord>> _stream = sharedArrivals();
+  String _firm = currentFirmId();
   final Set<String> _known = {};
   bool _primed = false;
 
@@ -589,6 +658,13 @@ class _ArrivalWatcherState extends State<ArrivalWatcher> {
 
   @override
   Widget build(BuildContext context) {
+    final firm = currentFirmId();
+    if (firm != _firm) {
+      _firm = firm;
+      _stream = sharedArrivals();
+      _primed = false;
+      _known.clear();
+    }
     return StreamBuilder<List<ReceiptsRecord>>(
       stream: _stream,
       builder: (context, s) {
