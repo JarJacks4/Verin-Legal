@@ -52,6 +52,43 @@ class VEvent {
   bool get needsAttention => alertRef != null;
 }
 
+/// The icon for an arrival, by what arrived. A paralegal scanning the feed
+/// should be able to tell a photo from a contract without reading.
+IconData _kindIcon(String kind) {
+  switch (kind) {
+    case 'photo':
+      return Icons.photo_outlined;
+    case 'screenshot':
+      return Icons.phone_iphone_rounded;
+    case 'video':
+      return Icons.videocam_outlined;
+    case 'audio':
+      return Icons.mic_none_rounded;
+    case 'document':
+      return Icons.description_outlined;
+    case 'email':
+      return Icons.mail_outline_rounded;
+    case 'message':
+      return Icons.chat_bubble_outline_rounded;
+    default:
+      return Icons.inbox_outlined;
+  }
+}
+
+/// The icon for something needing attention, by what went wrong.
+IconData _alertIcon(String kind) {
+  switch (kind) {
+    case 'provisioning':
+      return Icons.dialpad_rounded;
+    case 'oversize':
+      return Icons.attachment_outlined;
+    case 'delivery_failed':
+      return Icons.cloud_off_outlined;
+    default:
+      return Icons.notification_important_outlined;
+  }
+}
+
 String _kindLabel(String kind) {
   switch (kind) {
     case 'photo':
@@ -100,7 +137,7 @@ Stream<List<VEvent>> _alertEvents(DocumentReference? firmRef) {
           id: d.reference.path,
           title: data['message'] is String ? data['message'] as String : 'Something needs attention',
           subtitle: 'Needs attention',
-          icon: Icons.notification_important_outlined,
+          icon: _alertIcon(data['kind'] is String ? data['kind'] as String : ''),
           at: raised is Timestamp ? raised.toDate() : null,
           alertRef: d.reference,
           severity: data['severity'] is String ? data['severity'] as String : 'warning',
@@ -197,7 +234,7 @@ Stream<List<VEvent>> _arrivalEvents() => sharedArrivals().asyncMap((receipts) as
           id: r.reference.path,
           title: '${_kindLabel(r.itemKind)} arrived',
           subtitle: ref == null ? '' : await matterNameOf(ref),
-          icon: Icons.inbox_outlined,
+          icon: _kindIcon(r.itemKind),
           at: r.receivedAt,
           matter: ref,
         ));
