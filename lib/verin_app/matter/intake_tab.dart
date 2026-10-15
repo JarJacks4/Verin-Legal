@@ -10,6 +10,7 @@ import '/backend/backend.dart';
 import '../data/format.dart';
 import '../data/model.dart';
 import 'client_card.dart';
+import 'matter_detail_screen.dart' show MatterTab;
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/badges.dart';
@@ -20,9 +21,12 @@ import '../widgets/drawer.dart';
 import '../onboarding/tour.dart' show DemoMode, TourTarget;
 
 class IntakeTab extends StatefulWidget {
-  const IntakeTab({super.key, required this.matter});
+  const IntakeTab({super.key, required this.matter, this.onOpenTab});
 
   final MattersRecord matter;
+
+  /// Lets an arrival take you to where the item landed.
+  final ValueChanged<MatterTab>? onOpenTab;
 
   @override
   State<IntakeTab> createState() => _IntakeTabState();
@@ -258,7 +262,7 @@ class _IntakeTabState extends State<IntakeTab> {
               _DemoArrivalState._autoSent = true;
               Future.delayed(const Duration(milliseconds: 900), () => _arrivalKey.currentState?._send());
             },
-            child: _DemoArrival(key: _arrivalKey, matter: matter),
+            child: _DemoArrival(key: _arrivalKey, matter: matter, onOpenTab: widget.onOpenTab),
           ),
         ],
         const SizedBox(height: 24.0),
@@ -392,9 +396,10 @@ class _SenderList extends StatelessWidget {
 /// Demo workspaces only: the client "sends" the next sample message, so a
 /// prospect can watch it arrive, get fingerprinted and read.
 class _DemoArrival extends StatefulWidget {
-  const _DemoArrival({super.key, required this.matter});
+  const _DemoArrival({super.key, required this.matter, this.onOpenTab});
 
   final MattersRecord matter;
+  final ValueChanged<MatterTab>? onOpenTab;
 
   @override
   State<_DemoArrival> createState() => _DemoArrivalState();
@@ -402,6 +407,7 @@ class _DemoArrival extends StatefulWidget {
 
 class _DemoArrivalState extends State<_DemoArrival> {
   static bool _autoSent = false;
+  DateTime? _quietUntil;
   bool _busy = false;
 
   // "Text it now" (#3): watch for anything that arrives while this is open.
@@ -427,12 +433,28 @@ class _DemoArrivalState extends State<_DemoArrival> {
       }
       if (d.id == _lastSeen) return;
       _lastSeen = d.id;
-      if (_busy || !mounted) return; // the simulated one celebrates itself
-      final ch = '${d.data()['channelKey'] ?? ''}';
-      celebrate(context,
-          title: ch == 'email' ? 'Your email just arrived' : 'Your text just arrived',
-          subtitle: 'Received, fingerprinted and time-stamped live. Open Receipts or Thread to see it.');
+      // The simulated send celebrates itself, and its own receipt arrives a
+      // moment after _busy clears — so hold off by time, not by the flag.
+      if (_busy || !mounted) return;
+      if (_quietUntil != null && DateTime.now().isBefore(_quietUntil!)) return;
+      final data = d.data();
+      final ch = '${data['channelKey'] ?? ''}';
+      _announce(ch, '${data['itemKind'] ?? ''}');
     }, onError: (_) {});
+  }
+
+  /// Says what landed and takes you to it. A text becomes a thread message;
+  /// anything else is read on its receipt.
+  void _announce(String channelKey, String itemKind) {
+    final threaded = itemKind == 'screenshot' || itemKind == 'message' || channelKey == 'sms';
+    final tab = threaded ? MatterTab.thread : MatterTab.receipts;
+    celebrate(
+      context,
+      title: channelKey == 'email' ? 'Your email just arrived' : 'Your text just arrived',
+      subtitle: 'Received, fingerprinted and time-stamped live.',
+      actionLabel: widget.onOpenTab == null ? null : (threaded ? 'Open the thread' : 'Open the receipt'),
+      onAction: widget.onOpenTab == null ? null : () => widget.onOpenTab!(tab),
+    );
   }
 
   @override
@@ -465,13 +487,22 @@ class _DemoArrivalState extends State<_DemoArrival> {
 
   Future<void> _send() async {
     if (_busy) return;
+    // The listener would otherwise announce this same item again when its
+    // snapshot lands, a moment after _busy clears.
+    _quietUntil = DateTime.now().add(const Duration(seconds: 8));
     setState(() => _busy = true);
     try {
       final r = await VerinApi.demoSimulateArrival(widget.matter.reference.id);
       if (mounted) {
-        celebrate(context,
-            title: r['kind'] == 'email' ? 'An email just arrived' : 'A text just arrived',
-            subtitle: 'Fingerprinted, time-stamped and read. Open Receipts or Thread to see it.');
+        final kind = '${r['kind'] ?? ''}';
+        final threaded = kind != 'email';
+        celebrate(
+          context,
+          title: kind == 'email' ? 'An email just arrived' : 'A text just arrived',
+          subtitle: 'Fingerprinted, time-stamped and read.',
+          actionLabel: widget.onOpenTab == null ? null : (threaded ? 'Open the thread' : 'Open the receipt'),
+          onAction: widget.onOpenTab == null ? null : () => widget.onOpenTab!(threaded ? MatterTab.thread : MatterTab.receipts),
+        );
       }
     } catch (e) {
       if (mounted) showVToast(context, 'Could not send the sample', error: true, description: e is VerinApiException ? e.message : '$e');

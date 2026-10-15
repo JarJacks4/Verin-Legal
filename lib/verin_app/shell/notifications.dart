@@ -50,6 +50,9 @@ class VEvent {
   final DocumentReference? matter;
   final DocumentReference? alertRef;
 
+  /// Which tab of the matter actually holds this thing.
+  String tab = 'receipts';
+
   bool get needsAttention => alertRef != null;
 }
 
@@ -89,6 +92,10 @@ IconData _alertIcon(String kind) {
       return Icons.notification_important_outlined;
   }
 }
+
+/// A text becomes a line in the thread; everything else is read on its
+/// receipt. Opening a notification should land on the thing itself.
+String _tabFor(String kind) => (kind == 'screenshot' || kind == 'message') ? 'thread' : 'receipts';
 
 String _kindLabel(String kind) {
   switch (kind) {
@@ -238,7 +245,7 @@ Stream<List<VEvent>> _arrivalEvents() => sharedArrivals().asyncMap((receipts) as
           icon: _kindIcon(r.itemKind),
           at: r.receivedAt,
           matter: ref,
-        ));
+        )..tab = _tabFor(r.itemKind));
       }
       return events;
     });
@@ -498,7 +505,7 @@ class _NotificationFeedBodyState extends State<NotificationFeedBody> {
       final m = await MattersRecord.getDocumentOnce(ref);
       if (!mounted) return;
       Navigator.of(context).maybePop();
-      openMatter(context, m);
+      openMatter(context, m, tab: e.tab);
     } catch (_) {
       if (mounted) showVToast(context, 'Could not open that matter', error: true);
     }

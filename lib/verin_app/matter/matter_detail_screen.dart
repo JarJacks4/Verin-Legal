@@ -200,7 +200,7 @@ class _MatterDetailScreenState extends State<MatterDetailScreen> {
                               child: VFadeSwitch(
                               switchKey: _tab,
                               child: switch (_tab) {
-                              MatterTab.intake => IntakeTab(matter: m),
+                              MatterTab.intake => IntakeTab(matter: m, onOpenTab: (t) => setState(() => _tab = t)),
                               MatterTab.receipts => ReceiptsTab(matter: m, receipts: receipts, loading: !rs.hasData, error: rs.error),
                               MatterTab.thread => ThreadTab(matter: m, receipts: receipts),
                               MatterTab.timeline => TimelineTab(matter: m, receipts: receipts),

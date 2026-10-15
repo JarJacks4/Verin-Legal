@@ -90,6 +90,7 @@ async function addSlipSheet(doc, { label, item, template, native = false }) {
   const mono = await doc.embedFont(StandardFonts.Courier);
   const page = doc.addPage([612, 792]);
   drawMark(page, await embedMark(doc), { left: 72, top: 48, width: 150 });
+  drawStampLib(page, { bold, reg, rgb, right: 60, top: 44, label: 'EVIDENCE RECORD' });
   const grey = rgb(...GREY);
   page.drawText(ascii(label, 40).toUpperCase(), { x: 72, y: 600, size: 40, font: bold, color: rgb(0.05, 0.09, 0.13) });
   let y = 560;
