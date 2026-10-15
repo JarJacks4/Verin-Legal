@@ -149,6 +149,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => const VAdminPage(nav: AdminNav.billing),
         ),
         FFRoute(
+          name: 'AdminRedactions',
+          path: '/admin/redactions',
+          requireAuth: true,
+          builder: (context, params) => const VAdminPage(nav: AdminNav.redactions),
+        ),
+        FFRoute(
           name: AdminTeamsWidget.routeName,
           path: AdminTeamsWidget.routePath,
           requireAuth: true,

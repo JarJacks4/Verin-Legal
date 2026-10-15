@@ -20,6 +20,8 @@ import '../data/format.dart';
 import '../data/model.dart';
 import '../matter/exhibits_tab.dart' show sensitiveOf, categoryLabel;
 import '../matters/matters_screen.dart' show openMatter;
+import '../onboarding/tour.dart';
+import '../onboarding/tours.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/motion.dart';
@@ -97,7 +99,10 @@ class _RedactionsScreenState extends State<RedactionsScreen> {
             byMatter.putIfAbsent(key, () => []).add(f);
           }
 
-          return ListView(
+          return TourLauncher(
+            tourId: 'redactions_page',
+            steps: redactionsTour,
+            child: ListView(
             padding: vPagePadding(context),
             children: [
               Text('Redactions', style: VT.h1(context, size: 28.0)),
@@ -110,7 +115,9 @@ class _RedactionsScreenState extends State<RedactionsScreen> {
               const SizedBox(height: 18.0),
               // One page, four views: redactions earn a single place in the
               // sidebar rather than sprawling across it.
-              VSegmented<String>(
+              TourTarget(
+                id: 'redaction_tabs',
+                child: VSegmented<String>(
                 value: _tab,
                 options: const ['flagged', 'video', 'photo', 'document'],
                 fontSize: 12.0,
@@ -122,19 +129,23 @@ class _RedactionsScreenState extends State<RedactionsScreen> {
                 }[t]!,
                 onChanged: (t) => setState(() => _tab = t),
               ),
+              ),
               const SizedBox(height: 22.0),
               if (_tab != 'flagged') ...[
                 MediaRedactionList(kind: _tab, receipts: rs.data ?? const [], loading: loading),
                 const SizedBox(height: 32.0),
               ],
               if (_tab == 'flagged') ...[
-              AlwaysRedactCard(firm: fs.data),
+              TourTarget(id: 'always_redact', child: AlwaysRedactCard(firm: fs.data)),
               const SizedBox(height: 28.0),
-              Row(
+              TourTarget(
+                id: 'flagged_list',
+                child: Row(
                 children: [
                   Expanded(child: Text('FLAGGED IN YOUR MATTERS', style: VT.eyebrow(context))),
                   if (!loading) Text('${all.length} flagged', style: VT.muted(context, size: 12.0)),
                 ],
+              ),
               ),
               const SizedBox(height: 12.0),
               if (categories.length > 1) ...[
@@ -197,6 +208,7 @@ class _RedactionsScreenState extends State<RedactionsScreen> {
               ],
               const SizedBox(height: 32.0),
             ],
+          ),
           );
         },
       ),

@@ -18,11 +18,12 @@ import '../shell/firm_alerts.dart' show FirmGates;
 import '../shell/help.dart' show SystemStatusBanner;
 import '../onboarding/tours.dart';
 
-enum AdminNav { dashboard, matters, billing, team, program, settings }
+enum AdminNav { dashboard, matters, redactions, billing, team, program, settings }
 
 const _adminRoutes = {
   AdminNav.dashboard: 'AdminDashBoardPage',
   AdminNav.matters: 'AdminMattersList',
+  AdminNav.redactions: 'AdminRedactions',
   AdminNav.billing: 'AdminBillingAndPlan',
   AdminNav.team: 'AdminTeams',
   AdminNav.program: 'AdminProgramPage',
@@ -144,6 +145,7 @@ class AdminSidebar extends StatelessWidget {
     const items = [
       (AdminNav.dashboard, Icons.dashboard_outlined, 'Dashboard'),
       (AdminNav.matters, Icons.folder_open_outlined, 'Matters'),
+      (AdminNav.redactions, Icons.shield_outlined, 'Redactions'),
       (AdminNav.billing, Icons.credit_card, 'Billing & Plan'),
       (AdminNav.team, Icons.group_outlined, 'Team'),
       (AdminNav.program, Icons.emoji_events_outlined, 'Program'),

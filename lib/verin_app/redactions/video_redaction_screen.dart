@@ -22,6 +22,8 @@ import '/verin/verin_api.dart';
 import '../data/format.dart';
 import '../data/model.dart';
 import '../matter/exhibits_tab.dart' show sensitiveOf, categoryLabel;
+import '../onboarding/tour.dart';
+import '../onboarding/tours.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/motion.dart';
@@ -290,7 +292,10 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
     final c = VC.of(context);
     return Scaffold(
       backgroundColor: c.background,
-      body: SafeArea(
+      body: TourLauncher(
+        tourId: 'video_redaction',
+        steps: videoRedactionTour,
+        child: SafeArea(
         child: SingleChildScrollView(
           padding: vPagePadding(context),
           child: Center(
@@ -314,6 +319,7 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -355,10 +361,13 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
                   style: VT.muted(context, size: 11.5)),
               Text('The original is never changed', style: VT.body(context, size: 11.5, color: c.verified)),
               const SizedBox(height: 8.0),
-              VButton(
-                label: 'Produce redacted video',
-                icon: Icons.movie_filter_outlined,
-                onPressed: _blocked || (_boxes.isEmpty && _mutes.isEmpty) ? null : _produce,
+              TourTarget(
+                id: 'video_produce',
+                child: VButton(
+                  label: 'Produce redacted video',
+                  icon: Icons.movie_filter_outlined,
+                  onPressed: _blocked || (_boxes.isEmpty && _mutes.isEmpty) ? null : _produce,
+                ),
               ),
             ],
           ),
@@ -501,7 +510,9 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
 
   Widget _frameCard(BuildContext context) {
     final c = VC.of(context);
-    return VCard(
+    return TourTarget(
+      id: 'video_frame',
+      child: VCard(
       padding: const EdgeInsets.all(12.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -600,6 +611,7 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
           const SizedBox(height: 12.0),
           _scrubber(context),
         ],
+      ),
       ),
     );
   }
@@ -759,7 +771,9 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
     final c = VC.of(context);
     final lanes = _lanes();
     final laneCount = lanes.isEmpty ? 1 : (lanes.values.reduce(math.max) + 1);
-    return VCard(
+    return TourTarget(
+      id: 'video_timeline',
+      child: VCard(
       child: LayoutBuilder(
         builder: (context, box) {
           final w = box.maxWidth;
@@ -926,6 +940,7 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
             ],
           );
         },
+      ),
       ),
     );
   }
