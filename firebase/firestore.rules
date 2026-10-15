@@ -81,6 +81,12 @@ service cloud.firestore {
 
       // Server-written: deliveries to the firm's system (#16), weekly digests
       // (#70), closed-matter imports (#4) and AI usage (#53, #76).
+      // Video and audio redaction jobs: the screen watches these while
+      // ffmpeg runs. Written only by the server.
+      match /videoRedactions/{id} {
+        allow read: if inMyFirm(matterFirm(matterId));
+        allow write: if false;
+      }
       match /deliveries/{id} {
         allow read: if inMyFirm(matterFirm(matterId));
         allow write: if false;
