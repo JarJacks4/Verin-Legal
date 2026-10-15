@@ -30,7 +30,25 @@ const { requireAuth, loadMatterForUser } = require('../common/access');
 const MAX_SECONDS = 15 * 60;
 const MAX_BYTES = 500 * 1024 * 1024;
 
-const clamp01 = (v) => Math.min(Math.max(Number(v), 0), 1);
+const clamp01 = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(Math.max(n, 0), 1) : NaN;
+};
+
+/// The editor works in percentages of the frame; this module works in
+/// fractions. The caller says which it is sending rather than having it
+/// guessed from the values: guessing makes an out-of-range number mean two
+/// different things, and a coordinate is not a place to be clever.
+function toFractions(boxes, units) {
+  const div = units === 'percent' ? 100 : 1;
+  return boxes.map((b) => ({
+    ...b,
+    x: Number(b.x) / div,
+    y: Number(b.y) / div,
+    w: Number(b.w) / div,
+    h: Number(b.h) / div,
+  }));
+}
 
 /// ffmpeg takes a filter string, and a filter string is the whole security
 /// boundary here: everything in it is derived from numbers we have clamped,
@@ -42,8 +60,8 @@ function buildFilters(boxes = [], mutes = [], duration = 0) {
     const y = clamp01(b.y);
     const w = clamp01(b.w);
     const h = clamp01(b.h);
-    if (!(w > 0 && h > 0)) continue;
     if (![x, y, w, h].every(Number.isFinite)) continue;
+    if (!(w > 0 && h > 0)) continue;
     const draw = `drawbox=x=${x}*iw:y=${y}*ih:w=${w}*iw:h=${h}*ih:color=black@1.0:t=fill`;
     const span = timeSpan(b, duration);
     vf.push(span ? `${draw}:enable='between(t,${span.start},${span.end})'` : draw);
@@ -99,9 +117,10 @@ function ffprobePath() {
   return 'ffprobe';
 }
 
-function run(bin, args, { onStderr } = {}) {
+function run(bin, args, { onStderr, onStart } = {}) {
   return new Promise((resolve, reject) => {
     const p = spawn(bin, args);
+    if (onStart) onStart(p);
     let err = '';
     p.stderr.on('data', (d) => {
       const s = String(d);
@@ -165,7 +184,11 @@ exports.redactVideo = onCall({ timeoutSeconds: 540, memory: '2GiB', cpu: 2 }, as
   await jobRef.set({
     receiptId,
     status: 'running',
+    stage: 'preparing',
     progress: 0,
+    // Kept for the record: what was covered and why, so a later question
+    // about a produced file can be answered without the editor open.
+    reasons: boxes.map((b) => String(b.reason || 'other')).slice(0, 50),
     boxes: boxes.length,
     mutes: mutes.length,
     startedAt: FieldValue.serverTimestamp(),
@@ -190,7 +213,7 @@ exports.redactVideo = onCall({ timeoutSeconds: 540, memory: '2GiB', cpu: 2 }, as
       throw new HttpsError('failed-precondition', `That clip is ${Math.round(duration / 60)} minutes. Verin redacts videos up to ${MAX_SECONDS / 60} minutes; trim it first.`);
     }
 
-    const { vf, af } = buildFilters(boxes, mutes, duration);
+    const { vf, af } = buildFilters(toFractions(boxes, String(data.units || 'fraction')), mutes, duration);
     if (!vf.length && !af.length) throw new HttpsError('invalid-argument', 'Nothing to redact: the marked areas were empty.');
 
     const args = ['-y', '-i', inFile];
@@ -201,17 +224,39 @@ exports.redactVideo = onCall({ timeoutSeconds: 540, memory: '2GiB', cpu: 2 }, as
     args.push('-c:a', 'aac', '-movflags', '+faststart', outFile);
 
     let lastWrite = 0;
+    let lastCheck = Date.now();
+    let cancelled = false;
+    let child = null;
     await run(ffmpegPath(), args, {
+      onStart: (p) => (child = p),
       onStderr: (line) => {
         const p = progressFrom(line, duration);
         const now = Date.now();
         // Firestore writes are not free; once a second is plenty for a bar.
         if (p !== null && now - lastWrite > 1000) {
           lastWrite = now;
-          jobRef.update({ progress: Math.round(p * 100) / 100 }).catch(() => {});
+          jobRef.update({ progress: Math.round(p * 100) / 100, stage: vf.length ? 'redacting' : 'silencing' }).catch(() => {});
+        }
+        // Someone pressed Cancel: stop the encode rather than finish work
+        // nobody wants and charge the firm for it.
+        if (now - lastCheck > 2000) {
+          lastCheck = now;
+          jobRef
+            .get()
+            .then((d) => {
+              if (d.exists && d.get('cancelRequested') === true && child && !cancelled) {
+                cancelled = true;
+                child.kill('SIGKILL');
+              }
+            })
+            .catch(() => {});
         }
       },
+    }).catch((e) => {
+      if (cancelled) throw new HttpsError('cancelled', 'Production cancelled. Nothing was produced and the original is untouched.');
+      throw e;
     });
+    if (cancelled) throw new HttpsError('cancelled', 'Production cancelled. Nothing was produced and the original is untouched.');
 
     const bytes = fs.readFileSync(outFile);
     const sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
@@ -230,8 +275,10 @@ exports.redactVideo = onCall({ timeoutSeconds: 540, memory: '2GiB', cpu: 2 }, as
     });
     const downloadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(storagePath)}?alt=media&token=${token}`;
 
+    await jobRef.update({ stage: 'fingerprinting' }).catch(() => {});
     const result = {
       status: 'done',
+      stage: 'done',
       progress: 1,
       storagePath,
       fileName,
@@ -248,11 +295,32 @@ exports.redactVideo = onCall({ timeoutSeconds: 540, memory: '2GiB', cpu: 2 }, as
   } catch (e) {
     const message = e instanceof HttpsError ? e.message : `The video could not be redacted: ${String(e && e.message ? e.message : e).slice(0, 300)}`;
     if (!(e instanceof HttpsError)) console.error('redactVideo failed', e);
-    await jobRef.update({ status: 'failed', error: message, finishedAt: FieldValue.serverTimestamp() }).catch(() => {});
+    const stopped = e instanceof HttpsError && e.code === 'cancelled';
+    await jobRef
+      .update({ status: stopped ? 'cancelled' : 'failed', stage: stopped ? 'cancelled' : 'failed', error: stopped ? null : message, finishedAt: FieldValue.serverTimestamp() })
+      .catch(() => {});
     throw e instanceof HttpsError ? e : new HttpsError('internal', message);
   } finally {
     cleanup();
   }
 });
 
-exports._internal = { buildFilters, timeSpan, progressFrom, MAX_SECONDS, MAX_BYTES };
+/// Asks a running job to stop. The job checks this every couple of seconds
+/// and kills ffmpeg; the rule set keeps the document read-only to clients, so
+/// the request comes through here where firm access is checked.
+exports.cancelVideoRedaction = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const db = getFirestore();
+  const data = request.data || {};
+  const { ref } = await loadMatterForUser(db, uid, data.matterId);
+  const jobId = String(data.jobId || '');
+  if (!jobId) throw new HttpsError('invalid-argument', 'jobId is required.');
+  const jobRef = ref.collection('videoRedactions').doc(jobId);
+  const snap = await jobRef.get();
+  if (!snap.exists) throw new HttpsError('not-found', 'That job no longer exists.');
+  if (snap.get('status') !== 'running') return { stopped: false, status: snap.get('status') };
+  await jobRef.update({ cancelRequested: true, cancelRequestedByUid: uid });
+  return { stopped: true };
+});
+
+exports._internal = { buildFilters, toFractions, timeSpan, progressFrom, MAX_SECONDS, MAX_BYTES };

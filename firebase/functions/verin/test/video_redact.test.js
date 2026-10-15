@@ -73,6 +73,19 @@ test('a span past the end is brought back to the end', () => {
   assert.deepEqual(V.timeSpan({ start: 5, end: 999 }, 20), { start: 5, end: 20 });
 });
 
+test('percent coordinates from the editor become fractions', () => {
+  const [b] = V.toFractions([{ x: 15, y: 40, w: 24, h: 12, reason: 'child' }], 'percent');
+  assert.deepEqual([b.x, b.y, b.w, b.h], [0.15, 0.4, 0.24, 0.12]);
+  assert.equal(b.reason, 'child');
+});
+
+test('fractions are left alone, so an out-of-range value still clamps', () => {
+  const [b] = V.toFractions([{ x: 0.1, y: 2, w: 0.3, h: 0.2 }], 'fraction');
+  assert.equal(b.y, 2);
+  const { vf } = V.buildFilters([b], [], 10);
+  assert.match(vf[0], /y=1\*ih/);
+});
+
 test('progress is read from ffmpeg output', () => {
   assert.equal(V.progressFrom('frame= 120 fps=30 time=00:00:10.00 bitrate=1000', 20), 0.5);
   assert.equal(V.progressFrom('no time here', 20), null);

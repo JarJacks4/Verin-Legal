@@ -25,6 +25,7 @@ import '../matters/matters_screen.dart' show openMatter;
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
+import '../widgets/cues.dart';
 import '../widgets/motion.dart';
 
 /// How far back the feed looks. Beyond this, a matter's own pages are the
@@ -684,6 +685,7 @@ class _ArrivalWatcherState extends State<ArrivalWatcher> {
     final more = fresh.length - 1;
     final ref = first.matterId;
     final title = more > 0 ? '${fresh.length} new items arrived' : '${_kindLabel(first.itemKind)} arrived';
+    playCue(VCue.arrival);
     if (ref == null) {
       showVToast(context, title, duration: const Duration(seconds: 6));
       return;

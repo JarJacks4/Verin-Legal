@@ -19,6 +19,7 @@ import '../widgets/motion.dart';
 import '../onboarding/tour.dart';
 import 'demo_banner.dart';
 import 'notifications.dart';
+import '../widgets/cues.dart';
 import 'firm_alerts.dart';
 import '../auth/two_step.dart' show TwoStepCard;
 
@@ -45,6 +46,15 @@ class _AppShellState extends State<AppShell> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   late final Stream<UsersRecord?> _user = currentUserStream();
   late final Stream<FirmAccountRecord?> _firm = firmAccountStream();
+  bool _readSound = false;
+
+  /// Whether this person wants sound, read once per session.
+  void _loadSound(UsersRecord? u) {
+    if (_readSound || u == null) return;
+    _readSound = true;
+    final v = u.snapshotData['soundCues'];
+    cuesEnabled = v == true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +62,7 @@ class _AppShellState extends State<AppShell> {
     return StreamBuilder<UsersRecord?>(
       stream: _user,
       builder: (context, snap) {
+        _loadSound(snap.data ?? currentUserDocument);
         final user = VUser.fromRecord(snap.data ?? currentUserDocument);
         return StreamBuilder<FirmAccountRecord?>(
           stream: _firm,
@@ -353,6 +364,8 @@ class _ProfileDrawerBodyState extends State<ProfileDrawerBody> {
         ),
         const SizedBox(height: 16.0),
         const TwoStepCard(),
+        const SizedBox(height: 16.0),
+        const SoundCuesCard(),
         const SizedBox(height: 24.0),
         VButton(
           label: 'Help & support',
@@ -561,6 +574,60 @@ class _ProfileRow extends StatelessWidget {
           SizedBox(width: 56.0, child: Text(label, style: VT.muted(context, size: 12.0))),
           const SizedBox(width: 12.0),
           Expanded(child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: VT.body(context, weight: FontWeight.w500))),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+
+/// Sound is off until someone asks for it: a paralegal may be with a client,
+/// on a call, or in a courthouse corridor, and a chime at the wrong moment is
+/// worse than silence. The choice is per person, not per firm.
+class SoundCuesCard extends StatefulWidget {
+  const SoundCuesCard({super.key});
+
+  @override
+  State<SoundCuesCard> createState() => _SoundCuesCardState();
+}
+
+class _SoundCuesCardState extends State<SoundCuesCard> {
+  late bool _on = cuesEnabled;
+
+  Future<void> _set(bool v) async {
+    setState(() => _on = v);
+    cuesEnabled = v;
+    if (v) playCue(VCue.soft);
+    final uid = currentUserUid;
+    if (uid.isEmpty) return;
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({'soundCues': v}, SetOptions(merge: true));
+    } catch (_) {
+      // The switch still works for this session if the write fails.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    return VCard(
+      child: Row(
+        children: [
+          Icon(_on ? Icons.volume_up_outlined : Icons.volume_off_outlined, size: 16.0, color: _on ? c.tealDeep : c.mutedFg),
+          const SizedBox(width: 10.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Sound', style: VT.body(context, size: 13.0, weight: FontWeight.w600)),
+                Text('A quiet tone when evidence arrives, when something finishes, and when something needs you.',
+                    style: VT.muted(context, size: 11.5)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          VSwitch(value: _on, width: 40.0, onChanged: _set),
         ],
       ),
     );
