@@ -6,7 +6,7 @@
 //                           confirmed (checklist #16)
 //   Standing Record (Word)  editable export (#69)
 //   This week's digest      one page, written back to Clio when linked (#70)
-//   Hearing / filing packet one per practice (#27, #71)
+//   Record extract         one per practice (#27, #71)
 //   Import a closed matter  ZIP, mailbox or files, with the counts (#4)
 //   Verify a file           does this file match an item exactly? (#16)
 //   Delete demo material    NFR demo workspace only, with confirmation (#9)
@@ -42,7 +42,7 @@ class MatterActionsButton extends StatelessWidget {
       ('deliver', 'Deliver the record…', Icons.move_to_inbox_outlined),
       ('word', 'Standing Record (Word)', Icons.description_outlined),
       ('digest', "This week's digest", Icons.view_week_outlined),
-      ('packet', 'Hearing / filing packet…', Icons.gavel_outlined),
+      ('packet', 'Record extract…', Icons.article_outlined),
       ('import', 'Import a closed matter…', Icons.unarchive_outlined),
       ('verify', 'Verify a file…', Icons.fingerprint),
       if (DemoMode.active) ('deleteDemo', 'Delete demo material…', Icons.delete_outline),
@@ -100,7 +100,7 @@ class MatterActionsButton extends StatelessWidget {
           'Digest ready',
         );
       case 'packet':
-        await showVDrawer<void>(context, title: 'Hearing or filing packet', tour: 'practice_packet', builder: (_) => PracticePacketSheet(matter: matter));
+        await showVDrawer<void>(context, title: 'Record extract', tour: 'practice_packet', builder: (_) => PracticePacketSheet(matter: matter));
       case 'import':
         await showVDrawer<void>(context, title: 'Import a closed matter', tour: 'closed_import', builder: (_) => ClosedMatterImportSheet(matter: matter));
       case 'verify':
@@ -262,19 +262,19 @@ class _DeliverDialogState extends State<_DeliverDialog> {
 }
 
 // ---------------------------------------------------------------------------
-// Practice packets
+// Record extracts
 // ---------------------------------------------------------------------------
 
 const kPacketKinds = <(String, String, String)>[
-  ('family_exhibit_packet', 'Family law — court exhibit packet', 'Bates-stamped production with index, from the Exhibits tab.'),
+  ('family_exhibit_packet', 'Family law — court exhibit production', 'Bates-stamped production with index, from the Exhibits tab.'),
   ('pi_treatment_chronology', 'Personal injury — treatment chronology', 'Dated records, bills and photos: the demand support set.'),
   ('immigration_checklist', 'Immigration — checklist coverage', 'What the record holds for each common evidence category.'),
   ('civil_key_dates', 'Civil — key-date chronology', 'Dated items, hearings and items marked Key evidence.'),
   ('criminal_event_window', 'Criminal — event window report', 'Every message and item around an event, to the minute.'),
-  ('criminal_mitigation', 'Criminal — mitigation packet', 'Marked documents and the team\'s notes, indexed.'),
+  ('criminal_mitigation', 'Criminal — mitigation index', 'Marked documents and the team\'s notes, indexed.'),
 ];
 
-/// The packet that fits a matter's practice area best.
+/// The extract that fits a matter's practice area best.
 String suggestedPacket(MattersRecord m) {
   final p = matterPractice(m).toLowerCase();
   if (p.contains('injury')) return 'pi_treatment_chronology';
@@ -312,7 +312,7 @@ class _PracticePacketSheetState extends State<PracticePacketSheet> {
   Future<void> _make({bool confirmed = false}) async {
     if (_kind == 'family_exhibit_packet') {
       Navigator.of(context).pop();
-      showVToast(context, 'Open the Exhibits tab', description: 'Family court packets are built there: choose items, review redactions, then Produce.');
+      showVToast(context, 'Open the Exhibits tab', description: 'Family court productions are built there: choose items, review redactions, then Produce.');
       return;
     }
     DateTime? eventAt;
@@ -338,7 +338,7 @@ class _PracticePacketSheetState extends State<PracticePacketSheet> {
       );
       if (!mounted) return;
       setState(() => _busy = false);
-      celebrate(context, title: 'Packet ready', subtitle: '${r['fileName'] ?? ''}');
+      celebrate(context, title: 'Extract ready', subtitle: '${r['fileName'] ?? ''}');
       await launchURL('${r['downloadUrl'] ?? ''}');
     } on VerinApiException catch (e) {
       if (!mounted) return;
@@ -378,7 +378,11 @@ class _PracticePacketSheetState extends State<PracticePacketSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('One packet per practice, built from the record. Flagged personal details are masked, and you confirm redactions before export.', style: VT.muted(context, size: 13.0)),
+        Text('One extract per practice, built from the record. Flagged personal details are masked, and you confirm redactions before export.', style: VT.muted(context, size: 13.0)),
+        const SizedBox(height: 6.0),
+        // Said plainly, because a firm's counsel will ask: Verin arranges what
+        // the record already holds and makes no call about what any of it means.
+        Text('Verin organises what is already in your record. What it means, and what to file, is yours.', style: VT.muted(context, size: 12.0)),
         const SizedBox(height: 16.0),
         TourTarget(
           id: 'packet_kinds',
@@ -428,7 +432,7 @@ class _PracticePacketSheetState extends State<PracticePacketSheet> {
         ],
         if (_error != null) ...[const SizedBox(height: 12.0), VErrorBox(message: _error!)],
         const SizedBox(height: 18.0),
-        VButton(label: 'Build packet', icon: Icons.picture_as_pdf_outlined, fullWidth: true, loading: _busy, loadingLabel: 'Building…', onPressed: _busy ? null : () => _make()),
+        VButton(label: 'Build extract', icon: Icons.picture_as_pdf_outlined, fullWidth: true, loading: _busy, loadingLabel: 'Building…', onPressed: _busy ? null : () => _make()),
       ],
     );
   }
