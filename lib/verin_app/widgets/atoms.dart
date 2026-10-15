@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/tokens.dart';
 import 'celebrate.dart';
+import 'cues.dart';
 
 export 'celebrate.dart' show celebrate, VSuccessBurst, VUploadProgress;
 
@@ -1178,6 +1179,7 @@ class VThemeToggle extends StatelessWidget {
 void showVToast(BuildContext context, String message, {bool error = false, String? description, Duration? duration}) {
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger == null) return;
+  if (error) playCue(VCue.attention);
   final c = VC.of(context);
   messenger.hideCurrentSnackBar();
   messenger.showSnackBar(

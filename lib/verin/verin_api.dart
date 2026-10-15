@@ -233,9 +233,11 @@ class VerinApi {
   /// Burns black boxes into a video's pixels and silences the marked spans,
   /// producing a new file. The original is untouched and keeps its hash.
   ///
-  /// Boxes and mutes are fractions of the frame and seconds into the clip:
-  ///   boxes: [{x, y, w, h, start?, end?}]   omit start/end for the whole clip
+  /// Boxes and mutes carry positions and seconds into the clip:
+  ///   boxes: [{x, y, w, h, start?, end?, reason?}]
   ///   mutes: [{start?, end?}]
+  /// Omit start/end to cover the whole clip. [units] says whether x/y/w/h are
+  /// percentages of the frame (what the editor works in) or fractions.
   ///
   /// Runs for tens of seconds; watch Matters/{id}/videoRedactions/{jobId} for
   /// progress rather than waiting on this future alone.
@@ -244,13 +246,23 @@ class VerinApi {
     required String receiptId,
     List<Map<String, dynamic>> boxes = const [],
     List<Map<String, dynamic>> mutes = const [],
+    String units = 'percent',
   }) =>
       _call('redactVideo', {
         'matterId': matterId,
         'receiptId': receiptId,
         'boxes': boxes,
         'mutes': mutes,
-      });
+        'units': units,
+      }, timeout: const Duration(seconds: 540));
+
+  /// Asks a running redaction to stop. The job checks every couple of seconds
+  /// and kills the encode; nothing is produced and the original is untouched.
+  static Future<Map<String, dynamic>> cancelVideoRedaction({
+    required String matterId,
+    required String jobId,
+  }) =>
+      _call('cancelVideoRedaction', {'matterId': matterId, 'jobId': jobId});
 
   static Future<Map<String, dynamic>> exportPracticePacket({
     required String matterId,

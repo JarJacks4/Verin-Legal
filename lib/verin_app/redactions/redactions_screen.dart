@@ -13,14 +13,17 @@
 import 'package:flutter/material.dart';
 
 import '/backend/backend.dart';
+import '/verin/record_ext.dart';
 import '/verin/verin_config.dart';
 
+import '../data/format.dart';
 import '../data/model.dart';
 import '../matter/exhibits_tab.dart' show sensitiveOf, categoryLabel;
 import '../matters/matters_screen.dart' show openMatter;
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/motion.dart';
+import 'video_redaction_screen.dart';
 
 /// One flagged value, with the item and matter it came from.
 class Flagged {
@@ -72,6 +75,7 @@ class _RedactionsScreenState extends State<RedactionsScreen> {
   late final Stream<List<ReceiptsRecord>> _receipts = _firmReceipts();
   late final Stream<FirmAccountRecord?> _firm = firmAccountStream();
   String _filter = 'all';
+  String _tab = 'flagged';
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +107,27 @@ class _RedactionsScreenState extends State<RedactionsScreen> {
                 'Originals are never altered — flagged text is masked when a packet, exhibit set or report is produced.',
                 style: VT.muted(context),
               ),
-              const SizedBox(height: 24.0),
+              const SizedBox(height: 18.0),
+              // One page, four views: redactions earn a single place in the
+              // sidebar rather than sprawling across it.
+              VSegmented<String>(
+                value: _tab,
+                options: const ['flagged', 'video', 'photo', 'document'],
+                fontSize: 12.0,
+                labelFor: (t) => const {
+                  'flagged': 'Flagged',
+                  'video': 'Video & audio',
+                  'photo': 'Photos',
+                  'document': 'Documents',
+                }[t]!,
+                onChanged: (t) => setState(() => _tab = t),
+              ),
+              const SizedBox(height: 22.0),
+              if (_tab != 'flagged') ...[
+                MediaRedactionList(kind: _tab, receipts: rs.data ?? const [], loading: loading),
+                const SizedBox(height: 32.0),
+              ],
+              if (_tab == 'flagged') ...[
               AlwaysRedactCard(firm: fs.data),
               const SizedBox(height: 28.0),
               Row(
@@ -170,6 +194,7 @@ class _RedactionsScreenState extends State<RedactionsScreen> {
                       child: MatterFlagsCard(matterRef: entry.value.first.matterRef, flags: entry.value),
                     ),
                   ),
+              ],
               const SizedBox(height: 32.0),
             ],
           );
@@ -430,6 +455,160 @@ class _MatterFlagsCardState extends State<MatterFlagsCard> {
           VButton(
             label: 'Review and produce',
             icon: Icons.arrow_forward,
+            kind: VButtonKind.link,
+            size: VButtonSize.sm,
+            onPressed: () => _open(context),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+
+/// Items of one kind that someone may need to redact, newest first.
+///
+/// Video and audio open the editor, where boxes are burned into the picture
+/// and spans are silenced. Photos and documents are redacted inside a
+/// production, where they are already part of an exhibit set — sending people
+/// to a second place to do the same job would only split the habit.
+class MediaRedactionList extends StatelessWidget {
+  const MediaRedactionList({super.key, required this.kind, required this.receipts, required this.loading});
+
+  final String kind;
+  final List<ReceiptsRecord> receipts;
+  final bool loading;
+
+  static const _kinds = {
+    'video': ['video', 'audio'],
+    'photo': ['photo', 'screenshot', 'image'],
+    'document': ['document', 'email'],
+  };
+
+  static const _blurb = {
+    'video': 'Black out part of the picture and silence spans of the sound. The original is never altered — producing saves a new file with its own fingerprint.',
+    'photo': 'Boxes are burned into the picture, so nothing under them survives. Photos are redacted while you build a production.',
+    'document': 'Flagged text is removed wherever it appears, and pages with redactions are re-rendered so nothing survives underneath.',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    final wanted = _kinds[kind] ?? const <String>[];
+    final items = receipts.where((r) => wanted.contains(r.itemKind)).toList()
+      ..sort((a, b) => (b.receivedAt ?? DateTime(2000)).compareTo(a.receivedAt ?? DateTime(2000)));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(_blurb[kind] ?? '', style: VT.muted(context, size: 12.5)),
+        const SizedBox(height: 16.0),
+        if (loading)
+          for (var i = 0; i < 3; i++)
+            const Padding(padding: EdgeInsets.only(bottom: 10.0), child: VShimmer(height: 58.0, radius: 14.0))
+        else if (items.isEmpty)
+          VCard(
+            child: Column(
+              children: [
+                Icon(Icons.inbox_outlined, size: 24.0, color: c.mutedFg),
+                const SizedBox(height: 8.0),
+                Text('Nothing of this kind yet', style: VT.body(context, size: 13.5, weight: FontWeight.w600)),
+                const SizedBox(height: 4.0),
+                Text('Items will appear here as they arrive in your matters.',
+                    textAlign: TextAlign.center, style: VT.muted(context, size: 12.0)),
+              ],
+            ),
+          )
+        else
+          for (final (i, r) in items.take(40).indexed)
+            VReveal(
+              key: ValueKey(r.reference.path),
+              index: i,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: _MediaRow(receipt: r, openable: kind == 'video'),
+              ),
+            ),
+      ],
+    );
+  }
+}
+
+class _MediaRow extends StatelessWidget {
+  const _MediaRow({required this.receipt, required this.openable});
+
+  final ReceiptsRecord receipt;
+  final bool openable;
+
+  Future<void> _open(BuildContext context) async {
+    final ref = receipt.matterId;
+    if (ref == null) return;
+    try {
+      final m = await MattersRecord.getDocumentOnce(ref);
+      if (!context.mounted) return;
+      if (openable) {
+        await showVideoRedaction(context, matter: m, receipt: receipt);
+      } else {
+        openMatter(context, m, tab: 'exhibits');
+      }
+    } catch (_) {
+      if (context.mounted) showVToast(context, 'Could not open that item', error: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = VC.of(context);
+    final flags = sensitiveOf(receipt).length;
+    return VCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+      child: Row(
+        children: [
+          Container(
+            width: 34.0,
+            height: 34.0,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: c.secondary, borderRadius: BorderRadius.circular(VR.lg)),
+            child: Icon(
+              switch (receipt.itemKind) {
+                'video' => Icons.videocam_outlined,
+                'audio' => Icons.mic_none_rounded,
+                'document' => Icons.description_outlined,
+                'email' => Icons.mail_outline_rounded,
+                _ => Icons.photo_outlined,
+              },
+              size: 16.0,
+              color: c.tealDeep,
+            ),
+          ),
+          const SizedBox(width: 12.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(receipt.fileName.isEmpty ? receipt.headline : receipt.fileName,
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: VT.body(context, size: 13.0, weight: FontWeight.w500)),
+                Text(
+                  [
+                    receipt.kindLabel,
+                    if (receipt.receivedAt != null) 'received ${fmtWhen(receipt.receivedAt)}',
+                    if (flags > 0) '$flags flagged',
+                  ].join(' · '),
+                  style: VT.muted(context, size: 11.5),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10.0),
+          if (flags > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: VBadge(label: 'Needs review', bg: c.pending.withValues(alpha: 0.12), fg: c.pending),
+            ),
+          VButton(
+            label: openable ? 'Redact' : 'Open matter',
+            icon: openable ? Icons.brush_outlined : Icons.arrow_forward,
             kind: VButtonKind.link,
             size: VButtonSize.sm,
             onPressed: () => _open(context),

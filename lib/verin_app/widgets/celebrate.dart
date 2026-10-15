@@ -14,6 +14,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
+import 'cues.dart';
 
 class VSuccessBurst extends StatefulWidget {
   const VSuccessBurst({super.key, this.size = 56.0, this.sparks = true, this.delay = Duration.zero});
@@ -169,6 +170,7 @@ class _BurstPainter extends CustomPainter {
 void celebrate(BuildContext context, {required String title, String? subtitle}) {
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return;
+  playCue(VCue.done);
   late final OverlayEntry entry;
   entry = OverlayEntry(
     builder: (_) => _Celebration(
