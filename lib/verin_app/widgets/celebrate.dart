@@ -14,6 +14,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
+import 'atoms.dart' show VButton, VButtonSize;
 import 'cues.dart';
 
 class VSuccessBurst extends StatefulWidget {
@@ -166,29 +167,50 @@ class _BurstPainter extends CustomPainter {
   bool shouldRepaint(_BurstPainter old) => old.ring != ring || old.ringSize != ringSize || old.sparks != sparks;
 }
 
-/// A brief centred success card for the bigger moments. Never blocks input.
-void celebrate(BuildContext context, {required String title, String? subtitle}) {
+/// A brief centred success card for the bigger moments.
+///
+/// With an [actionLabel] it offers one button and waits to be dismissed —
+/// telling someone where a thing landed is less use than taking them there.
+/// Without one it never blocks input and fades by itself.
+void celebrate(
+  BuildContext context, {
+  required String title,
+  String? subtitle,
+  String? actionLabel,
+  VoidCallback? onAction,
+}) {
   final overlay = Overlay.maybeOf(context, rootOverlay: true);
   if (overlay == null) return;
   playCue(VCue.done);
   late final OverlayEntry entry;
+  void close() {
+    if (entry.mounted) entry.remove();
+  }
+
   entry = OverlayEntry(
     builder: (_) => _Celebration(
       title: title,
       subtitle: subtitle,
-      onDone: () {
-        if (entry.mounted) entry.remove();
-      },
+      actionLabel: actionLabel,
+      onAction: onAction == null
+          ? null
+          : () {
+              close();
+              onAction();
+            },
+      onDone: close,
     ),
   );
   overlay.insert(entry);
 }
 
 class _Celebration extends StatefulWidget {
-  const _Celebration({required this.title, this.subtitle, required this.onDone});
+  const _Celebration({required this.title, this.subtitle, this.actionLabel, this.onAction, required this.onDone});
 
   final String title;
   final String? subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
   final VoidCallback onDone;
 
   @override
@@ -196,7 +218,10 @@ class _Celebration extends StatefulWidget {
 }
 
 class _CelebrationState extends State<_Celebration> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2300))..forward().whenComplete(widget.onDone);
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: Duration(milliseconds: widget.actionLabel == null ? 2300 : 6000),
+  )..forward().whenComplete(widget.onDone);
 
   @override
   void dispose() {
@@ -208,6 +233,7 @@ class _CelebrationState extends State<_Celebration> with SingleTickerProviderSta
   Widget build(BuildContext context) {
     final c = VC.of(context);
     return IgnorePointer(
+      ignoring: widget.actionLabel == null,
       child: AnimatedBuilder(
         animation: _c,
         builder: (context, child) {
@@ -245,6 +271,10 @@ class _CelebrationState extends State<_Celebration> with SingleTickerProviderSta
                 if (widget.subtitle != null) ...[
                   const SizedBox(height: 6.0),
                   Text(widget.subtitle!, textAlign: TextAlign.center, style: VT.muted(context, size: 13.0)),
+                ],
+                if (widget.actionLabel != null) ...[
+                  const SizedBox(height: 16.0),
+                  VButton(label: widget.actionLabel!, icon: Icons.arrow_forward, size: VButtonSize.sm, onPressed: widget.onAction),
                 ],
               ],
             ),
