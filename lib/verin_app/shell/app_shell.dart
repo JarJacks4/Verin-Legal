@@ -3,6 +3,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'feedback.dart';
 import 'help.dart';
 
 import '/auth/firebase_auth/auth_util.dart';
@@ -367,6 +368,18 @@ class _ProfileDrawerBodyState extends State<ProfileDrawerBody> {
         const SizedBox(height: 16.0),
         const SoundCuesCard(),
         const SizedBox(height: 24.0),
+        VButton(
+          label: 'Send feedback',
+          icon: Icons.campaign_outlined,
+          fullWidth: true,
+          onPressed: () {
+            final nav = Navigator.of(context);
+            final root = nav.context;
+            nav.pop();
+            showFeedbackSheet(root);
+          },
+        ),
+        const SizedBox(height: 12.0),
         VButton(
           label: 'Help & support',
           icon: Icons.support_agent_outlined,

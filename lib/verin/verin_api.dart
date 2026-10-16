@@ -289,6 +289,26 @@ class VerinApi {
   static Future<Map<String, dynamic>> packetDiagnose({required String matterId, String? kind}) =>
       _call('packetDiagnose', {'matterId': matterId, if (kind != null) 'kind': kind}, timeout: const Duration(seconds: 150));
 
+  /// In-app feedback. [context] carries only ids, route, browser and screen —
+  /// never matter names, client names, message text or file names. A screenshot
+  /// is attached only when the person chose one.
+  static Future<Map<String, dynamic>> submitFeedback({
+    required String kind,
+    required String impact,
+    required String text,
+    required Map<String, dynamic> context,
+    String? shotBase64,
+    String? shotType,
+  }) =>
+      _call('submitFeedback', {
+        'kind': kind,
+        'impact': impact,
+        'text': text,
+        'context': context,
+        if (shotBase64 != null) 'shotBase64': shotBase64,
+        if (shotType != null) 'shotType': shotType,
+      }, timeout: const Duration(seconds: 90));
+
   /// This week's one-page digest for a matter (written back to Clio when asked).
   static Future<Map<String, dynamic>> buildMatterDigest(String matterId, {bool writeBack = false}) =>
       _call('buildMatterDigest', {'matterId': matterId, 'writeBack': writeBack}, timeout: const Duration(seconds: 120));

@@ -66,6 +66,7 @@ exports.standingRecordCounts = verinArchiveBuild.standingRecordCounts;
 exports.exportRecordLagAudit = require("./verin/reports/lag_audit").exportRecordLagAudit;
 exports.exportPracticePacket = require("./verin/reports/packets").exportPracticePacket;
 exports.packetDiagnose = require("./verin/reports/packets").packetDiagnose;
+exports.submitFeedback = require("./verin/support/feedback").submitFeedback;
 exports.redactVideo = require("./verin/evidence/video_redact").redactVideo;
 exports.cancelVideoRedaction = require("./verin/evidence/video_redact").cancelVideoRedaction;
 const verinDigest = require("./verin/reports/digest");
