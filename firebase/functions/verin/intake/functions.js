@@ -172,11 +172,17 @@ exports.provisionIntake = onCall(async (request) => {
   const upd = await intakeUpdates(db, ref, snap.data());
   if (Object.keys(upd).length) await ref.set(upd, { merge: true });
   const fresh = (await ref.get()).data();
+  const smsAvailable = fresh.demo === true
+    ? !!P.DEMO_TWILIO_SMS_NUMBER.value()
+    : !!(P.TWILIO_SMS_NUMBER.value() || P.TWILIO_NUMBER_POOL.value());
   return {
     emailAddress: fresh.emailAddress || '',
     smsNumber: fresh.smsNumber || '',
     emailConfigured: !!(fresh.demo === true ? demoDomain() : liveDomain()),
     smsConfigured: !!fresh.smsNumber,
+    // Whether Verin has any texting number at all. Without one the matter
+    // shouldn't advertise a texting channel it can't honour.
+    smsAvailable,
   };
 });
 
