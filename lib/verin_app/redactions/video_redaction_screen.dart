@@ -150,6 +150,21 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
   int get _unreviewed => _flags.length - _reviewed.length;
   bool get _blocked => _unreviewed > 0;
 
+  /// Why Produce can't run yet, in the words the person needs, or null when it
+  /// can. A greyed-out button that says nothing reads as a broken button, so
+  /// the button always presses and answers instead.
+  String? get _whyNotReady {
+    if (_blocked) {
+      return 'Review the $_unreviewed marked moment${_unreviewed == 1 ? '' : 's'} below first — '
+          'each one needs Mark reviewed before this video can leave the firm.';
+    }
+    if (_boxes.isEmpty && _mutes.isEmpty) {
+      return 'Nothing is marked for redaction yet. Drag a rectangle over the frame to cover something, '
+          'or select a span on the audio track to silence it.';
+    }
+    return null;
+  }
+
   @override
   void dispose() {
     _jobSub?.cancel();
@@ -408,9 +423,27 @@ class _VideoRedactionScreenState extends State<VideoRedactionScreen> {
                 child: VButton(
                   label: 'Produce redacted video',
                   icon: Icons.movie_filter_outlined,
-                  onPressed: _blocked || (_boxes.isEmpty && _mutes.isEmpty) ? null : _produce,
+                  onPressed: () {
+                    final why = _whyNotReady;
+                    if (why != null) {
+                      showVToast(context, 'Not ready to produce yet', description: why);
+                      return;
+                    }
+                    _produce();
+                  },
                 ),
               ),
+              if (_whyNotReady != null) ...[
+                const SizedBox(height: 6.0),
+                SizedBox(
+                  width: 280.0,
+                  child: Text(
+                    _whyNotReady!,
+                    textAlign: TextAlign.right,
+                    style: VT.muted(context, size: 11.5),
+                  ),
+                ),
+              ],
             ],
           ),
         ],

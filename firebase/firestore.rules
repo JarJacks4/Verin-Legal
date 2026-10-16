@@ -336,6 +336,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // In-app feedback. Written only by the submitFeedback function, read only
+    // by Verin's own support process — never by a client, not even the firm
+    // that sent it, since one firm's report must not be readable by another.
+    match /feedback/{id} {
+      allow read, write: if false;
+    }
+
     // Collections from the original FlutterFlow build. The current app
     // doesn't use them and they carry no firm, so they are closed.
     match /Items/{itemId=**} {

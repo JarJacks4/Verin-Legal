@@ -64,6 +64,8 @@ module.exports = {
   // Outbound email (common/mailer.js). The key is the EMAIL_API_KEY secret.
   EMAIL_PROVIDER: defineString('EMAIL_PROVIDER', { default: 'postmark' }),
   EMAIL_FROM: defineString('EMAIL_FROM', { default: '' }),
+  // Where in-app feedback is copied (the Spiceworks help desk).
+  SUPPORT_EMAIL: defineString('SUPPORT_EMAIL', { default: 'help@verin-legal.on.spiceworks.com' }),
   // "true" once Meta has approved the firm's Twilio number as a WhatsApp sender
   // (its webhook is the same inboundSms URL). Adds the WhatsApp line to client cards.
   WHATSAPP_ENABLED: defineString('WHATSAPP_ENABLED', { default: 'false' }),

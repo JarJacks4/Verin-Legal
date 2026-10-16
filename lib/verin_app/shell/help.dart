@@ -13,6 +13,7 @@ import '../data/model.dart';
 import '../theme/tokens.dart';
 import '../widgets/atoms.dart';
 import '../widgets/drawer.dart';
+import 'feedback.dart';
 
 const _articles = <(String, String)>[
   (
@@ -96,7 +97,17 @@ class _HelpBodyState extends State<_HelpBody> {
                 spacing: 8.0,
                 runSpacing: 8.0,
                 children: [
-                  VButton(label: 'Email support', icon: Icons.mail_outline, size: VButtonSize.sm, onPressed: () => launchURL('mailto:$kSupportEmail?subject=Verin%20support')),
+                  VButton(
+                    label: 'Send feedback',
+                    icon: Icons.campaign_outlined,
+                    size: VButtonSize.sm,
+                    onPressed: () {
+                      final root = Navigator.of(context).context;
+                      Navigator.of(context).pop();
+                      showFeedbackSheet(root);
+                    },
+                  ),
+                  VButton(label: 'Email support', icon: Icons.mail_outline, kind: VButtonKind.secondary, size: VButtonSize.sm, onPressed: () => launchURL('mailto:$kSupportEmail?subject=Verin%20support')),
                   VButton(label: 'Open the help desk', icon: Icons.support_agent_outlined, kind: VButtonKind.secondary, size: VButtonSize.sm, onPressed: () => launchURL(kHelpDeskUrl)),
                   VButton(label: 'Copy address', icon: Icons.copy, kind: VButtonKind.secondary, size: VButtonSize.sm, onPressed: () => copyToClipboard(context, kSupportEmail, what: 'Support address copied')),
                 ],
