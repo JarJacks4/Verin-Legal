@@ -1,0 +1,51 @@
+Verin Legal deploy  Thu 10/15/2026 21:02:05.58 
+Folder: C:\Users\whart\Downloads\Verin-dev\Verin-Legal\verin-legal 
+claude/finish-build
+02966d1 new
+ 
+===== 1/3 npm install ===== 
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: undefined,
+npm warn EBADENGINE   required: { node: '22' },
+npm warn EBADENGINE   current: { node: 'v26.10.0', npm: '12.2.0' }
+npm warn EBADENGINE }
+
+up to date in 2s
+npm warn install-scripts 2 packages had install scripts blocked because they are not covered by allowScripts:
+npm warn install-scripts   @google/genai@1.52.0 (preinstall: echo 'preinstall: no-op')
+npm warn install-scripts   ffmpeg-static@5.3.0 (install: node install.js)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+ 
+===== 2/3 flutter build web ===== 
+Compiling lib\main.dart for the Web...                          
+Wasm dry run succeeded. Consider building and testing your application with the `--wasm` flag. See docs for more info: https://docs.flutter.dev/platform-integration/web/wasm
+Use --no-wasm-dry-run to disable these warnings.
+Font asset "Font-Awesome-7-Free-Solid-900.otf" was tree-shaken, reducing it from 414664 to 1648 bytes (99.6% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "CupertinoIcons.ttf" was tree-shaken, reducing it from 257628 to 1472 bytes (99.4% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 41420 bytes (97.5% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Compiling lib\main.dart for the Web...                            111.3s
+√ Built firebase\public
+ 
+===== 3/3 firebase deploy (functions:functions:onUserDeleted,functions:functions:ingestScreenshot,functions:functions:extractThreadMessages,functions:functions:verifyMatterChain,functions:functions:setupAccount,functions:functions:deleteAccount,functions:functions:onReceiptWritten,functions:functions:onMatterNamesChanged,functions:functions:refreshMatterRecord,functions:functions:summarizeThread,functions:functions:produceExhibits,functions:functions:clioAuthStart,functions:functions:clioOAuthCallback,functions:functions:clioDisconnect,functions:functions:clioSearchMatters,functions:functions:clioLinkMatter,functions:functions:clioPushDocument,functions:functions:exportMatterRecord,functions:functions:ingestEvidence,functions:functions:onReceiptCreated,functions:functions:reprocessReceipt,functions:functions:exportRecordZip,functions:functions:exportFirmData,functions:functions:exportIntegrationReport,functions:functions:deliverMatterRecord,functions:functions:confirmDelivery,functions:functions:autoDeliverToClio,functions:functions:setBaselineRecordLag,functions:functions:importClosedMatter,functions:functions:standingRecordCounts,functions:functions:exportRecordLagAudit,functions:functions:exportPracticePacket,functions:functions:redactVideo,functions:functions:cancelVideoRedaction,functions:functions:buildMatterDigest,functions:functions:weeklyMatterDigests,functions:functions:exportFirmMonthlyReport,functions:functions:monthlyFirmReports,functions:functions:exportStandingRecordDocx,functions:functions:exportChronologyPdf,functions:functions:deleteDemoMatter,functions:functions:weeklyCostToServe,functions:functions:costToServeNow,functions:functions:nightlyFirestoreBackup,functions:functions:practiceAvailability,functions:functions:practicePantherAuthStart,functions:functions:practicePantherOAuthCallback,functions:functions:filevineConnect,functions:functions:practiceDisconnect,functions:functions:practiceSearchMatters,functions:functions:practiceLinkMatter,functions:functions:practicePushDocument,functions:functions:approveQuarantined,functions:functions:assignUnrouted,functions:functions:seedDemoWorkspace,functions:functions:demoSimulateArrival,firestore:rules,firestore:indexes,hosting) ===== 
+
+[1m[37m===[39m Deploying to 'verin-legal-fbzp5w'...[22m
+
+[36m[1mi [22m[39m deploying [1mfirestore, functions, hosting[22m
+[36m[1mi [22m[39m [1m[36mfirestore:[39m[22m reading indexes from [1mfirestore.indexes.json[22m...
+[36m[1mi  cloud.firestore:[22m[39m checking [1mfirestore.rules[22m for compilation errors...
+[32m[1m+  cloud.firestore:[22m[39m rules file [1mfirestore.rules[22m compiled successfully
+[36m[1mi  functions:[22m[39m preparing codebase [1mfunctions[22m for deployment
+[36m[1mi  functions:[22m[39m ensuring required API [1mcloudfunctions.googleapis.com[22m is enabled...
+[36m[1mi  functions:[22m[39m ensuring required API [1mcloudbuild.googleapis.com[22m is enabled...
+[36m[1mi  artifactregistry:[22m[39m ensuring required API [1martifactregistry.googleapis.com[22m is enabled...
+[36m[1mi  functions:[22m[39m Loading and analyzing source code for codebase functions to determine what to deploy
+[36m[1mi  functions:[22m[39m You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly
+Serving at port 8206
+
+[36m[1mi [22m[39m [36m[1mfunctions: [22m[39mLoaded environment variables from .env.
+[34m?[39m [1mEnter a string value for SUPPORT_EMAIL:[22m [2m(help@verin-legal.on.spiceworks.com)[22m[80G
+[?25h
+[1m[31mError:[39m[22m An unexpected error has occurred.
+ 
+===== FAILED ===== 
