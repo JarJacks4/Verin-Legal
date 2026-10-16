@@ -37,7 +37,14 @@ class _IntakeTabState extends State<IntakeTab> {
   final _arrivalKey = GlobalKey<_DemoArrivalState>();
   bool _assigning = false;
 
+  /// Whether Verin has a texting number at all, as the server last reported it.
+  /// Until it does, this matter receives by email and says so, rather than
+  /// showing a texting row that will never be assigned.
+  bool? _smsAvailable;
+
   MattersRecord get matter => widget.matter;
+
+  bool get _sms => _smsAvailable ?? matter.smsNumber.isNotEmpty;
 
   @override
   void initState() {
@@ -50,6 +57,7 @@ class _IntakeTabState extends State<IntakeTab> {
     setState(() => _assigning = true);
     try {
       final r = await VerinApi.provisionIntake(matter.reference.id);
+      if (mounted && r['smsAvailable'] is bool) setState(() => _smsAvailable = r['smsAvailable'] as bool);
       if (!quiet && mounted && (r['emailAddress'] ?? '') == '' && (r['smsNumber'] ?? '') == '') {
         showVToast(context, 'Intake isn\'t switched on for Verin yet', error: true, description: 'An admin finishes the email and texting setup (see DEPLOYMENT.md).');
       }
@@ -148,7 +156,7 @@ class _IntakeTabState extends State<IntakeTab> {
     final c = VC.of(context);
     final rows = [
       (VChannel.email, 'email', matter.emailAddress, matter.emailAddress),
-      (VChannel.sms, 'sms', matter.smsNumber, _pretty(matter.smsNumber)),
+      if (_sms) (VChannel.sms, 'sms', matter.smsNumber, _pretty(matter.smsNumber)),
     ];
     final provisioned = rDate(matter.snapshotData, 'intakeProvisionedAt');
     final anyAssigned = rows.any((r) => r.$3.isNotEmpty);
@@ -174,8 +182,11 @@ class _IntakeTabState extends State<IntakeTab> {
         ),
         const SizedBox(height: 4.0),
         Text(
-          'This matter has its own address and number. The client forwards messages and photos from whatever device they already own — '
-          'nothing to install, no account, no password. Hand them the card below.',
+          _sms
+              ? 'This matter has its own address and number. The client forwards messages and photos from whatever device they already own — '
+                  'nothing to install, no account, no password. Hand them the card below.'
+              : 'This matter has its own email address. The client forwards messages and photos from whatever device they already own — '
+                  'nothing to install, no account, no password. Hand them the card below.',
           style: VT.muted(context),
         ),
         const SizedBox(height: 24.0),
@@ -226,6 +237,26 @@ class _IntakeTabState extends State<IntakeTab> {
           ),
         ),
         ),
+        if (!_sms) ...[
+          const SizedBox(height: 10.0),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: Icon(Icons.schedule_outlined, size: 14.0, color: c.mutedFg),
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  'Texting is not switched on for your firm yet. Email intake works exactly as it will once texting arrives, '
+                  'and nothing changes on your side when it does — the number simply appears on this card.',
+                  style: VT.muted(context, size: 12.0),
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 12.0),
         if (anyAssigned)
           TourTarget(
