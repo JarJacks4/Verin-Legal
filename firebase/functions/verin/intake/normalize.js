@@ -3,7 +3,7 @@
 /// "+1 (317) 555-0142", "317.555.0142", "13175550142" -> "+13175550142".
 /// Numbers without a country code are taken as US/Canada. '' if unusable.
 function normPhone(s) {
-  // Twilio prefixes WhatsApp senders and recipients: "whatsapp:+16155550123".
+  // Some providers prefix WhatsApp senders and recipients: "whatsapp:+16155550123".
   const raw = String(s || '').trim().replace(/^whatsapp:/i, '');
   if (!raw) return '';
   const digits = raw.replace(/\D/g, '');
@@ -103,14 +103,30 @@ function isDecorativeAttachment(a) {
   return ct.startsWith('image/') && (a.inline || a.related) && size < 20 * 1024;
 }
 
-/// Twilio's request signature: base64 HMAC-SHA1 of the URL followed by each
-/// POST parameter name and value, sorted by name.
-function twilioSignature(authToken, url, params) {
+// Ed25519 SPKI DER header for a 32-byte raw public key (RFC 8410), so Node's
+// crypto can import the raw key Telnyx publishes without a third-party lib.
+const ED25519_SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
+
+/// Verifies a Telnyx webhook: true iff `signature` (base64, from the
+/// telnyx-signature-ed25519 header) is a valid Ed25519 signature over
+/// "<timestamp>|<rawBody>" under `publicKey` (base64, from the Telnyx
+/// Portal). Also rejects a timestamp more than 5 minutes old or in the
+/// future, so a captured request can't be replayed later.
+function telnyxSignatureValid(publicKey, timestamp, rawBody, signature) {
   const crypto = require('crypto');
-  const data = Object.keys(params || {})
-    .sort()
-    .reduce((acc, k) => acc + k + (params[k] == null ? '' : String(params[k])), url);
-  return crypto.createHmac('sha1', authToken).update(Buffer.from(data, 'utf8')).digest('base64');
+  try {
+    const ts = Number(timestamp);
+    if (!ts || Math.abs(Date.now() / 1000 - ts) > 300) return false;
+    const pub = Buffer.from(String(publicKey || ''), 'base64');
+    if (pub.length !== 32) return false;
+    const key = crypto.createPublicKey({ key: Buffer.concat([ED25519_SPKI_PREFIX, pub]), format: 'der', type: 'spki' });
+    const signed = Buffer.concat([Buffer.from(String(timestamp)), Buffer.from('|'), Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody || ''))]);
+    const sig = Buffer.from(String(signature || ''), 'base64');
+    if (!sig.length) return false;
+    return crypto.verify(null, signed, key, sig);
+  } catch (e) {
+    return false;
+  }
 }
 
 function safeEqual(a, b) {
@@ -127,25 +143,22 @@ function smsRecordText({ from, to, body, at, sid }) {
 
 /// Reply to a client's text (launch checklist #29: the client never sees an
 /// error). Everything sent is accepted and kept; the reply says so and that
-/// the number is not watched for emergencies.
+/// the number is not watched for emergencies. Sent via the Telnyx Messaging
+/// API (Telnyx has no inline webhook-response reply like Twilio's TwiML).
 const SMS_ACK_TEXT =
   "Received — your attorney's office has it. This number isn't monitored around the clock. If this is an emergency, call 911.";
 
-/// Twilio TwiML for the reply, escaped for XML.
-function smsAckTwiml(text = SMS_ACK_TEXT) {
-  const esc = String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `<Message>${esc}</Message>`;
-}
-
-/// 'whatsapp' when Twilio relayed the message from WhatsApp, else 'sms'.
-function messageChannel(from) {
+/// 'whatsapp' for a Telnyx WhatsApp message `type`, else 'sms' (also covers
+/// MMS — media is filed the same way as a text with a photo). Also accepts
+/// the legacy "whatsapp:+1..." prefix form for callers still on it.
+function messageChannel(from, type) {
+  if (/^\s*whatsapp\s*$/i.test(String(type || ''))) return 'whatsapp';
   return /^\s*whatsapp:/i.test(String(from || '')) ? 'whatsapp' : 'sms';
 }
 
 module.exports = {
   SMS_ACK_TEXT,
   messageChannel,
-  smsAckTwiml,
   normPhone,
   normEmail,
   emailsIn,
@@ -155,7 +168,7 @@ module.exports = {
   kindFor,
   extFor,
   isDecorativeAttachment,
-  twilioSignature,
+  telnyxSignatureValid,
   safeEqual,
   smsRecordText,
 };

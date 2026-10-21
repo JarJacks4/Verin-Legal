@@ -22,9 +22,9 @@ test('sendMail is a no-op until email is switched on', async () => {
 
 test('provisioning gaps name what a matter is missing', () => {
   process.env.INBOUND_EMAIL_DOMAIN = 'in.example.com';
-  process.env.TWILIO_SMS_NUMBER = '+13175551234';
+  process.env.TELNYX_SMS_NUMBER = '+13175551234';
   process.env.DEMO_INBOUND_EMAIL_DOMAIN = '';
-  process.env.DEMO_TWILIO_SMS_NUMBER = '';
+  process.env.DEMO_TELNYX_SMS_NUMBER = '';
   const { provisioningGaps } = require('../intake/functions')._internal;
   assert.deepStrictEqual(provisioningGaps({}), ['email address', 'texting number']);
   assert.deepStrictEqual(provisioningGaps({ emailAddress: 'a@in.example.com', smsNumber: '+1' }), []);

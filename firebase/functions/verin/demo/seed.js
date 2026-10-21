@@ -99,10 +99,10 @@ function screenshot({ contact, theme, items, sender }) {
 // ---------------------------------------------------------------------------
 
 const FICTIONAL_SMS_NUMBER = '+13175550000'; // 555-01xx/0000 numbers are reserved for fiction
-// A real demo number (DEMO_TWILIO_SMS_NUMBER) lets a prospect text the demo
+// A real demo number (DEMO_TELNYX_SMS_NUMBER) lets a prospect text the demo
 // matter live (#3); otherwise demo matters show a fictional one.
 const DEMO_SMS_NUMBER = (() => {
-  const v = String(process.env.DEMO_TWILIO_SMS_NUMBER || '').replace(/[^\d+]/g, '');
+  const v = String(process.env.DEMO_TELNYX_SMS_NUMBER || '').replace(/[^\d+]/g, '');
   return v ? (v.startsWith('+') ? v : `+1${v.replace(/^1/, '')}`) : FICTIONAL_SMS_NUMBER;
 })();
 
