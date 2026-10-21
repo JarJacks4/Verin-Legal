@@ -8,14 +8,16 @@ test('phones normalize to E.164', () => {
   assert.strictEqual(N.normPhone('1-317-555-0142'), '+13175550142');
   assert.strictEqual(N.normPhone('+44 7700 900123'), '+447700900123');
   assert.strictEqual(N.normPhone('555-0142'), '');
-  // Twilio's WhatsApp senders, including international ones
+  // The legacy "whatsapp:+1..." prefix form, international included.
   assert.strictEqual(N.normPhone('whatsapp:+447700900123'), '+447700900123');
   assert.strictEqual(N.normPhone('whatsapp:+13175550142'), '+13175550142');
 });
 
 test('WhatsApp messages are told apart from texts', () => {
-  assert.strictEqual(N.messageChannel('whatsapp:+447700900123'), 'whatsapp');
-  assert.strictEqual(N.messageChannel('+13175550142'), 'sms');
+  assert.strictEqual(N.messageChannel('+447700900123', 'whatsapp'), 'whatsapp');
+  assert.strictEqual(N.messageChannel('+13175550142', 'SMS'), 'sms');
+  assert.strictEqual(N.messageChannel('+13175550142', 'MMS'), 'sms');
+  assert.strictEqual(N.messageChannel('whatsapp:+447700900123'), 'whatsapp'); // legacy prefix form
   assert.strictEqual(N.messageChannel(''), 'sms');
 });
 
@@ -42,18 +44,17 @@ test('kinds and decorative images', () => {
   assert.ok(!N.isDecorativeAttachment({ contentType: 'image/png', inline: false, size: 3000 }));
 });
 
-test('twilio signature matches the documented example', () => {
-  // https://www.twilio.com/docs/usage/security#validating-requests
-  const sig = N.twilioSignature('12345', 'https://mycompany.com/myapp.php?foo=1&bar=2', {
-    CallSid: 'CA1234567890ABCDE',
-    Caller: '+12349013030',
-    Digits: '1234',
-    From: '+12349013030',
-    To: '+18005551212',
-  });
-  assert.strictEqual(sig, '0/KCTR6DLpKmkAf8muzZqo1nDgQ=');
-  assert.ok(N.safeEqual(sig, '0/KCTR6DLpKmkAf8muzZqo1nDgQ='));
-  assert.ok(!N.safeEqual(sig, ''));
+test('telnyx webhook signature verifies, rejects tampering, and rejects a stale timestamp', () => {
+  const crypto = require('node:crypto');
+  const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
+  const pubRaw = publicKey.export({ type: 'spki', format: 'der' }).subarray(-32).toString('base64');
+  const body = Buffer.from(JSON.stringify({ data: { event_type: 'message.received' } }));
+  const ts = String(Math.floor(Date.now() / 1000));
+  const sig = crypto.sign(null, Buffer.concat([Buffer.from(ts), Buffer.from('|'), body]), privateKey).toString('base64');
+  assert.ok(N.telnyxSignatureValid(pubRaw, ts, body, sig));
+  assert.ok(!N.telnyxSignatureValid(pubRaw, ts, Buffer.from('tampered'), sig));
+  assert.ok(!N.telnyxSignatureValid(pubRaw, String(Number(ts) - 3600), body, sig)); // 1h old: stale
+  assert.ok(!N.telnyxSignatureValid(pubRaw, ts, body, 'not-a-real-signature'));
 });
 
 test('postmark JSON parses with attachments', async () => {
@@ -121,5 +122,4 @@ test('sendgrid multipart (parsed fields + files)', async () => {
 test('SMS acknowledgment confirms receipt and gives the emergency instruction', () => {
   assert.match(N.SMS_ACK_TEXT, /Received/);
   assert.match(N.SMS_ACK_TEXT, /911/);
-  assert.strictEqual(N.smsAckTwiml('a < b & c'), '<Message>a &lt; b &amp; c</Message>');
 });

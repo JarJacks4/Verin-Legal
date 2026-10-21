@@ -21,14 +21,21 @@ const { firmData, firmDocRef } = require('../common/firm');
 const M = require('./metrics');
 
 // $ per million tokens / per message / per GB-month (override in .env).
+// SMS_PER_MESSAGE is billed per filed item below (one text body + one item
+// per photo/video), not per carrier message segment, so it's a blended
+// estimate rather than a lookup of Telnyx's own per-part prices. Telnyx
+// (as of Oct 2026, telnyx.com/pricing/toll-free and /numbers): ~$0.0055 per
+// SMS part, ~$0.015 per MMS part. Client evidence is mostly photos, so each
+// filed item skews toward the MMS rate; 0.01 is that blend, not an exact
+// figure — revisit if the mix of texts vs. photos changes a lot.
 const RATES = {
   AI_INPUT_PER_MTOK: defineString('COST_AI_INPUT_PER_MTOK', { default: '3' }),
   AI_OUTPUT_PER_MTOK: defineString('COST_AI_OUTPUT_PER_MTOK', { default: '15' }),
-  SMS_PER_MESSAGE: defineString('COST_SMS_PER_MESSAGE', { default: '0.0083' }),
+  SMS_PER_MESSAGE: defineString('COST_SMS_PER_MESSAGE', { default: '0.01' }),
   EMAIL_PER_MESSAGE: defineString('COST_EMAIL_PER_MESSAGE', { default: '0.0012' }),
   STORAGE_PER_GB_MONTH: defineString('COST_STORAGE_PER_GB_MONTH', { default: '0.026' }),
 };
-const RATE_DEFAULTS = { AI_INPUT_PER_MTOK: 3, AI_OUTPUT_PER_MTOK: 15, SMS_PER_MESSAGE: 0.0083, EMAIL_PER_MESSAGE: 0.0012, STORAGE_PER_GB_MONTH: 0.026 };
+const RATE_DEFAULTS = { AI_INPUT_PER_MTOK: 3, AI_OUTPUT_PER_MTOK: 15, SMS_PER_MESSAGE: 0.01, EMAIL_PER_MESSAGE: 0.0012, STORAGE_PER_GB_MONTH: 0.026 };
 const rate = (k) => {
   let v = '';
   try {

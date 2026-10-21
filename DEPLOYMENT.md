@@ -225,14 +225,13 @@ items), `onMatterIntake` / `provisionIntake` (addresses). `approveQuarantined` a
 ### 1. Secrets and settings
 ```
 firebase functions:secrets:set INBOUND_WEBHOOK_KEY   # any long random string
-firebase functions:secrets:set TWILIO_AUTH_TOKEN     # Twilio console → Account info
+firebase functions:secrets:set TELNYX_API_KEY        # Telnyx Portal → Account → Auth → API Keys
 ```
 In `firebase/functions/.env`:
 ```
 INBOUND_EMAIL_DOMAIN=in.verinlegal.com
-TWILIO_ACCOUNT_SID=AC...
-TWILIO_SMS_NUMBER=+1XXXXXXXXXX
-TWILIO_WEBHOOK_URL=https://us-central1-verin-legal-fbzp5w.cloudfunctions.net/inboundSms
+TELNYX_PUBLIC_KEY=...    # Telnyx Portal → Account settings → Public key (not a secret)
+TELNYX_SMS_NUMBER=+1XXXXXXXXXX
 SMS_AUTO_REPLY=false
 ```
 Then `npm install` in `firebase/functions` (adds busboy) and deploy functions,
@@ -252,23 +251,24 @@ rules and indexes.
 2. DNS: `MX  in.verinlegal.com  →  inbound.postmarkapp.com` (priority 10).
 No code change: the webhook recognises either provider.
 
-### 3. Text — Twilio
-1. Buy a number with SMS + MMS. Phone Numbers → the number → Messaging →
-   "A message comes in": Webhook, HTTP POST,
-   `https://us-central1-verin-legal-fbzp5w.cloudfunctions.net/inboundSms`
-   (must equal `TWILIO_WEBHOOK_URL` exactly — it's part of the signature check).
-2. Receiving works right away. Replies (`SMS_AUTO_REPLY=true`) need A2P 10DLC or
-   toll-free verification in Twilio first.
-3. Optional per firm: set `smsNumber` on that firm's `firmAccount` document to
-   give the firm its own number; otherwise `TWILIO_SMS_NUMBER` is used.
+### 3. Text — Telnyx
+1. Buy a number with SMS + MMS. Messaging → the number (or its messaging
+   profile) → Webhook URL:
+   `https://us-central1-verin-legal-fbzp5w.cloudfunctions.net/inboundSms`,
+   and the same URL as the Failover/Fallback URL.
+2. Telnyx Portal → Account settings → copy the **Public key** into
+   `TELNYX_PUBLIC_KEY` in `.env` — it's how `inboundSms` verifies each
+   webhook (Ed25519 signature, not a shared secret like Twilio's).
+3. Receiving works right away. Replies (`SMS_AUTO_REPLY=true`, sent via the
+   Telnyx Messaging API) need 10DLC or toll-free verification in Telnyx first.
+4. Optional per firm: set `smsNumber` on that firm's `firmAccount` document to
+   give the firm its own number; otherwise `TELNYX_SMS_NUMBER` is used.
 
-### 4. WhatsApp — same Twilio number (optional)
-1. Twilio → Messaging → Senders → WhatsApp senders → self sign-up: connect the Meta
-   Business account, finish Meta business verification, register the firm's Twilio
-   number with display name "Verin Legal". The number must not be on the WhatsApp app.
-2. On the sender, "A message comes in" → the same `inboundSms` URL, HTTP POST.
-3. Once Meta approves it, set `WHATSAPP_ENABLED=true` in `.env` and deploy functions.
-   Messages are filed like texts but labelled WhatsApp; client cards gain a WhatsApp line.
+### 4. WhatsApp — same Telnyx number (optional)
+Not yet wired up for Telnyx (the earlier Twilio build supported it via Twilio's
+WhatsApp senders, which Telnyx's product doesn't mirror one-to-one). If a firm
+needs WhatsApp intake, this needs its own pass before `WHATSAPP_ENABLED=true`
+is turned back on.
 
 Existing matters get their address the first time someone opens their Intake tab.
 
@@ -313,13 +313,13 @@ Everything app-side still open on launch checklist v2, except billing (firms sig
 
 | Checklist | What was added | Where |
 |---|---|---|
-| #1 separate demo intake | Demo matters use their own email domain and texting number; live addresses never reach a demo and demo addresses never reach a firm. Any matter opened in a demo workspace is a demo matter. | `DEMO_INBOUND_EMAIL_DOMAIN`, `DEMO_TWILIO_SMS_NUMBER` in `.env` |
+| #1 separate demo intake | Demo matters use their own email domain and texting number; live addresses never reach a demo and demo addresses never reach a firm. Any matter opened in a demo workspace is a demo matter. | `DEMO_INBOUND_EMAIL_DOMAIN`, `DEMO_TELNYX_SMS_NUMBER` in `.env` |
 | #3 "text it now" | Demo Intake tab shows the real demo number and address, and celebrates anything that arrives while it's open. Texts from any phone (and emails from anyone) to the demo number land in the case marked live (Reyes by default; **Use this case for live messages** on another). | Intake tab (demo) |
 | #4 closed-matter import | ZIP of a folder, .mbox, .eml or loose files; every file becomes its own item. Counts: items received, distinct dated items, conversations rebuilt, items flagged. | Matter → **Record** → Import a closed matter |
 | #5 before and after | As-sent items next to the assembled record; every line cites its item; gaps and unreadable items shown. | Matter → **Timeline** tab → Before and after |
 | #6 write-back live | Connecting a real Clio sandbox from the demo workspace replaces the simulation; Reset demo keeps the real connection. | Practice mgmt tab |
 | #9 demo deletion | Deletes a prospect's material and emails the deletion confirmation (or shows it to copy). | Matter → Record → Delete demo material (demo only) |
-| #15 provisioning | Failed or incomplete provisioning raises a firm alert; `TWILIO_NUMBER_POOL` hands numbers out one per firm. | Alert strip at the top of every page |
+| #15 provisioning | Failed or incomplete provisioning raises a firm alert; `TELNYX_NUMBER_POOL` hands numbers out one per firm. | Alert strip at the top of every page |
 | #16 delete after delivery | Record ZIP delivered to Clio (confirmed upload) or downloaded and confirmed by the firm, then Verin deletes its copy of each finished file. Hashes, RFC 3161 tokens, chain and audit log stay. Nightly Clio delivery. **Verify a file** checks any copy against the record in the browser. | Matter → Record → Deliver the record / Verify a file; Settings → Records and delivery |
 | #21 timeline | Every item on one dated line with both dates, hearings as milestones. | Timeline tab |
 | #22 versioned write-back | Each push to Clio is a new version of the same document, not a duplicate. | automatic |
@@ -341,7 +341,7 @@ Everything app-side still open on launch checklist v2, except billing (firms sig
 1. **Deploy:** functions, `firestore:rules`, `firestore:indexes`, then hosting (the usual `deploy.bat`). Then press **Reset demo** in the demo workspace.
 2. **Two-step sign-in:** Firebase console → Authentication → Settings → upgrade to **Identity Platform** (free tier covers this), then enable **Multi-factor authentication → TOTP**. Until then the "Turn on" button explains that it isn't enabled.
 3. **Outbound email** (client receipts, digests, deletion confirmations): create the secret `EMAIL_API_KEY` (Postmark server token, or a SendGrid key for the demo) in Secret Manager, then set `EMAIL_ENABLED=true` and `EMAIL_FROM` in `.env` and deploy functions. With it off, everything else works and emails are simply not sent.
-4. **Demo intake:** buy a second Twilio number for demos, point it at the same `inboundSms` webhook, and set `DEMO_TWILIO_SMS_NUMBER`; add a demo email domain (e.g. `demo.in.verinlegal.com`) to SendGrid Inbound Parse with the same webhook, and set `DEMO_INBOUND_EMAIL_DOMAIN`. Both need `INTAKE_ENABLED=true`.
+4. **Demo intake:** buy a second Telnyx number for demos, point it at the same `inboundSms` webhook, and set `DEMO_TELNYX_SMS_NUMBER`; add a demo email domain (e.g. `demo.in.verinlegal.com`) to SendGrid Inbound Parse with the same webhook, and set `DEMO_INBOUND_EMAIL_DOMAIN`. Both need `INTAKE_ENABLED=true`.
 5. **Clio sandbox for demos:** sign in to the demo workspace as an admin and connect the Clio sandbox account from Settings; link each demo matter to a sandbox matter in its Practice mgmt tab.
 6. **Backups (#31):** create a bucket `verin-legal-fbzp5w-backups` (same region, 30-day lifecycle delete), give the App Engine default service account the roles **Cloud Datastore Import Export Admin** and **Storage Admin** on that bucket, then set `BACKUP_BUCKET=verin-legal-fbzp5w-backups` in `.env` and deploy. Test a restore once into a scratch project: `gcloud firestore import gs://verin-legal-fbzp5w-backups/firestore/<date> --project <scratch-project>`.
 

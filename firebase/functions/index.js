@@ -96,8 +96,8 @@ exports.practiceSearchMatters = verinPractice.practiceSearchMatters;
 exports.practiceLinkMatter = verinPractice.practiceLinkMatter;
 exports.practicePushDocument = verinPractice.practicePushDocument;
 
-// ---- Verin: client email and text intake (SendGrid / Postmark, Twilio) ----
-// Off until the intake secrets exist (INBOUND_WEBHOOK_KEY, TWILIO_AUTH_TOKEN):
+// ---- Verin: client email and text intake (SendGrid / Postmark, Telnyx) ----
+// Off until the intake secrets exist (INBOUND_WEBHOOK_KEY, TELNYX_API_KEY):
 // set INTAKE_ENABLED=true in .env, then deploy. See DEPLOYMENT.md.
 if (process.env.INTAKE_ENABLED === "true") {
   const verinIntake = require("./verin/intake/functions");

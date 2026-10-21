@@ -2,7 +2,7 @@
 //
 //   inboundEmail       HTTPS webhook for SendGrid Inbound Parse (multipart) or
 //                      Postmark inbound (JSON). The URL carries ?key=<secret>.
-//   inboundSms         HTTPS webhook for Twilio messages (signature checked).
+//   inboundSms         HTTPS webhook for Telnyx messages (Ed25519 signature checked).
 //                      Both only store the raw request (hashed) and queue it,
 //                      so providers get a fast 200.
 //   onInboundEvent     Files the queued request into the right matter: the
@@ -48,16 +48,16 @@ const MAX_ATTACHMENTS = 40;
 // ---------------------------------------------------------------------------
 
 const poolNumbers = () =>
-  String(P.TWILIO_NUMBER_POOL.value() || '')
+  String(P.TELNYX_NUMBER_POOL.value() || '')
     .split(',')
     .map((x) => N.normPhone(x))
     .filter(Boolean);
 
 /// The texting number for a firm's matters. Demo matters always get the demo
 /// number (#1). A firm without its own number is given the least-used number
-/// from the pool (#15), else everyone shares TWILIO_SMS_NUMBER.
+/// from the pool (#15), else everyone shares TELNYX_SMS_NUMBER.
 async function firmSmsNumber(db, firmId, { demo = false } = {}) {
-  if (demo) return N.normPhone(P.DEMO_TWILIO_SMS_NUMBER.value());
+  if (demo) return N.normPhone(P.DEMO_TELNYX_SMS_NUMBER.value());
   if (firmId) {
     const acct = await db.collection('firmAccount').where('firmID', '==', firmId).limit(1).get();
     const n = acct.empty ? '' : N.normPhone(acct.docs[0].get('smsNumber'));
@@ -70,7 +70,7 @@ async function firmSmsNumber(db, firmId, { demo = false } = {}) {
       return pick;
     }
   }
-  return N.normPhone(P.TWILIO_SMS_NUMBER.value());
+  return N.normPhone(P.TELNYX_SMS_NUMBER.value());
 }
 
 const liveDomain = () => String(P.INBOUND_EMAIL_DOMAIN.value() || '').toLowerCase().trim();
@@ -160,7 +160,7 @@ function provisioningGaps(m) {
   const gaps = [];
   const demo = m.demo === true;
   if ((demo ? demoDomain() : liveDomain()) && !m.emailAddress && !(m.intakeEnabled && m.intakeEnabled.email === false)) gaps.push('email address');
-  const smsConfigured = demo ? !!P.DEMO_TWILIO_SMS_NUMBER.value() : !!(P.TWILIO_SMS_NUMBER.value() || P.TWILIO_NUMBER_POOL.value());
+  const smsConfigured = demo ? !!P.DEMO_TELNYX_SMS_NUMBER.value() : !!(P.TELNYX_SMS_NUMBER.value() || P.TELNYX_NUMBER_POOL.value());
   if (smsConfigured && !m.smsNumber && !(m.intakeEnabled && m.intakeEnabled.sms === false)) gaps.push('texting number');
   return gaps;
 }
@@ -173,8 +173,8 @@ exports.provisionIntake = onCall(async (request) => {
   if (Object.keys(upd).length) await ref.set(upd, { merge: true });
   const fresh = (await ref.get()).data();
   const smsAvailable = fresh.demo === true
-    ? !!P.DEMO_TWILIO_SMS_NUMBER.value()
-    : !!(P.TWILIO_SMS_NUMBER.value() || P.TWILIO_NUMBER_POOL.value());
+    ? !!P.DEMO_TELNYX_SMS_NUMBER.value()
+    : !!(P.TELNYX_SMS_NUMBER.value() || P.TELNYX_NUMBER_POOL.value());
   return {
     emailAddress: fresh.emailAddress || '',
     smsNumber: fresh.smsNumber || '',
@@ -230,28 +230,63 @@ exports.inboundEmail = onRequest(
   },
 );
 
+/// Sends one text via the Telnyx Messaging API. Only used for the optional
+/// "Received" auto-reply — fire-and-forget; a failure here doesn't affect
+/// filing, which already happened via queueRaw.
+async function sendTelnyxSms({ from, to, text }) {
+  const r = await fetch('https://api.telnyx.com/v2/messages', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${S.TELNYX_API_KEY.value()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, text }),
+  });
+  if (!r.ok) throw new Error(`telnyx send ${r.status}: ${(await r.text()).slice(0, 300)}`);
+}
+
 exports.inboundSms = onRequest(
-  { secrets: [S.TWILIO_AUTH_TOKEN], memory: '512MiB', timeoutSeconds: 60, cors: false },
+  { secrets: [S.TELNYX_API_KEY], memory: '512MiB', timeoutSeconds: 60, cors: false },
   async (req, res) => {
     if (req.method !== 'POST') return res.status(405).send('POST only');
-    const params = req.body && typeof req.body === 'object' ? req.body : {};
-    const url = P.TWILIO_WEBHOOK_URL.value() || `https://${req.headers.host}${req.originalUrl}`;
-    const expected = N.twilioSignature(S.TWILIO_AUTH_TOKEN.value(), url, params);
-    if (!N.safeEqual(req.headers['x-twilio-signature'], expected)) {
-      console.warn('inboundSms: bad signature for', url);
+    const raw = req.rawBody || Buffer.from(JSON.stringify(req.body || {}));
+    const pubKey = P.TELNYX_PUBLIC_KEY.value();
+    const ok = pubKey && N.telnyxSignatureValid(pubKey, req.headers['telnyx-timestamp'], raw, req.headers['telnyx-signature-ed25519']);
+    if (!ok) {
+      console.warn('inboundSms: bad or missing Telnyx signature');
       return res.status(403).send('forbidden');
     }
-    const fields = {};
-    for (const [k, v] of Object.entries(params)) if (typeof v === 'string') fields[k] = v.slice(0, 5000);
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const data = body.data || {};
+    const payload = data.payload || {};
+    // Telnyx posts every messaging event (sent, delivered, finalized …) to
+    // the same webhook; only an inbound message carries evidence to file.
+    if (data.event_type !== 'message.received') return res.status(200).send('ok');
+    const media = Array.isArray(payload.media) ? payload.media : [];
+    // Kept in Twilio's field shape internally (From/To/Body/MessageSid/
+    // MediaUrl0..) so the rest of the filing pipeline (fileSms, keepSmsMedia,
+    // review.js) didn't need to change for the provider swap.
+    const fields = {
+      From: (payload.from && payload.from.phone_number) || '',
+      To: (Array.isArray(payload.to) && payload.to[0] && payload.to[0].phone_number) || '',
+      Body: String(payload.text || '').slice(0, 5000),
+      MessageSid: payload.id || '',
+      NumMedia: String(media.length),
+      TelnyxType: payload.type || 'SMS',
+    };
+    media.slice(0, 10).forEach((m, i) => {
+      fields[`MediaUrl${i}`] = m.url || '';
+      fields[`MediaContentType${i}`] = m.content_type || '';
+    });
     try {
-      await queueRaw({ kind: 'sms', provider: 'twilio', body: req.rawBody || Buffer.from(JSON.stringify(fields)), contentType: String(req.headers['content-type'] || ''), fields });
+      await queueRaw({ kind: 'sms', provider: 'telnyx', body: raw, contentType: String(req.headers['content-type'] || ''), fields });
     } catch (e) {
       console.error('inboundSms: could not store', e);
       return res.status(500).send('retry');
     }
-    const reply = P.SMS_AUTO_REPLY.value() === 'true' ? N.smsAckTwiml() : '';
-    res.set('Content-Type', 'text/xml');
-    return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?><Response>${reply}</Response>`);
+    // No TwiML-style inline reply with Telnyx: send the ack as its own API
+    // call, after the response so it never delays acknowledging the webhook.
+    if (P.SMS_AUTO_REPLY.value() === 'true' && fields.From && fields.To) {
+      sendTelnyxSms({ from: fields.To, to: fields.From, text: N.SMS_ACK_TEXT }).catch((e) => console.warn('sms auto-reply failed', e.message));
+    }
+    return res.status(200).send('ok');
   },
 );
 
@@ -525,7 +560,7 @@ async function liveDemoMatter(db, firmIds) {
 async function mattersForPhone(db, phone, toNumber) {
   const snap = await db.collection('Matters').where('clientPhones', 'array-contains', phone).get();
   // The demo number reaches only demo matters, and live numbers never do (#1).
-  const demoNum = N.normPhone(P.DEMO_TWILIO_SMS_NUMBER.value());
+  const demoNum = N.normPhone(P.DEMO_TELNYX_SMS_NUMBER.value());
   const toDemo = !!demoNum && toNumber === demoNum;
   let docs = snap.docs.filter((d) => (d.get('demo') === true) === toDemo);
   const firmsForTo = (await db.collection('firmAccount').where('smsNumber', '==', toNumber).get()).docs.map((d) => d.get('firmID'));
@@ -538,16 +573,16 @@ async function mattersForPhone(db, phone, toNumber) {
   return { list: (open.length ? open : docs).sort((a, b) => ms(b) - ms(a)), firmsForTo };
 }
 
-async function fetchTwilioMedia(url) {
-  const sid = P.TWILIO_ACCOUNT_SID.value();
-  const headers = sid ? { Authorization: `Basic ${Buffer.from(`${sid}:${S.TWILIO_AUTH_TOKEN.value()}`).toString('base64')}` } : {};
-  const r = await fetch(url, { headers, redirect: 'follow' });
+async function fetchTelnyxMedia(url) {
+  // Telnyx media URLs are pre-signed; the bearer key is attached as a
+  // defensive extra and is harmless if the host ignores it.
+  const r = await fetch(url, { headers: { Authorization: `Bearer ${S.TELNYX_API_KEY.value()}` }, redirect: 'follow' });
   if (!r.ok) throw new Error(`media ${r.status}`);
   return { content: Buffer.from(await r.arrayBuffer()), contentType: r.headers.get('content-type') || '' };
 }
 
-/// Copies a text's photos into our storage right away (Twilio's copies can be
-/// deleted), hashed, so the record doesn't depend on theirs.
+/// Copies a text's photos into our storage right away (Telnyx's copies
+/// expire), hashed, so the record doesn't depend on theirs.
 async function keepSmsMedia(bucket, event, f) {
   const n = Math.min(Number(f.NumMedia || 0), 10);
   const out = [];
@@ -555,7 +590,7 @@ async function keepSmsMedia(bucket, event, f) {
     const url = f[`MediaUrl${i}`];
     if (!url) continue;
     try {
-      const m = await fetchTwilioMedia(url);
+      const m = await fetchTelnyxMedia(url);
       const ct = m.contentType || f[`MediaContentType${i}`] || 'application/octet-stream';
       const path = `inbound/sms/${event.id}/media${i}${N.extFor(ct)}`;
       const sha256 = crypto.createHash('sha256').update(m.content).digest('hex');
@@ -574,7 +609,7 @@ async function keepSmsMedia(bucket, event, f) {
 
 async function fileSms(db, bucket, event) {
   const f = event.data.fields || {};
-  const channel = N.messageChannel(f.From);
+  const channel = N.messageChannel(f.From, f.TelnyxType);
   const from = N.normPhone(f.From);
   const to = N.normPhone(f.To);
   const at = new Date();
@@ -584,7 +619,7 @@ async function fileSms(db, bucket, event) {
   let target = list.find((d) => !(d.get('intakeEnabled') && d.get('intakeEnabled').sms === false));
   // "Text it now" (#3): on the demo number, a prospect's own phone isn't on
   // any matter, so it goes to the case the presenter marked as live.
-  const demoNum = N.normPhone(P.DEMO_TWILIO_SMS_NUMBER.value());
+  const demoNum = N.normPhone(P.DEMO_TELNYX_SMS_NUMBER.value());
   if (!target && demoNum && to === demoNum) target = await liveDemoMatter(db, firmsForTo);
   if (!target) {
     // Nobody we know: hold it for the firm to file by hand.
@@ -632,13 +667,13 @@ async function fileSms(db, bucket, event) {
 
 /// With one shared demo number, the firm is only known if exactly one firm uses it.
 async function soleFirmFor(db, to) {
-  if (!to || to !== N.normPhone(P.TWILIO_SMS_NUMBER.value())) return '';
+  if (!to || to !== N.normPhone(P.TELNYX_SMS_NUMBER.value())) return '';
   const firms = await db.collection('firmAccount').limit(2).get();
   return firms.size === 1 ? firms.docs[0].get('firmID') || '' : '';
 }
 
 exports.onInboundEvent = onDocumentCreated(
-  { document: 'InboundEvents/{eventId}', secrets: [S.TWILIO_AUTH_TOKEN, ...emailSecrets()], memory: '2GiB', timeoutSeconds: 540 },
+  { document: 'InboundEvents/{eventId}', secrets: [S.TELNYX_API_KEY, ...emailSecrets()], memory: '2GiB', timeoutSeconds: 540 },
   async (ev) => {
     const snap = ev.data;
     if (!snap) return;

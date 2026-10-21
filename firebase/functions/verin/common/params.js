@@ -40,25 +40,25 @@ module.exports = {
   APP_URL: defineString('APP_URL', { default: '' }),
 
   // Client email and text intake (verin/intake). Its two secrets
-  // (INBOUND_WEBHOOK_KEY, TWILIO_AUTH_TOKEN) are defined in verin/intake/secrets.js
+  // (INBOUND_WEBHOOK_KEY, TELNYX_API_KEY) are defined in verin/intake/secrets.js
   // so the rest of Verin deploys before they exist.
   // Matters get <name>-<4 digits>@INBOUND_EMAIL_DOMAIN. Empty = no addresses.
   INBOUND_EMAIL_DOMAIN: defineString('INBOUND_EMAIL_DOMAIN', { default: '' }),
-  TWILIO_ACCOUNT_SID: defineString('TWILIO_ACCOUNT_SID', { default: '' }),
+  // Ed25519 public key for Telnyx webhook signatures (Telnyx Portal →
+  // Account settings → Public key). This is public by design, not a secret.
+  TELNYX_PUBLIC_KEY: defineString('TELNYX_PUBLIC_KEY', { default: '' }),
   // The texting number shown on matters when a firm has none of its own.
-  TWILIO_SMS_NUMBER: defineString('TWILIO_SMS_NUMBER', { default: '' }),
-  // The exact URL configured in Twilio for incoming messages (signature check).
-  TWILIO_WEBHOOK_URL: defineString('TWILIO_WEBHOOK_URL', { default: '' }),
-  // "true" sends a short "Received" reply (needs A2P / toll-free registration).
+  TELNYX_SMS_NUMBER: defineString('TELNYX_SMS_NUMBER', { default: '' }),
+  // "true" sends a short "Received" reply (needs 10DLC / toll-free registration).
   SMS_AUTO_REPLY: defineString('SMS_AUTO_REPLY', { default: 'false' }),
 
   // Separate demo intake (#1): prospects' messages land only in NFR demo
   // workspaces, never a live firm. Empty = demo matters keep sample addresses.
   DEMO_INBOUND_EMAIL_DOMAIN: defineString('DEMO_INBOUND_EMAIL_DOMAIN', { default: '' }),
-  DEMO_TWILIO_SMS_NUMBER: defineString('DEMO_TWILIO_SMS_NUMBER', { default: '' }),
-  // Number pool (#15): comma-separated Twilio numbers handed out one per firm
-  // when a firm has no number of its own. Empty = everyone shares TWILIO_SMS_NUMBER.
-  TWILIO_NUMBER_POOL: defineString('TWILIO_NUMBER_POOL', { default: '' }),
+  DEMO_TELNYX_SMS_NUMBER: defineString('DEMO_TELNYX_SMS_NUMBER', { default: '' }),
+  // Number pool (#15): comma-separated Telnyx numbers handed out one per firm
+  // when a firm has no number of its own. Empty = everyone shares TELNYX_SMS_NUMBER.
+  TELNYX_NUMBER_POOL: defineString('TELNYX_NUMBER_POOL', { default: '' }),
   // "true" emails a short receipt (with the emergency line) to known senders.
   EMAIL_AUTO_REPLY: defineString('EMAIL_AUTO_REPLY', { default: 'false' }),
   // Outbound email (common/mailer.js). The key is the EMAIL_API_KEY secret.
@@ -66,7 +66,7 @@ module.exports = {
   EMAIL_FROM: defineString('EMAIL_FROM', { default: '' }),
   // Where in-app feedback is copied (the Spiceworks help desk).
   SUPPORT_EMAIL: defineString('SUPPORT_EMAIL', { default: 'help@verin-legal.on.spiceworks.com' }),
-  // "true" once Meta has approved the firm's Twilio number as a WhatsApp sender
+  // "true" once Meta has approved the firm's Telnyx number as a WhatsApp sender
   // (its webhook is the same inboundSms URL). Adds the WhatsApp line to client cards.
   WHATSAPP_ENABLED: defineString('WHATSAPP_ENABLED', { default: 'false' }),
 
