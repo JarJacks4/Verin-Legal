@@ -26,3 +26,11 @@ verin-batch*/
 verin-fix*/
 *-debug.log
 firebase/functions/.env.local
+
+# Never commit secrets: API keys belong in Google Secret Manager, not files.
+*KEY*.txt
+*Key*.txt
+*_API_KEY
+*_API_KEY.*
+*.pem
+service-account*.json
