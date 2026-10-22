@@ -99,7 +99,8 @@ exports.practicePushDocument = verinPractice.practicePushDocument;
 // ---- Verin: client email and text intake (SendGrid / Postmark, Telnyx) ----
 // Off until the intake secrets exist (INBOUND_WEBHOOK_KEY, TELNYX_API_KEY):
 // set INTAKE_ENABLED=true in .env, then deploy. See DEPLOYMENT.md.
-if (process.env.INTAKE_ENABLED === "true") {
+// envFlag also reads .env directly: at deploy time process.env may not hold it.
+if (require("./verin/common/env_flag").envFlag("INTAKE_ENABLED")) {
   const verinIntake = require("./verin/intake/functions");
   exports.inboundEmail = verinIntake.inboundEmail;
   exports.inboundSms = verinIntake.inboundSms;

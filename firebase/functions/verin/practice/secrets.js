@@ -6,7 +6,7 @@
 //     (without FILEVINE_PARTNER each firm enters its own client id/secret)
 const { defineSecret } = require('firebase-functions/params');
 
-const on = (k) => process.env[k] === 'true';
+const on = (k) => require('../common/env_flag').envFlag(k);
 const PP_SECRET = on('PRACTICEPANTHER_ENABLED') ? defineSecret('PRACTICEPANTHER_CLIENT_SECRET') : null;
 const FV_SECRET = on('FILEVINE_ENABLED') && on('FILEVINE_PARTNER') ? defineSecret('FILEVINE_CLIENT_SECRET') : null;
 
