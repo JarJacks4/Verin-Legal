@@ -8,4 +8,6 @@ const { defineSecret } = require('firebase-functions/params');
 module.exports = {
   INBOUND_WEBHOOK_KEY: defineSecret('INBOUND_WEBHOOK_KEY'),
   TELNYX_API_KEY: defineSecret('TELNYX_API_KEY'),
+  // Twilio, accepted on the same webhook (toll-free (855) number).
+  TWILIO_AUTH_TOKEN: defineSecret('TWILIO_AUTH_TOKEN'),
 };

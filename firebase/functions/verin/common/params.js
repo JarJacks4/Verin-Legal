@@ -49,6 +49,12 @@ module.exports = {
   TELNYX_PUBLIC_KEY: defineString('TELNYX_PUBLIC_KEY', { default: '' }),
   // The texting number shown on matters when a firm has none of its own.
   TELNYX_SMS_NUMBER: defineString('TELNYX_SMS_NUMBER', { default: '' }),
+  // Twilio works on the same inboundSms webhook. When TWILIO_SMS_NUMBER is set
+  // it is the number matters show (it wins over TELNYX_SMS_NUMBER).
+  TWILIO_ACCOUNT_SID: defineString('TWILIO_ACCOUNT_SID', { default: '' }),
+  TWILIO_SMS_NUMBER: defineString('TWILIO_SMS_NUMBER', { default: '' }),
+  // The exact URL configured in Twilio for incoming messages (signature check).
+  TWILIO_WEBHOOK_URL: defineString('TWILIO_WEBHOOK_URL', { default: '' }),
   // "true" sends a short "Received" reply (needs 10DLC / toll-free registration).
   SMS_AUTO_REPLY: defineString('SMS_AUTO_REPLY', { default: 'false' }),
 

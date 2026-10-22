@@ -103,6 +103,16 @@ function isDecorativeAttachment(a) {
   return ct.startsWith('image/') && (a.inline || a.related) && size < 20 * 1024;
 }
 
+/// Twilio's request signature: base64 HMAC-SHA1 of the URL followed by each
+/// POST parameter name and value, sorted by name.
+function twilioSignature(authToken, url, params) {
+  const crypto = require('crypto');
+  const data = Object.keys(params || {})
+    .sort()
+    .reduce((acc, k) => acc + k + (params[k] == null ? '' : String(params[k])), url);
+  return crypto.createHmac('sha1', authToken).update(Buffer.from(data, 'utf8')).digest('base64');
+}
+
 // Ed25519 SPKI DER header for a 32-byte raw public key (RFC 8410), so Node's
 // crypto can import the raw key Telnyx publishes without a third-party lib.
 const ED25519_SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
@@ -169,6 +179,7 @@ module.exports = {
   extFor,
   isDecorativeAttachment,
   telnyxSignatureValid,
+  twilioSignature,
   safeEqual,
   smsRecordText,
 };
