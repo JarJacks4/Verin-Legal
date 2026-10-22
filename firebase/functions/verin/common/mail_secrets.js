@@ -4,7 +4,7 @@
 //   EMAIL_API_KEY   Postmark server token or SendGrid API key
 const { defineSecret } = require('firebase-functions/params');
 
-const emailEnabled = () => process.env.EMAIL_ENABLED === 'true';
+const emailEnabled = () => require('./env_flag').envFlag('EMAIL_ENABLED');
 const EMAIL_API_KEY = emailEnabled() ? defineSecret('EMAIL_API_KEY') : null;
 
 /// The key, inside a function that lists emailSecrets().
